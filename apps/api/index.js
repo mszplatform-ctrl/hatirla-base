@@ -2,12 +2,13 @@
 
 const express = require('express');
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require('@prisma/client'); // ✅ DOĞRU IMPORT
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Prisma Client
 const prisma = new PrismaClient();
 
 // ROOT test endpoint
@@ -37,7 +38,7 @@ app.get('/api/data/cities', async (req, res) => {
 
     res.json(mapped);
   } catch (err) {
-    console.error(err);
+    console.error('CITY_FETCH_ERROR', err);
     res.status(500).json({ error: 'CITY_FETCH_ERROR' });
   }
 });
@@ -56,6 +57,7 @@ app.get('/api/data/hotels', async (req, res) => {
 
     res.json(hotels);
   } catch (err) {
+    console.error('HOTEL_FETCH_ERROR', err);
     res.status(500).json({ error: 'HOTEL_FETCH_ERROR' });
   }
 });
@@ -74,6 +76,7 @@ app.get('/api/data/experiences', async (req, res) => {
 
     res.json(exps);
   } catch (err) {
+    console.error('EXPERIENCE_FETCH_ERROR', err);
     res.status(500).json({ error: 'EXPERIENCE_FETCH_ERROR' });
   }
 });
@@ -85,10 +88,11 @@ app.get('/api/data/flights', async (req, res) => {
   const fromId = Number(req.query.fromId);
   const toId = Number(req.query.toId);
 
-  if (!fromId || !toId)
+  if (!fromId || !toId) {
     return res
       .status(400)
       .json({ error: 'fromId and toId required' });
+  }
 
   try {
     const flights = await prisma.flight.findMany({
@@ -100,6 +104,7 @@ app.get('/api/data/flights', async (req, res) => {
 
     res.json(flights);
   } catch (err) {
+    console.error('FLIGHT_FETCH_ERROR', err);
     res.status(500).json({ error: 'FLIGHT_FETCH_ERROR' });
   }
 });
@@ -116,6 +121,7 @@ app.get('/api/data/all', async (req, res) => {
 
     res.json({ cities, hotels, flights, experiences });
   } catch (err) {
+    console.error('ALL_DATA_FETCH_ERROR', err);
     res.status(500).json({ error: 'ALL_DATA_FETCH_ERROR' });
   }
 });
@@ -190,9 +196,24 @@ app.post('/api/ai/compose', (req, res) => {
 });
 
 // SERVER START
-const PORT = 3001;
+const PORT =
+  process.env.PORT ||
+  Number(process.env.EXPRESS_PORT) ||
+  3001;
+
 app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`);
+  console.log(`API running on port ${PORT}`);
+});
+
+// Render kapanırken Prisma bağlantısını düzgün kapat
+process.on('SIGINT', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
 });
 
 
