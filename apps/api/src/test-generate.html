@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Referral Generate Test</title>
+</head>
+<body>
+  <h1>Referral Generate Test</h1>
+  <button id="generateBtn">Generate Code</button>
+  <pre id="result"></pre>
+
+  <script>
+    document.getElementById("generateBtn").addEventListener("click", () => {
+      fetch("http://localhost:4000/api/referral/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: "12345" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+      });
+    });
+  </script>
+</body>
+</html>

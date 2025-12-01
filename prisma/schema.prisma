@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// CITY
+//
+model City {
+  id          Int      @id @default(autoincrement())
+  name        String
+  countryCode String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hotels      Hotel[]
+  departures  Flight[]     @relation("FlightFromCity")
+  arrivals    Flight[]     @relation("FlightToCity")
+  experiences Experience[]
+}
+
+//
+// HOTEL
+//
+model Hotel {
+  id          Int     @id @default(autoincrement())
+  name        String
+  slug        String  @unique
+  description String?
+  cityId      Int
+
+  address   String?
+  latitude  Float?
+  longitude Float?
+
+  starRating Int?
+  minPrice   Int?
+  currency   String?
+
+  source     String?
+  externalId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  city City @relation(fields: [cityId], references: [id])
+}
+
+//
+// FLIGHT
+//
+model Flight {
+  id         Int @id @default(autoincrement())
+  fromCityId Int
+  toCityId   Int
+
+  carrierCode   String
+  flightNumber  String
+  departureTime DateTime
+  arrivalTime   DateTime
+
+  price    Int?
+  currency String?
+
+  source     String?
+  externalId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fromCity City @relation("FlightFromCity", fields: [fromCityId], references: [id])
+  toCity   City @relation("FlightToCity", fields: [toCityId], references: [id])
+}
+
+//
+// EXPERIENCE
+//
+model Experience {
+  id          Int     @id @default(autoincrement())
+  title       String
+  slug        String  @unique
+  description String?
+
+  cityId Int
+
+  category    String?
+  durationMin Int?
+  price       Int?
+  currency    String?
+
+  rating      Float? @default(0.0)
+  reviewCount Int?   @default(0)
+
+  source     String?
+  externalId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  city City @relation(fields: [cityId], references: [id])
+}
+

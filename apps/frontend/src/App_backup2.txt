@@ -1,0 +1,108 @@
+import { useEffect, useState } from 'react';
+
+type Suggestion = {
+  type: string;
+  payload: any;
+};
+
+type Itinerary = {
+  items: Suggestion[];
+  total_price: number;
+};
+
+export default function App() {
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [itinerary, setItinerary] = useState<Itinerary | null>(null);
+  const [reelUrl, setReelUrl] = useState<string>('');
+
+  useEffect(() => {
+    fetch('/api/ai/suggestions')
+      .then(res => res.json())
+      .then(data => setSuggestions(data))
+      .catch(err => console.error(err));
+  }, []);
+
+  const toggleSelect = (index: number) => {
+    const newSet = new Set(selected);
+    if (newSet.has(index)) newSet.delete(index);
+    else newSet.add(index);
+    setSelected(newSet);
+  };
+
+  const composePackage = async () => {
+    const selections = Array.from(selected).map(i => suggestions[i]);
+    const res = await fetch('http://localhost:4000/api/ai/compose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ selections }),
+    });
+    const data = await res.json();
+    setItinerary(data.itinerary);
+    setReelUrl(''); // yeni paket => önceki reel iptal
+  };
+
+  const generateReel = async () => {
+    if (!itinerary) return alert('Önce paket oluştur!');
+    const itineraryId = 'mock-itinerary-123'; // mock ID
+
+    const res = await fetch('http://localhost:4000/api/reel/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itinerary_id: itineraryId }),
+    });
+    const data = await res.json();
+
+    const statusRes = await fetch(`http://localhost:4000/api/reel/status/${data.jobId}`);
+    const statusData = await statusRes.json();
+    setReelUrl(statusData.reel_url);
+  };
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>Hatırla — AI Öneriler + Paket + Reel</h1>
+
+      <h2>Öneriler</h2>
+      {suggestions.map((s, i) => (
+        <div
+          key={i}
+          style={{
+            border: selected.has(i) ? '2px solid green' : '1px solid gray',
+            padding: '8px',
+            margin: '4px 0',
+            cursor: 'pointer',
+          }}
+          onClick={() => toggleSelect(i)}
+        >
+          <strong>{s.type}</strong>: {s.payload.name || s.payload.title || s.payload.origin} - ${s.payload.price}
+        </div>
+      ))}
+
+      <button onClick={composePackage} style={{ marginTop: '10px' }}>
+        Seçilen Önerilerden Paket Oluştur
+      </button>
+
+      {itinerary && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>Paket Özeti</h2>
+          <ul>
+            {itinerary.items.map((item, idx) => (
+              <li key={idx}>
+                {item.type}: {item.payload.name || item.payload.title || item.payload.origin} - ${item.payload.price}
+              </li>
+            ))}
+          </ul>
+          <p><strong>Toplam Fiyat: ${itinerary.total_price}</strong></p>
+
+          <button onClick={generateReel}>Reel Oluştur</button>
+          {reelUrl && (
+            <div style={{ marginTop: '10px' }}>
+              <p>Reel hazır:</p>
+              <a href={reelUrl} target="_blank" rel="noopener noreferrer">{reelUrl}</a>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
