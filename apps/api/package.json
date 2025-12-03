@@ -9,9 +9,11 @@
     "dev:api": "nodemon index.js"
   },
   "dependencies": {
+    "@prisma/client": "^7.0.1",
     "better-sqlite3": "^12.4.1",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "prisma": "^7.0.1",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {

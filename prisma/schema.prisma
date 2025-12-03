@@ -104,3 +104,4 @@ model Experience {
   city City @relation(fields: [cityId], references: [id])
 }
 
+
