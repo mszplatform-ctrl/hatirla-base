@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import MSZ from "./MSZCore";
 
 // --------------------------------------------------
+// API BASE URL (deploy uyumlu)
+// --------------------------------------------------
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/data`;
+const AI_BASE = `${import.meta.env.VITE_API_URL}/api/ai`;
+
+// --------------------------------------------------
 // TYPES
 // --------------------------------------------------
 type CitySummary = {
@@ -41,9 +47,6 @@ type Itinerary = {
   currency: string;
   summary?: string;
 };
-
-const API_BASE = "http://localhost:3001/api/data";
-const AI_BASE = "http://localhost:3001/api/ai";
 
 // --------------------------------------------------
 // MODAL COMPONENT
@@ -202,7 +205,7 @@ export default function App() {
   }, [selectedHotelIds, selectedExperienceIds, hotels, experiences]);
 
   // --------------------------------------------------
-  // MODAL OPENERS (✔ FIX EKLENDİ)
+  // MODAL OPENERS
   // --------------------------------------------------
   function openHotelModal(hotel: Hotel) {
     setModalType("hotel");
