@@ -1,0 +1,8 @@
+{
+  "name": "apps",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}
