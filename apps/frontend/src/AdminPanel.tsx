@@ -63,7 +63,7 @@ export default function AdminPanel() {
 
   return (
     <div style={{ padding: "30px", fontFamily: "Arial" }}>
-      <h1>🛠 Hatırla — Admin Panel</h1>
+      <h1>🛠 XOTIJI — Admin Panel</h1>
 
       {/* DESTINATIONS */}
       <section style={{ marginTop: "40px" }}>

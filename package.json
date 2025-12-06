@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Hatırla proje temel package.json",
   "main": "index.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
-    "start": "node apps/api/index.js",
+    "start": "node index.js",
     "dev:frontend": "npm run dev --prefix apps/frontend -- --host",
     "dev:backend": "npm run dev:api --prefix apps/api",
     "dev:all": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
@@ -31,3 +31,4 @@
     "prisma": "^5.15.0"
   }
 }
+

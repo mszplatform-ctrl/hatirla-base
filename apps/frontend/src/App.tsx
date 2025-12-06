@@ -129,9 +129,7 @@ export default function App() {
 
   const [mszComment, setMszComment] = useState<string | null>(null);
 
-  // --------------------------------------------------
   // LOAD CITIES
-  // --------------------------------------------------
   useEffect(() => {
     async function fetchCities() {
       try {
@@ -148,9 +146,7 @@ export default function App() {
     fetchCities();
   }, []);
 
-  // --------------------------------------------------
   // LOAD HOTELS + EXPERIENCES
-  // --------------------------------------------------
   async function handleCityClick(city: CitySummary) {
     setSelectedCity(city);
     setLoadingDetails(true);
@@ -175,9 +171,7 @@ export default function App() {
     }
   }
 
-  // --------------------------------------------------
   // MSZ MEMORY SYNC
-  // --------------------------------------------------
   useEffect(() => {
     const items: any[] = [];
 
@@ -204,9 +198,7 @@ export default function App() {
     MSZ.remember("lastSelections", items);
   }, [selectedHotelIds, selectedExperienceIds, hotels, experiences]);
 
-  // --------------------------------------------------
   // MODAL OPENERS
-  // --------------------------------------------------
   function openHotelModal(hotel: Hotel) {
     setModalType("hotel");
     setModalData(hotel);
@@ -219,9 +211,7 @@ export default function App() {
     setModalVisible(true);
   }
 
-  // --------------------------------------------------
   // SELECTION HANDLERS
-  // --------------------------------------------------
   function toggleHotelSelection(h: Hotel) {
     setSelectedHotelIds((prev) =>
       prev.includes(h.id) ? prev.filter((id) => id !== h.id) : [...prev, h.id]
@@ -234,9 +224,7 @@ export default function App() {
     );
   }
 
-  // --------------------------------------------------
   // AI SUGGESTIONS
-  // --------------------------------------------------
   async function handleAiSuggest() {
     try {
       setAiLoading(true);
@@ -256,9 +244,7 @@ export default function App() {
     }
   }
 
-  // --------------------------------------------------
-  // AI COMPOSE + MSZ ANALYSIS
-  // --------------------------------------------------
+  // AI COMPOSE
   async function handleComposeItinerary() {
     try {
       const selectedHotelsArr = hotels.filter((h) =>
@@ -318,7 +304,8 @@ export default function App() {
     }
   }
 
-  const totalSelected = selectedHotelIds.length + selectedExperienceIds.length;
+  const totalSelected =
+    selectedHotelIds.length + selectedExperienceIds.length;
 
   // --------------------------------------------------
   // UI
@@ -334,6 +321,7 @@ export default function App() {
         boxSizing: "border-box",
       }}
     >
+      {/* 🔥 XOTIJI BRANDING */}
       <h1
         style={{
           fontSize: "40px",
@@ -342,7 +330,7 @@ export default function App() {
           color: "#1e293b",
         }}
       >
-        🌍 Hatırla — Gerçek Veri Bağlantısı Aktif
+        🌍 XOTIJI — Gerçek Veri Bağlantısı Aktif
       </h1>
 
       <p
@@ -419,7 +407,8 @@ export default function App() {
                   borderRadius: "16px",
                   boxShadow: "0 4px 10px rgba(15,23,42,0.06)",
                   cursor: "pointer",
-                  background: selectedCity?.id === city.id ? "#e6f4ff" : "white",
+                  background:
+                    selectedCity?.id === city.id ? "#e6f4ff" : "white",
                   transition: "all 0.25s",
                 }}
                 onClick={() => handleCityClick(city)}
@@ -446,7 +435,6 @@ export default function App() {
         <p>Şehirler yükleniyor...</p>
       )}
 
-      {/* DETAILS */}
       {selectedCity && (
         <div
           style={{
@@ -470,7 +458,8 @@ export default function App() {
               marginBottom: "12px",
             }}
           >
-            Kartlara tıklayarak detay görebilir, pakete ekleyebilir veya çıkarabilirsin.
+            Kartlara tıklayarak detay görebilir, pakete ekleyebilir veya
+            çıkarabilirsin.
           </p>
 
           {loadingDetails ? (
@@ -780,4 +769,3 @@ export default function App() {
     </div>
   );
 }
-

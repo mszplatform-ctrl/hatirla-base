@@ -1,6 +1,12 @@
 // ------------------------------------------------------
-// MSZ Lite — FINAL v1
-// Hatırla Base için minimalist yapay zeka yorumlayıcısı
+// MSZ Lite — FINAL v1 (XOTIJI Base Edition)
+// Minimalist Yapay Zeka Yorumlayıcı & Hafif Hafıza Motoru
+// ------------------------------------------------------
+//
+// Bu modül, XOTIJI Base'in ilk yapay zeka katmanı olan
+// "MSZ Lite Core" için optimize edilmiş sürümdür.
+// Hafif hafıza, seçim analizi ve AI ön-yorumlaması sağlar.
+//
 // ------------------------------------------------------
 
 export type MSZLogItem = {
@@ -14,13 +20,17 @@ class MSZLiteCore {
   private logs: MSZLogItem[] = [];
   private memory: Record<string, any> = {};
 
+  // ------------------------------------------------------
   // Singleton
+  // ------------------------------------------------------
   static get instance() {
     if (!this._instance) this._instance = new MSZLiteCore();
     return this._instance;
   }
 
-  // Basit log sistemi
+  // ------------------------------------------------------
+  // Loglama Sistemi
+  // ------------------------------------------------------
   log(type: "info" | "warn" | "error", message: string) {
     this.logs.push({
       ts: Date.now(),
@@ -33,7 +43,9 @@ class MSZLiteCore {
     return this.logs.slice(-limit);
   }
 
-  // Mini-hafıza
+  // ------------------------------------------------------
+  // Mini Hafıza Motoru
+  // ------------------------------------------------------
   remember(key: string, value: any) {
     this.memory[key] = value;
     this.log("info", `Memory saved: ${key}`);
@@ -46,6 +58,7 @@ class MSZLiteCore {
 
   // ------------------------------------------------------
   // FINAL v1 ANALYTICS — OTEL & DENEYİM ANALİZİ
+  // XOTIJI Base için optimize edilmiş versiyon
   // ------------------------------------------------------
   analyzeBeforeCompose(items: any[]) {
     const count = items.length;
@@ -65,16 +78,16 @@ class MSZLiteCore {
       )}`
     );
 
-    // FINAL v1 → daha temiz, daha profesyonel yorumlar
+    // FINAL v1 — profesyonel, sade yorumlar
     if (score > 0.75) {
-      return "Oldukça detaylı bir plan tarzın var. AI bu kadar çok veriyle çok daha iyi bir plan çıkaracaktır.";
+      return "Oldukça zengin bir seçim yaptın. AI bu verilerle son derece güçlü ve tutarlı bir seyahat planı çıkarabilir.";
     }
 
     if (score > 0.45) {
-      return "Fena değil. AI planı çıkarır ama birkaç ekleme yapmak planı iyileştirir.";
+      return "Fena değil. AI bir plan oluşturabilir ancak birkaç seçim daha eklemek sonuçları güçlendirebilir.";
     }
 
-    return "AI plan çıkarır ama çok az seçim yaptın, biraz daha eklemeyi düşünebilirsin.";
+    return "AI bir plan çıkarabilir fakat seçim sayısı düşük. Birkaç ekleme yapman sonuçları belirgin şekilde iyileştirir.";
   }
 }
 
