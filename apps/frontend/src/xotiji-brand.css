@@ -1,0 +1,34 @@
+/* XOTIJI — Horizon Identity Base Layer */
+
+:root {
+  --x-blue: #0ea5e9;
+  --x-orange: #fb923c;
+
+  --x-font-bold: 800;
+  --x-font: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--x-font);
+  background-color: #f7fafc;
+}
+
+h1, h2, h3 {
+  font-family: var(--x-font);
+  letter-spacing: -0.01em;
+}
+
+button {
+  font-family: var(--x-font);
+}
+
+.x-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.x-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+}

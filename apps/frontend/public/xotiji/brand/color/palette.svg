@@ -1,0 +1,87 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- XOTIJI Color Palette -->
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="DM Sans, sans-serif" font-weight="700" font-size="32" text-anchor="middle" fill="#0F172A">
+    XOTIJI Color Palette
+  </text>
+  
+  <!-- Primary Colors -->
+  <text x="50" y="90" font-family="DM Sans, sans-serif" font-weight="600" font-size="18" fill="#64748B">
+    Primary
+  </text>
+  
+  <rect x="50" y="100" width="200" height="80" rx="12" fill="#B8860B"/>
+  <text x="150" y="150" font-family="DM Sans, sans-serif" font-weight="600" font-size="14" text-anchor="middle" fill="#FFFFFF">
+    #B8860B
+  </text>
+  <text x="150" y="170" font-family="DM Sans, sans-serif" font-size="12" text-anchor="middle" fill="#FFFFFF">
+    Deep Amber
+  </text>
+  
+  <rect x="270" y="100" width="160" height="80" rx="12" fill="#D4A017"/>
+  <text x="350" y="150" font-family="DM Sans, sans-serif" font-weight="600" font-size="14" text-anchor="middle" fill="#FFFFFF">
+    #D4A017
+  </text>
+  <text x="350" y="170" font-family="DM Sans, sans-serif" font-size="12" text-anchor="middle" fill="#FFFFFF">
+    Light
+  </text>
+  
+  <rect x="450" y="100" width="160" height="80" rx="12" fill="#8B6914"/>
+  <text x="530" y="150" font-family="DM Sans, sans-serif" font-weight="600" font-size="14" text-anchor="middle" fill="#FFFFFF">
+    #8B6914
+  </text>
+  <text x="530" y="170" font-family="DM Sans, sans-serif" font-size="12" text-anchor="middle" fill="#FFFFFF">
+    Dark
+  </text>
+  
+  <!-- Accent -->
+  <text x="50" y="230" font-family="DM Sans, sans-serif" font-weight="600" font-size="18" fill="#64748B">
+    Accent
+  </text>
+  
+  <rect x="50" y="240" width="200" height="80" rx="12" fill="#FFD700"/>
+  <text x="150" y="290" font-family="DM Sans, sans-serif" font-weight="600" font-size="14" text-anchor="middle" fill="#000000">
+    #FFD700
+  </text>
+  <text x="150" y="310" font-family="DM Sans, sans-serif" font-size="12" text-anchor="middle" fill="#000000">
+    Pure Gold
+  </text>
+  
+  <!-- Neutrals -->
+  <text x="50" y="370" font-family="DM Sans, sans-serif" font-weight="600" font-size="18" fill="#64748B">
+    Neutrals
+  </text>
+  
+  <rect x="50" y="380" width="90" height="60" rx="8" fill="#0F172A"/>
+  <rect x="150" y="380" width="90" height="60" rx="8" fill="#475569"/>
+  <rect x="250" y="380" width="90" height="60" rx="8" fill="#94A3B8"/>
+  <rect x="350" y="380" width="90" height="60" rx="8" fill="#CBD5E1"/>
+  <rect x="450" y="380" width="90" height="60" rx="8" fill="#E2E8F0"/>
+  <rect x="550" y="380" width="90" height="60" rx="8" fill="#F8FAFC"/>
+  
+  <!-- Semantic -->
+  <text x="50" y="500" font-family="DM Sans, sans-serif" font-weight="600" font-size="18" fill="#64748B">
+    Semantic
+  </text>
+  
+  <rect x="50" y="510" width="120" height="60" rx="8" fill="#10B981"/>
+  <text x="110" y="545" font-family="DM Sans, sans-serif" font-size="12" text-anchor="middle" fill="#FFFFFF">
+    Success
+  </text>
+  
+  <rect x="190" y="510" width="120" height="60" rx="8" fill="#F59E0B"/>
+  <text x="250" y="545" font-family="DM Sans, sans-serif" font-size="12" text-anchor="middle" fill="#FFFFFF">
+    Warning
+  </text>
+  
+  <rect x="330" y="510" width="120" height="60" rx="8" fill="#EF4444"/>
+  <text x="390" y="545" font-family="DM Sans, sans-serif" font-size="12" text-anchor="middle" fill="#FFFFFF">
+    Error
+  </text>
+  
+  <rect x="470" y="510" width="120" height="60" rx="8" fill="#3B82F6"/>
+  <text x="530" y="545" font-family="DM Sans, sans-serif" font-size="12" text-anchor="middle" fill="#FFFFFF">
+    Info
+  </text>
+</svg>
