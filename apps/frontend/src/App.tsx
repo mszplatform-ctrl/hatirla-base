@@ -365,7 +365,7 @@ export default function App() {
 
           {loadingDetails ? (<p>Detaylar yükleniyor...</p>) : (
             <>
-              <div style={{display: "grid",gridTemplateColumns: "1fr 1fr",gap: "28px"}}>
+              <div style={{display: "grid",gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",gap: "28px"}}>
                 <div>
                   {/* OTELLER BAŞLIĞI - RENK DÜZELTİLDİ */}
                   <h3 style={{ fontSize: "18px", color: "#0f172a", fontWeight: 700 }}>🏨 Oteller ({hotels.length})</h3>
