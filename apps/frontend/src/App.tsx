@@ -347,10 +347,10 @@ export default function App() {
       </div>
 
       {/* AÇIKLAMA */}
-      <p style={{fontSize: "15px",color: "#64748b",marginBottom: "8px",fontWeight: 500}}>
+      <p style={{fontSize: "15px",color: "#475569",marginBottom: "8px",fontWeight: 500}}>
         Gerçek Veri Bağlantısı Aktif
       </p>
-      <p style={{fontSize: "13px",color: "#94a3b8",marginBottom: "20px"}}>
+      <p style={{fontSize: "13px",color: "#64748b",marginBottom: "20px"}}>
         Akıllı asistan seçimlerini takip ediyor ve paket oluşturmadan önce kısa bir yorum hazırlıyor.
       </p>
 
@@ -394,9 +394,9 @@ export default function App() {
                   }}
                   onClick={() => handleCityClick(city)}>
                   <h3 style={{marginBottom: "10px",fontSize: "20px",fontWeight: 600,color: "#0f172a"}}>{city.name}</h3>
-                  <p style={{ margin: "4px 0", fontSize: "14px" }}>🌍 Ülke: {countryCode}</p>
-                  <p style={{ margin: "4px 0", fontSize: "14px" }}>🏨 Otel: {hotelCount}</p>
-                  <p style={{ margin: "4px 0", fontSize: "14px" }}>🎭 Deneyim: {expCount}</p>
+                  <p style={{ margin: "4px 0", fontSize: "14px", color: "#334155", fontWeight: 500 }}>🌍 Ülke: {countryCode}</p>
+                  <p style={{ margin: "4px 0", fontSize: "14px", color: "#334155", fontWeight: 500 }}>🏨 Otel: {hotelCount}</p>
+                  <p style={{ margin: "4px 0", fontSize: "14px", color: "#334155", fontWeight: 500 }}>🎭 Deneyim: {expCount}</p>
                 </div>
               );
             })}
@@ -407,7 +407,7 @@ export default function App() {
       {selectedCity && (
         <div style={{marginTop: "32px",padding: "20px",borderRadius: "18px",background: "white",boxShadow: "0 6px 18px rgba(15,23,42,0.08)"}}>
           <h2 style={{ marginBottom: "8px", fontSize: "clamp(20px, 4vw, 26px)", fontWeight: 700 }}>🧭 {selectedCity.name} — Detaylar</h2>
-          <p style={{fontSize: "13px",color: "#64748b",marginBottom: "12px"}}>Kartlara tıklayarak detay görebilir, pakete ekleyebilir veya çıkarabilirsin.</p>
+          <p style={{fontSize: "13px",color: "#475569",marginBottom: "12px"}}>Kartlara tıklayarak detay görebilir, pakete ekleyebilir veya çıkarabilirsin.</p>
 
           {loadingDetails ? (<p>Detaylar yükleniyor...</p>) : (
             <>
@@ -420,7 +420,7 @@ export default function App() {
                 <div>
                   <h3 style={{ fontSize: "18px" }}>🏨 Oteller ({hotels.length})</h3>
                   {hotels.length === 0 ? (
-                    <p style={{ fontSize: "14px", color: "#94a3b8", marginTop: "8px" }}>Bu şehirde henüz otel yok.</p>
+                    <p style={{ fontSize: "14px", color: "#64748b", marginTop: "8px" }}>Bu şehirde henüz otel yok.</p>
                   ) : (
                     hotels.map((h) => {
                       const selected = selectedHotelIds.includes(h.id);
@@ -441,7 +441,7 @@ export default function App() {
                           <div style={{ marginBottom: "8px" }}>
                             <strong style={{ fontSize: "15px" }}>{h.name}</strong>
                             {price && (
-                              <p style={{ fontSize: "13px", margin: "4px 0 0 0", color: "#64748b" }}>
+                              <p style={{ fontSize: "13px", margin: "4px 0 0 0", color: "#334155", fontWeight: 500 }}>
                                 Başlangıç: {price} {h.currency || "TL"}
                               </p>
                             )}
@@ -455,7 +455,6 @@ export default function App() {
                               background: selected ? "#0f766e" : "white",
                               color: selected ? "white" : "#0f766e",
                               cursor: "pointer",
-                              width: "100%",
                               marginTop: "6px"
                             }}>
                             {selected ? "Paketten çıkar" : "Pakete ekle"}
@@ -469,7 +468,7 @@ export default function App() {
                 <div>
                   <h3 style={{ fontSize: "18px" }}>🎭 Deneyimler ({experiences.length})</h3>
                   {experiences.length === 0 ? (
-                    <p style={{ fontSize: "14px", color: "#94a3b8", marginTop: "8px" }}>Bu şehirde henüz deneyim yok.</p>
+                    <p style={{ fontSize: "14px", color: "#64748b", marginTop: "8px" }}>Bu şehirde henüz deneyim yok.</p>
                   ) : (
                     experiences.map((e) => {
                       const selected = selectedExperienceIds.includes(e.id);
@@ -489,7 +488,7 @@ export default function App() {
                           <div style={{ marginBottom: "8px" }}>
                             <strong style={{ fontSize: "15px" }}>{e.title}</strong>
                             {e.price && (
-                              <p style={{ fontSize: "13px", margin: "4px 0 0 0", color: "#64748b" }}>
+                              <p style={{ fontSize: "13px", margin: "4px 0 0 0", color: "#334155", fontWeight: 500 }}>
                                 Fiyat: {e.price} {e.currency || "TL"}
                               </p>
                             )}
@@ -503,7 +502,6 @@ export default function App() {
                               background: selected ? "#0f766e" : "white",
                               color: selected ? "white" : "#0f766e",
                               cursor: "pointer",
-                              width: "100%",
                               marginTop: "6px"
                             }}>
                             {selected ? "Paketten çıkar" : "Pakete ekle"}
