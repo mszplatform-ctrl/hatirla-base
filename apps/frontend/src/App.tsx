@@ -1,4 +1,4 @@
-// App.tsx — XOTIJI SUNUM HALİ
+// App.tsx — XOTIJI MOBILE-FIRST FIX
 
 import { useEffect, useState } from "react";
 import MSZ from "./MSZCore";
@@ -10,9 +10,13 @@ const AI_BASE = `${import.meta.env.VITE_API_URL}/api/ai`;
 type CitySummary = {
   id: number;
   name: string;
-  countryCode: string;
-  hotels: number;
-  experiences: number;
+  country?: string;        // Backend'den country veya countryCode gelebilir
+  countryCode?: string;
+  country_code?: string;
+  hotels?: number;         // Backend'den hotels veya hotel_count gelebilir  
+  hotel_count?: number;
+  experiences?: number;    // Backend'den experiences veya experience_count gelebilir
+  experience_count?: number;
 };
 
 type Hotel = {
@@ -20,6 +24,7 @@ type Hotel = {
   name: string;
   description: string | null;
   minPrice: number | null;
+  min_price?: number | null;  // Backend snake_case kullanıyor olabilir
   currency: string | null;
 };
 
@@ -60,6 +65,7 @@ function Modal({ visible, onClose, children }: any) {
         alignItems: "flex-start",
         paddingTop: "60px",
         zIndex: 9999,
+        overflowY: "auto",
       }}
       onClick={onClose}
     >
@@ -124,6 +130,7 @@ export default function App() {
       try {
         const res = await fetch(`${API_BASE}/cities`);
         const data = await res.json();
+        console.log("📥 Cities data:", data); // Debug için
         setCities(data);
       } catch (err) {
         console.error("CITY FETCH ERROR:", err);
@@ -150,8 +157,14 @@ export default function App() {
         fetch(`${API_BASE}/experiences?cityId=${city.id}`),
       ]);
 
-      setHotels(await hotelsRes.json());
-      setExperiences(await expRes.json());
+      const hotelsData = await hotelsRes.json();
+      const expData = await expRes.json();
+      
+      console.log("📥 Hotels data:", hotelsData); // Debug için
+      console.log("📥 Experiences data:", expData); // Debug için
+
+      setHotels(hotelsData);
+      setExperiences(expData);
     } catch (err) {
       console.error("DETAIL FETCH ERROR:", err);
     } finally {
@@ -167,7 +180,7 @@ export default function App() {
         items.push({
           type: "hotel",
           name: h.name,
-          price: h.minPrice,
+          price: h.minPrice || h.min_price,
         });
       }
     });
@@ -250,7 +263,7 @@ export default function App() {
         selections.push({
           type: "hotel",
           name: h.name,
-          price: h.minPrice,
+          price: h.minPrice || h.min_price,
           currency: h.currency,
         });
       });
@@ -289,10 +302,27 @@ export default function App() {
 
   const totalSelected = selectedHotelIds.length + selectedExperienceIds.length;
 
+  // 🔧 Helper function: Backend'den gelen farklı field name'lerini normalize et
+  function getCountryCode(city: CitySummary): string {
+    return city.countryCode || city.country_code || city.country || "??";
+  }
+
+  function getHotelCount(city: CitySummary): number {
+    return city.hotels ?? city.hotel_count ?? 0;
+  }
+
+  function getExperienceCount(city: CitySummary): number {
+    return city.experiences ?? city.experience_count ?? 0;
+  }
+
+  function getHotelPrice(hotel: Hotel): number | null {
+    return hotel.minPrice ?? hotel.min_price ?? null;
+  }
+
   return (
     <div
       style={{
-        padding: "40px",
+        padding: "20px",
         fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
         background: "#f7fafc",
         width: "100%",
@@ -311,7 +341,7 @@ export default function App() {
           <line x1="65" y1="54" x2="70" y2="49" stroke="#fb923c" strokeWidth="3" strokeLinecap="round"/>
           <line x1="35" y1="54" x2="30" y2="49" stroke="#fb923c" strokeWidth="3" strokeLinecap="round"/>
         </svg>
-        <h1 style={{fontWeight: 800,color: "#0ea5e9",fontSize: "2.5rem",letterSpacing: "-0.02em",margin: 0,lineHeight: 1}}>
+        <h1 style={{fontWeight: 800,color: "#0ea5e9",fontSize: "clamp(1.8rem, 5vw, 2.5rem)",letterSpacing: "-0.02em",margin: 0,lineHeight: 1}}>
           xotiji.
         </h1>
       </div>
@@ -338,90 +368,175 @@ export default function App() {
           <h2 style={{ marginTop: "16px", marginBottom: "4px" }}>Şehirler</h2>
           <p style={{ color: "gray", marginBottom: "16px" }}>NeonDB → Express API → React bağlantısı aktif.</p>
 
-          <div style={{marginTop: "12px",display: "grid",gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",gap: "24px",alignItems: "stretch"}}>
-            {cities.map((city) => (
-              <div key={city.id}
-                style={{padding: "24px",border: "1px solid #e2e8f0",borderRadius: "16px",boxShadow: "0 4px 10px rgba(15,23,42,0.06)",
-                cursor: "pointer",background: selectedCity?.id === city.id ? "#e6f4ff" : "white",transition: "all 0.25s"}}
-                onClick={() => handleCityClick(city)}>
-                <h3 style={{marginBottom: "10px",fontSize: "20px",fontWeight: 600,color: "#0f172a"}}>{city.name}</h3>
-                <p style={{ margin: "4px 0" }}>Ülke: {city.countryCode}</p>
-                <p style={{ margin: "4px 0" }}>🏨 Otel: {city.hotels}</p>
-                <p style={{ margin: "4px 0" }}>🎭 Deneyim: {city.experiences}</p>
-              </div>
-            ))}
+          {/* 🔧 MOBİL FİX: minmax artık daha esnek */}
+          <div style={{
+            marginTop: "12px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+            gap: "16px",
+            alignItems: "stretch"
+          }}>
+            {cities.map((city) => {
+              const countryCode = getCountryCode(city);
+              const hotelCount = getHotelCount(city);
+              const expCount = getExperienceCount(city);
+
+              return (
+                <div key={city.id}
+                  style={{
+                    padding: "20px",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "16px",
+                    boxShadow: "0 4px 10px rgba(15,23,42,0.06)",
+                    cursor: "pointer",
+                    background: selectedCity?.id === city.id ? "#e6f4ff" : "white",
+                    transition: "all 0.25s"
+                  }}
+                  onClick={() => handleCityClick(city)}>
+                  <h3 style={{marginBottom: "10px",fontSize: "20px",fontWeight: 600,color: "#0f172a"}}>{city.name}</h3>
+                  <p style={{ margin: "4px 0", fontSize: "14px" }}>🌍 Ülke: {countryCode}</p>
+                  <p style={{ margin: "4px 0", fontSize: "14px" }}>🏨 Otel: {hotelCount}</p>
+                  <p style={{ margin: "4px 0", fontSize: "14px" }}>🎭 Deneyim: {expCount}</p>
+                </div>
+              );
+            })}
           </div>
         </>
       ) : (<p>Şehirler yükleniyor...</p>)}
 
       {selectedCity && (
-        <div style={{marginTop: "32px",padding: "24px",borderRadius: "18px",background: "white",boxShadow: "0 6px 18px rgba(15,23,42,0.08)"}}>
-          <h2 style={{ marginBottom: "8px", fontSize: "26px", fontWeight: 700 }}>🧭 {selectedCity.name} — Detaylar</h2>
+        <div style={{marginTop: "32px",padding: "20px",borderRadius: "18px",background: "white",boxShadow: "0 6px 18px rgba(15,23,42,0.08)"}}>
+          <h2 style={{ marginBottom: "8px", fontSize: "clamp(20px, 4vw, 26px)", fontWeight: 700 }}>🧭 {selectedCity.name} — Detaylar</h2>
           <p style={{fontSize: "13px",color: "#64748b",marginBottom: "12px"}}>Kartlara tıklayarak detay görebilir, pakete ekleyebilir veya çıkarabilirsin.</p>
 
           {loadingDetails ? (<p>Detaylar yükleniyor...</p>) : (
             <>
-              <div style={{display: "grid",gridTemplateColumns: "1fr 1fr",gap: "28px"}}>
+              {/* 🔧 MOBİL FİX: Grid artık responsive, mobilde alt alta */}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
+                gap: "28px"
+              }}>
                 <div>
-                  <h3>🏨 Oteller ({hotels.length})</h3>
-                  {hotels.map((h) => {
-                    const selected = selectedHotelIds.includes(h.id);
-                    return (
-                      <div key={h.id}
-                        style={{marginTop: "12px",padding: "14px 16px",borderRadius: "12px",
-                        border: selected ? "2px solid #0f766e" : "1px solid #e2e8f0",cursor: "pointer",
-                        boxShadow: "0 2px 8px rgba(15,23,42,0.04)",background: selected ? "#ecfdf5" : "white",
-                        display: "flex",alignItems: "center",justifyContent: "space-between"}}
-                        onClick={() => openHotelModal(h)}>
-                        <div>
-                          <strong>{h.name}</strong>
-                          {h.minPrice && (<p style={{ fontSize: "13px" }}>Başlangıç fiyatı: {h.minPrice} {h.currency}</p>)}
+                  <h3 style={{ fontSize: "18px" }}>🏨 Oteller ({hotels.length})</h3>
+                  {hotels.length === 0 ? (
+                    <p style={{ fontSize: "14px", color: "#94a3b8", marginTop: "8px" }}>Bu şehirde henüz otel yok.</p>
+                  ) : (
+                    hotels.map((h) => {
+                      const selected = selectedHotelIds.includes(h.id);
+                      const price = getHotelPrice(h);
+                      
+                      return (
+                        <div key={h.id}
+                          style={{
+                            marginTop: "12px",
+                            padding: "14px 16px",
+                            borderRadius: "12px",
+                            border: selected ? "2px solid #0f766e" : "1px solid #e2e8f0",
+                            cursor: "pointer",
+                            boxShadow: "0 2px 8px rgba(15,23,42,0.04)",
+                            background: selected ? "#ecfdf5" : "white",
+                          }}
+                          onClick={() => openHotelModal(h)}>
+                          <div style={{ marginBottom: "8px" }}>
+                            <strong style={{ fontSize: "15px" }}>{h.name}</strong>
+                            {price && (
+                              <p style={{ fontSize: "13px", margin: "4px 0 0 0", color: "#64748b" }}>
+                                Başlangıç: {price} {h.currency || "TL"}
+                              </p>
+                            )}
+                          </div>
+                          <button onClick={(e) => {e.stopPropagation();toggleHotelSelection(h);}}
+                            style={{
+                              fontSize: "11px",
+                              padding: "6px 10px",
+                              borderRadius: "999px",
+                              border: "1px solid #0f766e",
+                              background: selected ? "#0f766e" : "white",
+                              color: selected ? "white" : "#0f766e",
+                              cursor: "pointer",
+                              width: "100%",
+                              marginTop: "6px"
+                            }}>
+                            {selected ? "Paketten çıkar" : "Pakete ekle"}
+                          </button>
                         </div>
-                        <button onClick={(e) => {e.stopPropagation();toggleHotelSelection(h);}}
-                          style={{fontSize: "11px",padding: "6px 10px",borderRadius: "999px",border: "1px solid #0f766e",
-                          background: selected ? "#0f766e" : "white",color: selected ? "white" : "#0f766e",cursor: "pointer"}}>
-                          {selected ? "Paketten çıkar" : "Pakete ekle"}
-                        </button>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
 
                 <div>
-                  <h3>🎭 Deneyimler ({experiences.length})</h3>
-                  {experiences.map((e) => {
-                    const selected = selectedExperienceIds.includes(e.id);
-                    return (
-                      <div key={e.id}
-                        style={{marginTop: "12px",padding: "14px 16px",borderRadius: "12px",
-                        border: selected ? "2px solid #0f766e" : "1px solid #e2e8f0",cursor: "pointer",
-                        boxShadow: "0 2px 8px rgba(15,23,42,0.04)",background: selected ? "#ecfdf5" : "white",
-                        display: "flex",alignItems: "center",justifyContent: "space-between"}}
-                        onClick={() => openExperienceModal(e)}>
-                        <div>
-                          <strong>{e.title}</strong>
-                          {e.price && (<p style={{ fontSize: "13px" }}>Fiyat: {e.price} {e.currency}</p>)}
+                  <h3 style={{ fontSize: "18px" }}>🎭 Deneyimler ({experiences.length})</h3>
+                  {experiences.length === 0 ? (
+                    <p style={{ fontSize: "14px", color: "#94a3b8", marginTop: "8px" }}>Bu şehirde henüz deneyim yok.</p>
+                  ) : (
+                    experiences.map((e) => {
+                      const selected = selectedExperienceIds.includes(e.id);
+                      
+                      return (
+                        <div key={e.id}
+                          style={{
+                            marginTop: "12px",
+                            padding: "14px 16px",
+                            borderRadius: "12px",
+                            border: selected ? "2px solid #0f766e" : "1px solid #e2e8f0",
+                            cursor: "pointer",
+                            boxShadow: "0 2px 8px rgba(15,23,42,0.04)",
+                            background: selected ? "#ecfdf5" : "white",
+                          }}
+                          onClick={() => openExperienceModal(e)}>
+                          <div style={{ marginBottom: "8px" }}>
+                            <strong style={{ fontSize: "15px" }}>{e.title}</strong>
+                            {e.price && (
+                              <p style={{ fontSize: "13px", margin: "4px 0 0 0", color: "#64748b" }}>
+                                Fiyat: {e.price} {e.currency || "TL"}
+                              </p>
+                            )}
+                          </div>
+                          <button onClick={(ev) => {ev.stopPropagation();toggleExperienceSelection(e);}}
+                            style={{
+                              fontSize: "11px",
+                              padding: "6px 10px",
+                              borderRadius: "999px",
+                              border: "1px solid #0f766e",
+                              background: selected ? "#0f766e" : "white",
+                              color: selected ? "white" : "#0f766e",
+                              cursor: "pointer",
+                              width: "100%",
+                              marginTop: "6px"
+                            }}>
+                            {selected ? "Paketten çıkar" : "Pakete ekle"}
+                          </button>
                         </div>
-                        <button onClick={(ev) => {ev.stopPropagation();toggleExperienceSelection(e);}}
-                          style={{fontSize: "11px",padding: "6px 10px",borderRadius: "999px",border: "1px solid #0f766e",
-                          background: selected ? "#0f766e" : "white",color: selected ? "white" : "#0f766e",cursor: "pointer"}}>
-                          {selected ? "Paketten çıkar" : "Pakete ekle"}
-                        </button>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
-              <div style={{marginTop: "24px",paddingTop: "12px",borderTop: "1px solid #e5e7eb",
-                display: "flex",justifyContent: "space-between",alignItems: "center"}}>
+              <div style={{
+                marginTop: "24px",
+                paddingTop: "12px",
+                borderTop: "1px solid #e5e7eb",
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px"
+              }}>
                 <span style={{fontSize: "13px",color: totalSelected > 0 ? "#0f766e" : "rgba(148,163,184,1)"}}>
                   {totalSelected > 0 ? `${totalSelected} öğe seçildi — AI ile paket oluşturabilirsin.` : "Paket için otel veya deneyim seç."}
                 </span>
                 <button onClick={handleComposeItinerary} disabled={composeLoading || totalSelected === 0}
-                  style={{background: composeLoading || totalSelected === 0 ? "#cbd5e1" : "#2563eb",
-                  color: "white",border: "none",padding: "10px 16px",borderRadius: "999px",
-                  cursor: composeLoading || totalSelected === 0 ? "default" : "pointer"}}>
+                  style={{
+                    background: composeLoading || totalSelected === 0 ? "#cbd5e1" : "#2563eb",
+                    color: "white",
+                    border: "none",
+                    padding: "12px 16px",
+                    borderRadius: "999px",
+                    cursor: composeLoading || totalSelected === 0 ? "default" : "pointer",
+                    fontSize: "14px",
+                    width: "100%"
+                  }}>
                   {composeLoading ? "AI paket oluşturuyor..." : "📦 AI ile paket oluştur"}
                 </button>
               </div>
@@ -434,17 +549,25 @@ export default function App() {
         {modalType === "hotel" && modalData && (
           <>
             <h2 style={{ marginBottom: "8px" }}>🏨 {modalData.name}</h2>
-            {modalData.description && <p>{modalData.description}</p>}
-            {modalData.minPrice && (<p>Fiyat: {modalData.minPrice} {modalData.currency}</p>)}
+            {modalData.description && <p style={{ fontSize: "14px", lineHeight: 1.6 }}>{modalData.description}</p>}
+            {(modalData.minPrice || modalData.min_price) && (
+              <p style={{ fontSize: "15px", fontWeight: 600, marginTop: "12px" }}>
+                Fiyat: {modalData.minPrice || modalData.min_price} {modalData.currency || "TL"}
+              </p>
+            )}
           </>
         )}
 
         {modalType === "experience" && modalData && (
           <>
             <h2 style={{ marginBottom: "8px" }}>🎭 {modalData.title}</h2>
-            {modalData.category && <p>Kategori: {modalData.category}</p>}
-            {modalData.description && <p>{modalData.description}</p>}
-            {modalData.price && (<p>Fiyat: {modalData.price} {modalData.currency}</p>)}
+            {modalData.category && <p style={{ fontSize: "13px", color: "#6b7280" }}>Kategori: {modalData.category}</p>}
+            {modalData.description && <p style={{ fontSize: "14px", lineHeight: 1.6, marginTop: "8px" }}>{modalData.description}</p>}
+            {modalData.price && (
+              <p style={{ fontSize: "15px", fontWeight: 600, marginTop: "12px" }}>
+                Fiyat: {modalData.price} {modalData.currency || "TL"}
+              </p>
+            )}
           </>
         )}
 
@@ -458,7 +581,7 @@ export default function App() {
                   {s.type} • skor: {s.score.toFixed(2)}
                 </p>
                 <strong>{s.payload.name || s.payload.title}</strong>
-                {s.payload.price && (<p>Fiyat: {s.payload.price} {s.payload.currency}</p>)}
+                {s.payload.price && (<p style={{ fontSize: "14px", marginTop: "4px" }}>Fiyat: {s.payload.price} {s.payload.currency}</p>)}
               </div>
             ))}
           </>
@@ -473,14 +596,18 @@ export default function App() {
                 <strong style={{ fontSize: "13px", color: "#166534" }}>AI'nin kısa yorumu:</strong><br />{mszComment}
               </div>
             )}
-            <p style={{ fontWeight: 600, marginBottom: "10px" }}>Toplam Fiyat: {modalData.totalPrice} {modalData.currency}</p>
+            <p style={{ fontWeight: 600, marginBottom: "10px", fontSize: "16px" }}>
+              Toplam Fiyat: {modalData.totalPrice} {modalData.currency}
+            </p>
             <div>
               {modalData.items.map((item: any, idx: number) => (
                 <div key={idx} style={{marginTop: "8px",padding: "10px",borderRadius: "10px",border: "1px solid #e2e8f0"}}>
                   <p style={{fontSize: "11px",color: "#6b7280",marginBottom: "4px",textTransform: "uppercase"}}>{item.type}</p>
-                  <strong>{item.name || item.title}</strong>
+                  <strong style={{ fontSize: "14px" }}>{item.name || item.title}</strong>
                   {(item.price || item.minPrice) && (
-                    <p style={{ fontSize: "13px" }}>{(item.price || item.minPrice) + " " + (item.currency || modalData.currency)}</p>
+                    <p style={{ fontSize: "13px", marginTop: "4px" }}>
+                      {(item.price || item.minPrice) + " " + (item.currency || modalData.currency)}
+                    </p>
                   )}
                 </div>
               ))}
