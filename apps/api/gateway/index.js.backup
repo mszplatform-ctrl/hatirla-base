@@ -1,0 +1,24 @@
+/**
+ * API Gateway - Centralized Routing & Security Layer
+ * 
+ * Priority 2'de implement edilecek:
+ * - Rate limiting (Upstash)
+ * - JWT/Session authentication
+ * - Service registry
+ * - Request/Response interceptors
+ * - Logging & tracing
+ * - Error handling standardization
+ * 
+ * Bu dosya şu an placeholder olarak duruyor.
+ */
+
+const express = require('express');
+const router = express.Router();
+
+// Placeholder - Priority 2'de doldurulacak
+router.use((req, res, next) => {
+  console.log('[Gateway] Request received - to be implemented in Priority 2');
+  next();
+});
+
+module.exports = router;

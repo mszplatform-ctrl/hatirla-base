@@ -1,0 +1,158 @@
+import { t } from '../../i18n';
+
+type Hotel = {
+  id: number;
+  name: string;
+  description: string | null;
+  minPrice: number | null;
+  currency: string | null;
+};
+
+type Experience = {
+  id: number;
+  title: string;
+  description: string | null;
+  price: number | null;
+  currency: string | null;
+  category: string | null;
+};
+
+type AISuggestion = {
+  type: "hotel" | "experience" | "flight";
+  score: number;
+  payload: any;
+};
+
+type Itinerary = {
+  items: any[];
+  totalPrice: number;
+  currency: string;
+  summary?: string;
+};
+
+type AIPackageModalProps = {
+  modalType: "hotel" | "experience" | "ai" | "itinerary" | null;
+  modalData: any;
+  aiSuggestions: AISuggestion[];
+  mszComment: string | null;
+};
+
+export function AIPackageModal({ modalType, modalData, aiSuggestions, mszComment }: AIPackageModalProps) {
+  if (modalType === "hotel" && modalData) {
+    return (
+      <>
+        <h2 style={{ marginBottom: "8px", color: "#0f172a" }}>🏨 {modalData.name}</h2>
+        {modalData.description && <p style={{ color: "#334155" }}>{modalData.description}</p>}
+        {modalData.minPrice && (
+          <p style={{ color: "#334155", fontWeight: 600 }}>
+            {t('home.price')}: {modalData.minPrice} {modalData.currency}
+          </p>
+        )}
+      </>
+    );
+  }
+
+  if (modalType === "experience" && modalData) {
+    return (
+      <>
+        <h2 style={{ marginBottom: "8px", color: "#0f172a" }}>🎭 {modalData.title}</h2>
+        {modalData.category && (
+          <p style={{ fontSize: "13px", color: "#64748b" }}>
+            {t('home.category')}: {modalData.category}
+          </p>
+        )}
+        {modalData.description && <p style={{ color: "#334155" }}>{modalData.description}</p>}
+        {modalData.price && (
+          <p style={{ color: "#334155", fontWeight: 600 }}>
+            {t('home.price')}: {modalData.price} {modalData.currency}
+          </p>
+        )}
+      </>
+    );
+  }
+
+  if (modalType === "ai") {
+    return (
+      <>
+        <h2 style={{ marginBottom: "12px", color: "#0f172a" }}>✨ {t('ai.suggestions')}</h2>
+        {aiSuggestions.length === 0 && <p style={{ color: "#64748b" }}>{t('ai.noSuggestions')}</p>}
+        {aiSuggestions.map((s, idx) => (
+          <div key={idx} style={{
+            marginTop: "12px",
+            padding: "12px",
+            border: "1px solid #e2e8f0",
+            borderRadius: "12px"
+          }}>
+            <p style={{
+              fontSize: "12px",
+              color: "#64748b",
+              marginBottom: "4px",
+              textTransform: "uppercase"
+            }}>
+              {s.type} • {t('ai.score')}: {s.score.toFixed(2)}
+            </p>
+            <strong style={{ color: "#0f172a" }}>{s.payload.name || s.payload.title}</strong>
+            {s.payload.price && (
+              <p style={{ color: "#334155", fontWeight: 600 }}>
+                {t('home.price')}: {s.payload.price} {s.payload.currency}
+              </p>
+            )}
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  if (modalType === "itinerary" && modalData) {
+    return (
+      <>
+        <h2 style={{ marginBottom: "10px", color: "#0f172a" }}>📦 {t('ai.packageSummary')}</h2>
+        {mszComment && (
+          <div style={{
+            marginBottom: "14px",
+            padding: "10px 14px",
+            background: "#f0fdf4",
+            border: "1px solid #bbf7d0",
+            borderRadius: "10px",
+            fontSize: "14px",
+            color: "#14532d"
+          }}>
+            <strong style={{ fontSize: "13px", color: "#166534" }}>{t('ai.aiComment')}</strong>
+            <br />
+            {mszComment}
+          </div>
+        )}
+        <p style={{ fontWeight: 600, marginBottom: "10px", color: "#0f172a" }}>
+          {t('ai.totalPrice')}: {modalData.totalPrice} {modalData.currency}
+        </p>
+        <div>
+          {modalData.items.map((item: any, idx: number) => (
+            <div key={idx} style={{
+              marginTop: "8px",
+              padding: "10px",
+              borderRadius: "10px",
+              border: "1px solid #e2e8f0"
+            }}>
+              <p style={{
+                fontSize: "11px",
+                color: "#6b7280",
+                marginBottom: "4px",
+                textTransform: "uppercase"
+              }}>
+                {item.type}
+              </p>
+              <strong style={{ color: "#0f172a" }}>{item.name || item.title}</strong>
+              {(item.price || item.minPrice) && (
+                <p style={{ fontSize: "13px", color: "#334155" }}>
+                  {(item.price || item.minPrice) + " " + (item.currency || modalData.currency)}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  return null;
+}

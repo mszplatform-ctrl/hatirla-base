@@ -1,0 +1,11 @@
+{
+  "name": "@xotiji/config",
+  "version": "0.1.0",
+  "description": "XOTIJI centralized configuration",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "keywords": [
+    "xotiji",
+    "config"
+  ]
+}

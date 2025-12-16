@@ -103,5 +103,19 @@ model Experience {
 
   city City @relation(fields: [cityId], references: [id])
 }
+// AI Packages Table
+model Package {
+  id            Int      @id @default(autoincrement())
+  userId        Int?     // Future: user tarafından oluşturulan paketler
+  items         Json     // Seçilen hotels, experiences, flights
+  totalPrice    Float
+  currency      String   @default("EUR")
+  summary       String?  // AI generated summary
+  aiComment     String?  // MSZ yorumu
+  status        String   @default("draft") // draft, confirmed, cancelled
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
+  @@map("packages")
+}
 

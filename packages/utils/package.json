@@ -1,0 +1,15 @@
+{
+  "name": "@xotiji/utils",
+  "version": "0.1.0",
+  "description": "XOTIJI shared utilities",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "xotiji",
+    "utils",
+    "helpers"
+  ]
+}

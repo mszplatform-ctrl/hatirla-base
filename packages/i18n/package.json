@@ -1,0 +1,12 @@
+{
+  "name": "@xotiji/i18n",
+  "version": "0.1.0",
+  "description": "XOTIJI internationalization support (TR/EN/AR/ES)",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "keywords": [
+    "xotiji",
+    "i18n",
+    "internationalization"
+  ]
+}

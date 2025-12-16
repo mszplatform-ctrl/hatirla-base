@@ -1,0 +1,67 @@
+{
+  "common": {
+    "appName": "XOTIJI",
+    "welcome": "Hoş geldiniz",
+    "search": "Ara",
+    "login": "Giriş Yap",
+    "logout": "Çıkış Yap",
+    "signup": "Kayıt Ol",
+    "loading": "Yükleniyor...",
+    "error": "Bir hata oluştu",
+    "success": "Başarılı",
+    "cancel": "İptal",
+    "confirm": "Onayla",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "close": "Kapat"
+  },
+  "nav": {
+    "home": "Ana Sayfa",
+    "explore": "Keşfet",
+    "trips": "Seyahatlerim",
+    "profile": "Profil"
+  },
+  "home": {
+    "dataConnectionActive": "Gerçek Veri Bağlantısı Aktif",
+    "aiTracking": "Akıllı asistan seçimlerini takip ediyor ve paket oluşturmadan önce kısa bir yorum hazırlıyor.",
+    "aiThinking": "AI düşünüyor...",
+    "aiGet3Suggestions": "AI'dan 3 öneri al",
+    "mockNote": "(Mock → gerçek AI daha sonra)",
+    "cities": "Şehirler",
+    "dbConnection": "NeonDB → Express API → React bağlantısı aktif.",
+    "citiesLoading": "Şehirler yükleniyor...",
+    "country": "Ülke",
+    "hotels": "Otel",
+    "experiences": "Deneyim",
+    "detailsLoading": "Detaylar yükleniyor...",
+    "cityDetails": "Detaylar",
+    "clickForDetails": "Kartlara tıklayarak detay görebilir, pakete ekleyebilir veya çıkarabilirsin.",
+    "startingPrice": "Başlangıç fiyatı",
+    "price": "Fiyat",
+    "addToPackage": "Pakete ekle",
+    "removeFromPackage": "Paketten çıkar",
+    "category": "Kategori",
+    "itemsSelected": "öğe seçildi — AI ile paket oluşturabilirsin.",
+    "selectItems": "Paket için otel veya deneyim seç.",
+    "aiCreatingPackage": "AI paket oluşturuyor...",
+    "createWithAI": "AI ile paket oluştur"
+  },
+  "ai": {
+    "suggestions": "AI Önerileri",
+    "noSuggestions": "Şu anda öneri yok.",
+    "score": "skor",
+    "packageSummary": "AI Paket Özeti",
+    "aiComment": "AI'nin kısa yorumu:",
+    "totalPrice": "Toplam Fiyat",
+    "suggestionsError": "AI önerileri alınırken bir hata oluştu.",
+    "packageError": "AI paket oluşturulurken bir hata oluştu.",
+    "selectAtLeastOne": "Önce en az bir otel veya deneyim seçmelisin."
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact"
+  }
+}
