@@ -103,8 +103,9 @@ router.get('/health', (req, res) => {
   });
 });
 
-router.use('/ai', require('../routes/ai'));
-router.use('/data', require('../routes/data')); 
+router.use('/ai', require('../src/routes/ai'));
+router.use('/data', require('../src/routes/data'));
+
 
 // ============================================
 // 6. ERROR HANDLING
