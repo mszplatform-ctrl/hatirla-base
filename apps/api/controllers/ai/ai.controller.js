@@ -12,13 +12,12 @@ class AIController {
   async getSuggestions(req, res) {
     try {
       const suggestions = await aiService.getSuggestions();
-      // Return array directly for frontend compatibility
       res.json(suggestions);
     } catch (error) {
       console.error('[AI Controller] Get suggestions error:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: 'Failed to fetch suggestions' 
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch suggestions',
       });
     }
   }
@@ -31,13 +30,12 @@ class AIController {
     try {
       const context = req.body || {};
       const result = await aiService.generateSuggestions(context);
-      
       res.json(result);
     } catch (error) {
       console.error('[AI Controller] Generate error:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: 'Failed to generate suggestions' 
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate suggestions',
       });
     }
   }
@@ -49,47 +47,42 @@ class AIController {
   async composePackage(req, res) {
     try {
       const { selections, language } = req.body;
-      
-      // DEBUG: Language kontrolü
-      console.log('🔍 RECEIVED LANGUAGE:', language);
-      console.log('🔍 FULL BODY:', JSON.stringify(req.body, null, 2));
-      
+
       if (!selections) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Missing selections' 
+        return res.status(400).json({
+          success: false,
+          error: 'Missing selections',
         });
       }
 
       const result = await aiService.composePackage(selections, language);
-      
-      // Return itinerary format for frontend compatibility
+
       res.json({
         success: true,
-        itinerary: result.package
+        itinerary: result.package,
       });
     } catch (error) {
       console.error('[AI Controller] Compose error:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: error.message || 'Failed to compose package' 
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to compose package',
       });
     }
   }
 
   /**
    * GET /api/ai/packages
-   * Get all packages
+   * Get all packages (REAL DB FLOW)
    */
   async getPackages(req, res) {
     try {
-      const packages = await aiService.getPackages();
-      res.json({ success: true, packages });
+      const result = await aiService.getPackages();
+      res.json(result);
     } catch (error) {
       console.error('[AI Controller] Get packages error:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: error.message || 'Failed to fetch packages' 
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to fetch packages',
       });
     }
   }

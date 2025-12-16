@@ -1,23 +1,18 @@
 const express = require('express');
 const router = express.Router();
 
-// AI service root (debug / sanity)
+const aiController = require('../../controllers/ai/ai.controller');
+
+// AI service root (sanity check)
 router.get('/', (req, res) => {
   res.json({
     status: 'ai service online',
     endpoints: ['/packages'],
-    language: req.lang || 'tr'
+    language: req.lang || 'tr',
   });
 });
 
-// AI Packages endpoint (MINIMAL – test için)
-router.get('/packages', (req, res) => {
-  res.json({
-    status: 'ok',
-    source: 'ai',
-    message: 'AI packages endpoint reached',
-    language: req.lang || 'tr'
-  });
-});
+// REAL endpoint → controller → service → repository → DB
+router.get('/packages', aiController.getPackages);
 
 module.exports = router;
