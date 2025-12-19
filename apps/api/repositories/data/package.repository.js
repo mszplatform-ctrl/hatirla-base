@@ -1,63 +1,70 @@
-/**
- * Package Repository
- * DB access layer for AI Packages
- * Only talks to Prisma / Database
- */
+// apps/api/repositories/data/package.repository.js
 
-const prisma = require('../../db/prisma');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-/**
- * Get all packages (latest first)
- */
-async function getAllPackages() {
-  return prisma.package.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
+// DB dosyasının TEK gerçek yolu
+const dbPath = path.resolve(__dirname, '../../db/hatirla.sqlite');
+const db = new sqlite3.Database(dbPath);
+
+// READ
+function getAllPackages() {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT * FROM packages ORDER BY created_at DESC', [], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
   });
 }
 
-/**
- * Get single package by ID
- */
-async function getPackageById(id) {
-  if (!id) return null;
-
-  return prisma.package.findUnique({
-    where: {
-      id: Number(id),
-    },
+function getPackageById(id) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT * FROM packages WHERE id = ?', [id], (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
   });
 }
 
-/**
- * Create new AI package
- */
-async function createPackage(data) {
-  return prisma.package.create({
-    data: {
-      userId: data.userId ?? null,
-      items: data.items,
-      totalPrice: data.totalPrice,
-      currency: data.currency ?? 'EUR',
-      summary: data.summary ?? null,
-      aiComment: data.aiComment ?? null,
-      status: data.status ?? 'draft',
-    },
-  });
-}
+// WRITE (ASLINDA BUGÜN YAPTIĞIMIZ ŞEY)
+function createPackage({ items, totalPrice, currency, status, userId }) {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      INSERT INTO packages (
+        items,
+        total_price,
+        currency,
+        status,
+        user_id
+      )
+      VALUES (?, ?, ?, ?, ?)
+    `;
 
-/**
- * Update package status
- */
-async function updatePackageStatus(id, status) {
-  return prisma.package.update({
-    where: {
-      id: Number(id),
-    },
-    data: {
+    const params = [
+      JSON.stringify(items),
+      totalPrice,
+      currency,
       status,
-    },
+      userId || null,
+    ];
+
+    db.run(sql, params, function (err) {
+      if (err) return reject(err);
+      resolve({ id: this.lastID });
+    });
+  });
+}
+
+function updatePackageStatus(id, status) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      'UPDATE packages SET status = ? WHERE id = ?',
+      [status, id],
+      function (err) {
+        if (err) return reject(err);
+        resolve({ updated: this.changes });
+      }
+    );
   });
 }
 
