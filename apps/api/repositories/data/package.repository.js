@@ -1,9 +1,7 @@
 // apps/api/repositories/data/package.repository.js
-
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// DB dosyasının TEK gerçek yolu
 const dbPath = path.resolve(__dirname, '../../db/hatirla.sqlite');
 const db = new sqlite3.Database(dbPath);
 
@@ -26,8 +24,11 @@ function getPackageById(id) {
   });
 }
 
-// WRITE (ASLINDA BUGÜN YAPTIĞIMIZ ŞEY)
+// WRITE
 function createPackage({ items, totalPrice, currency, status, userId }) {
+  console.log('🗄️ [REPO] createPackage called');
+  console.log('📦 [REPO] Input:', { items, totalPrice, currency, status, userId });
+
   return new Promise((resolve, reject) => {
     const sql = `
       INSERT INTO packages (
@@ -39,7 +40,6 @@ function createPackage({ items, totalPrice, currency, status, userId }) {
       )
       VALUES (?, ?, ?, ?, ?)
     `;
-
     const params = [
       JSON.stringify(items),
       totalPrice,
@@ -48,9 +48,19 @@ function createPackage({ items, totalPrice, currency, status, userId }) {
       userId || null,
     ];
 
+    console.log('🗄️ [REPO] SQL:', sql);
+    console.log('🗄️ [REPO] Params:', params);
+
     db.run(sql, params, function (err) {
-      if (err) return reject(err);
-      resolve({ id: this.lastID });
+      if (err) {
+        console.error('💣 [REPO] DB Error:', err.message);
+        console.error('💣 [REPO] Stack:', err.stack);
+        return reject(err);
+      }
+
+      const result = { id: this.lastID };
+      console.log('✅ [REPO] Insert successful:', result);
+      resolve(result);
     });
   });
 }

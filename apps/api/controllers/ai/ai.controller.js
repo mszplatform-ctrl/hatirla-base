@@ -2,12 +2,16 @@
  * AI Controller - HTTP Request/Response Handler
  * Handles routing and HTTP layer for AI endpoints
  */
+
 const aiService = require('../../services/ai/ai.service');
+
+// ✅ DOĞRU PATH’LER (SRC ALTINDAN)
+const { composeSchema } = require('../../src/validation/compose.schema');
+const { AppError } = require('../../src/gateway/error');
 
 class AIController {
   /**
    * GET /api/ai/suggestions
-   * Fetch all AI suggestions
    */
   async getSuggestions(req, res) {
     try {
@@ -15,16 +19,12 @@ class AIController {
       res.json(suggestions);
     } catch (error) {
       console.error('[AI Controller] Get suggestions error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch suggestions',
-      });
+      throw error;
     }
   }
 
   /**
    * POST /api/ai/generate
-   * Generate new AI suggestions
    */
   async generateSuggestions(req, res) {
     try {
@@ -33,10 +33,7 @@ class AIController {
       res.json(result);
     } catch (error) {
       console.error('[AI Controller] Generate error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to generate suggestions',
-      });
+      throw error;
     }
   }
 
@@ -46,33 +43,38 @@ class AIController {
    */
   async composePackage(req, res) {
     try {
-      const { selections, language } = req.body;
+      // ✅ VALIDATION CONTROLLER KATMANINDA
+      const data = composeSchema.parse(req.body);
 
-      if (!selections) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing selections',
-        });
-      }
-
-      const result = await aiService.composePackage(selections, language);
+      // ✅ SERVICE OBJE BEKLİYOR → OBJE GÖNDER
+      const result = await aiService.composePackage({
+        selections: data.selections,
+        language: data.language,
+        userId: null
+      });
 
       res.json({
         success: true,
-        itinerary: result.package,
+        itinerary: result.package
       });
     } catch (error) {
+      // ✅ ZOD ERROR → 422
+      if (error.name === 'ZodError') {
+        throw new AppError(
+          'Invalid request data',
+          'VALIDATION_ERROR',
+          422,
+          error.errors
+        );
+      }
+
       console.error('[AI Controller] Compose error:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to compose package',
-      });
+      throw error;
     }
   }
 
   /**
    * GET /api/ai/packages
-   * Get all packages (REAL DB FLOW)
    */
   async getPackages(req, res) {
     try {
@@ -80,10 +82,7 @@ class AIController {
       res.json(result);
     } catch (error) {
       console.error('[AI Controller] Get packages error:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to fetch packages',
-      });
+      throw error;
     }
   }
 }

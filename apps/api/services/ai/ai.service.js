@@ -2,7 +2,6 @@
  * AI Service
  * Business logic layer for AI-related operations
  */
-
 const packageRepository = require('../../repositories/data/package.repository');
 const { composeSchema } = require('../../src/validation/compose.schema');
 
@@ -11,7 +10,6 @@ const { composeSchema } = require('../../src/validation/compose.schema');
  */
 async function getPackages() {
   const packages = await packageRepository.getAllPackages();
-
   return {
     success: true,
     count: packages.length,
@@ -26,51 +24,68 @@ async function getPackages() {
 async function composePackage({
   selections = [],
   language = 'tr',
-  userId = null, // optional, future-proof
+  userId = null,
 }) {
-  // 🔒 INPUT VALIDATION (ZOD)
-  const parsed = composeSchema.parse({
-    selections,
-    language,
-  });
+  console.log('🔍 [SERVICE] composePackage START');
+  console.log('📦 Input:', { selections, language, userId });
 
-  const { selections: validSelections } = parsed;
+  try {
+    // 🔒 INPUT VALIDATION (ZOD)
+    console.log('🔒 [SERVICE] Validating with Zod...');
+    const parsed = composeSchema.parse({
+      selections,
+      language,
+    });
+    console.log('✅ [SERVICE] Validation passed:', parsed);
 
-  // 💰 totalPrice hesapla (tolerant & deterministic)
-  const totalPrice = validSelections.reduce((sum, item) => {
-    const price =
-      item.price ??
-      item.minPrice ??
-      item.payload?.price ??
-      item.payload?.minPrice ??
-      0;
+    const { selections: validSelections } = parsed;
 
-    return sum + (typeof price === 'number' ? price : 0);
-  }, 0);
+    // 💰 totalPrice hesapla
+    console.log('💰 [SERVICE] Calculating totalPrice...');
+    const totalPrice = validSelections.reduce((sum, item) => {
+      const price =
+        item.price ??
+        item.minPrice ??
+        item.payload?.price ??
+        item.payload?.minPrice ??
+        0;
+      return sum + (typeof price === 'number' ? price : 0);
+    }, 0);
+    console.log('✅ [SERVICE] totalPrice:', totalPrice);
 
-  // 🧱 DB write (REAL write-path)
-  const created = await packageRepository.createPackage({
-    userId, // null olabilir
-    items: validSelections,
-    totalPrice,
-    currency: 'USD',
-    status: 'draft',
-  });
-
-  // 🔁 Clean & stable response contract
-  return {
-    success: true,
-    package: {
-      id: created.id,
+    // 🧱 DB write
+    console.log('🧱 [SERVICE] Calling repository.createPackage...');
+    const created = await packageRepository.createPackage({
+      userId,
+      items: validSelections,
       totalPrice,
       currency: 'USD',
       status: 'draft',
-    },
-  };
+    });
+    console.log('✅ [SERVICE] Repository returned:', created);
+
+    // 🔁 Response
+    const response = {
+      success: true,
+      package: {
+        id: created.id,
+        totalPrice,
+        currency: 'USD',
+        status: 'draft',
+      },
+    };
+    console.log('✅ [SERVICE] Final response:', response);
+    return response;
+
+  } catch (error) {
+    console.error('💣 [SERVICE] ERROR:', error.message);
+    console.error('💣 [SERVICE] Stack:', error.stack);
+    throw error;
+  }
 }
 
 /**
- * Placeholders (bilerek boş – Aşama 4+)
+ * Placeholders
  */
 async function getSuggestions() {
   return [];

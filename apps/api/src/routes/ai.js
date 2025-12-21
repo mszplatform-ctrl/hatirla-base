@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const aiController = require('../../controllers/ai/ai.controller');
+const { composeRateLimit } = require('../gateway/rateLimit');
 
 // AI service root (sanity check)
 router.get('/', (req, res) => {
@@ -12,10 +13,10 @@ router.get('/', (req, res) => {
   });
 });
 
-// REAL endpoint → controller → service → repository → DB
+// READ PATH → packages
 router.get('/packages', aiController.getPackages);
 
-// WRITE PATH → create package
-router.post('/compose', aiController.composePackage);
+// WRITE PATH → create package (RATE LIMITED)
+router.post('/compose', composeRateLimit, aiController.composePackage);
 
 module.exports = router;
