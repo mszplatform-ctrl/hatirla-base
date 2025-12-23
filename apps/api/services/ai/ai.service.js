@@ -2,8 +2,12 @@
  * AI Service
  * Business logic layer for AI-related operations
  */
+
 const packageRepository = require('../../repositories/data/package.repository');
 const { composeSchema } = require('../../src/validation/compose.schema');
+
+// ✅ AI BRIDGE (Stage 4.5)
+const ai = require('../../src/ai');
 
 /**
  * GET /api/ai/packages
@@ -64,6 +68,13 @@ async function composePackage({
     });
     console.log('✅ [SERVICE] Repository returned:', created);
 
+    // 🤖 AI BRIDGE (Stage 4.5)
+    console.log('🤖 [SERVICE] Generating itinerary (AI bridge)...');
+    const itinerary = await ai.generateItinerary({
+      selections: validSelections,
+      language,
+    });
+
     // 🔁 Response
     const response = {
       success: true,
@@ -73,7 +84,9 @@ async function composePackage({
         currency: 'USD',
         status: 'draft',
       },
+      itinerary,
     };
+
     console.log('✅ [SERVICE] Final response:', response);
     return response;
 

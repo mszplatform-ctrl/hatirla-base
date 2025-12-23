@@ -27,8 +27,8 @@
     "@prisma/client": "^5.15.0",
     "cors": "^2.8.5",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "pg": "^8.16.3",
     "prisma": "^5.15.0"
   }
 }
-
