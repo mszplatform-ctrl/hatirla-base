@@ -45,8 +45,8 @@ export function useCityDetails() {
 
     try {
       const [hotelsRes, expRes] = await Promise.all([
-        fetch(`${API_BASE}/hotels?cityId=${city.id}`),
-        fetch(`${API_BASE}/experiences?cityId=${city.id}`),
+        fetch(`${API_BASE}/cities/${city.id}/hotels`),
+        fetch(`${API_BASE}/cities/${city.id}/experiences`),
       ]);
 
       setHotels(await hotelsRes.json());
@@ -60,13 +60,17 @@ export function useCityDetails() {
 
   function toggleHotelSelection(hotelId: number) {
     setSelectedHotelIds((prev) =>
-      prev.includes(hotelId) ? prev.filter((id) => id !== hotelId) : [...prev, hotelId]
+      prev.includes(hotelId)
+        ? prev.filter((id) => id !== hotelId)
+        : [...prev, hotelId]
     );
   }
 
   function toggleExperienceSelection(expId: number) {
     setSelectedExperienceIds((prev) =>
-      prev.includes(expId) ? prev.filter((id) => id !== expId) : [...prev, expId]
+      prev.includes(expId)
+        ? prev.filter((id) => id !== expId)
+        : [...prev, expId]
     );
   }
 

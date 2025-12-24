@@ -1,6 +1,33 @@
-// @xotiji/i18n - Internationalization Support
-// Bu package Priority 3'te doldurulacak (TR/EN/AR/ES)
+// packages/i18n/src/index.ts
 
-// Placeholder for future i18n implementation
-export const SUPPORTED_LOCALES = ['tr', 'en', 'ar', 'es'] as const;
-export type Locale = typeof SUPPORTED_LOCALES[number];
+import tr from "../locales/tr.json";
+import en from "../locales/en.json";
+
+type Locale = "tr" | "en";
+
+let currentLanguage: Locale = "tr";
+
+const messages: Record<Locale, any> = {
+  tr,
+  en,
+};
+
+export function setLanguage(lang: Locale) {
+  currentLanguage = lang;
+}
+
+export function getCurrentLanguage() {
+  return currentLanguage;
+}
+
+export function t(key: string): string {
+  const parts = key.split(".");
+  let value = messages[currentLanguage];
+
+  for (const part of parts) {
+    value = value?.[part];
+    if (!value) return key;
+  }
+
+  return value;
+}

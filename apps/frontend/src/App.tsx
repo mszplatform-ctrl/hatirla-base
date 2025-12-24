@@ -12,7 +12,7 @@ import { AIPackageModal } from './components/ai/AIPackageModal';
 import { useCities } from './hooks/useCities';
 import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
-import { t } from './i18n';
+import { t } from "@packages/i18n";
 
 export default function App() {
   const { cities, loading: loadingCities } = useCities();

@@ -4,19 +4,65 @@ const router = express.Router();
 const aiController = require('../../controllers/ai/ai.controller');
 const { composeRateLimit } = require('../gateway/rateLimit');
 
-// AI service root (sanity check)
+/**
+ * AI service root (sanity check)
+ */
 router.get('/', (req, res) => {
   res.json({
     status: 'ai service online',
-    endpoints: ['/packages', '/compose'],
+    endpoints: ['/packages', '/compose', '/suggestions'],
     language: req.lang || 'tr',
   });
 });
 
-// READ PATH → packages
+/**
+ * READ PATH → packages
+ */
 router.get('/packages', aiController.getPackages);
 
-// WRITE PATH → create package (RATE LIMITED)
+/**
+ * WRITE PATH → create package (RATE LIMITED)
+ */
 router.post('/compose', composeRateLimit, aiController.composePackage);
+
+/**
+ * READ PATH → AI suggestions (MOCK / FALLBACK)
+ * Frontend bunu çağırıyor: GET /api/ai/suggestions
+ * Gerçek AI sonra buraya bağlanacak
+ */
+router.get('/suggestions', (req, res) => {
+  res.json([
+    {
+      type: 'hotel',
+      score: 0.87,
+      payload: {
+        id: 101,
+        name: 'AI Recommended Hotel',
+        price: 120,
+        currency: 'USD',
+      },
+    },
+    {
+      type: 'experience',
+      score: 0.82,
+      payload: {
+        id: 202,
+        title: 'AI Selected Experience',
+        price: 60,
+        currency: 'USD',
+      },
+    },
+    {
+      type: 'experience',
+      score: 0.76,
+      payload: {
+        id: 203,
+        title: 'Hidden Local Experience',
+        price: 45,
+        currency: 'USD',
+      },
+    },
+  ]);
+});
 
 module.exports = router;

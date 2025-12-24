@@ -1,43 +1,26 @@
 import { t } from '../../i18n';
 
-type Hotel = {
-  id: number;
-  name: string;
-  description: string | null;
-  minPrice: number | null;
-  currency: string | null;
-};
-
-type Experience = {
-  id: number;
-  title: string;
-  description: string | null;
-  price: number | null;
-  currency: string | null;
-  category: string | null;
-};
-
 type AISuggestion = {
   type: "hotel" | "experience" | "flight";
   score: number;
   payload: any;
 };
 
-type Itinerary = {
-  items: any[];
-  totalPrice: number;
-  currency: string;
-  summary?: string;
-};
-
 type AIPackageModalProps = {
   modalType: "hotel" | "experience" | "ai" | "itinerary" | null;
   modalData: any;
-  aiSuggestions: AISuggestion[];
+  aiSuggestions?: AISuggestion[];
   mszComment: string | null;
 };
 
-export function AIPackageModal({ modalType, modalData, aiSuggestions, mszComment }: AIPackageModalProps) {
+export function AIPackageModal({
+  modalType,
+  modalData,
+  aiSuggestions = [],
+  mszComment
+}: AIPackageModalProps) {
+
+  /* ================= HOTEL ================= */
   if (modalType === "hotel" && modalData) {
     return (
       <>
@@ -52,6 +35,7 @@ export function AIPackageModal({ modalType, modalData, aiSuggestions, mszComment
     );
   }
 
+  /* ================= EXPERIENCE ================= */
   if (modalType === "experience" && modalData) {
     return (
       <>
@@ -71,18 +55,28 @@ export function AIPackageModal({ modalType, modalData, aiSuggestions, mszComment
     );
   }
 
+  /* ================= AI SUGGESTIONS ================= */
   if (modalType === "ai") {
     return (
       <>
-        <h2 style={{ marginBottom: "12px", color: "#0f172a" }}>✨ {t('ai.suggestions')}</h2>
-        {aiSuggestions.length === 0 && <p style={{ color: "#64748b" }}>{t('ai.noSuggestions')}</p>}
-        {aiSuggestions.map((s, idx) => (
-          <div key={idx} style={{
-            marginTop: "12px",
-            padding: "12px",
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px"
-          }}>
+        <h2 style={{ marginBottom: "12px", color: "#0f172a" }}>
+          ✨ {t('ai.suggestions')}
+        </h2>
+
+        {(!Array.isArray(aiSuggestions) || aiSuggestions.length === 0) && (
+          <p style={{ color: "#64748b" }}>{t('ai.noSuggestions')}</p>
+        )}
+
+        {Array.isArray(aiSuggestions) && aiSuggestions.map((s, idx) => (
+          <div
+            key={idx}
+            style={{
+              marginTop: "12px",
+              padding: "12px",
+              border: "1px solid #e2e8f0",
+              borderRadius: "12px"
+            }}
+          >
             <p style={{
               fontSize: "12px",
               color: "#64748b",
@@ -91,10 +85,14 @@ export function AIPackageModal({ modalType, modalData, aiSuggestions, mszComment
             }}>
               {s.type} • {t('ai.score')}: {s.score.toFixed(2)}
             </p>
-            <strong style={{ color: "#0f172a" }}>{s.payload.name || s.payload.title}</strong>
-            {s.payload.price && (
+
+            <strong style={{ color: "#0f172a" }}>
+              {s.payload?.name || s.payload?.title || "—"}
+            </strong>
+
+            {(s.payload?.price || s.payload?.minPrice) && (
               <p style={{ color: "#334155", fontWeight: 600 }}>
-                {t('home.price')}: {s.payload.price} {s.payload.currency}
+                {t('home.price')}: {s.payload.price || s.payload.minPrice} {s.payload.currency}
               </p>
             )}
           </div>
@@ -103,10 +101,16 @@ export function AIPackageModal({ modalType, modalData, aiSuggestions, mszComment
     );
   }
 
+  /* ================= ITINERARY ================= */
   if (modalType === "itinerary" && modalData) {
+    const items = Array.isArray(modalData.items) ? modalData.items : [];
+
     return (
       <>
-        <h2 style={{ marginBottom: "10px", color: "#0f172a" }}>📦 {t('ai.packageSummary')}</h2>
+        <h2 style={{ marginBottom: "10px", color: "#0f172a" }}>
+          📦 {t('ai.packageSummary')}
+        </h2>
+
         {mszComment && (
           <div style={{
             marginBottom: "14px",
@@ -117,39 +121,48 @@ export function AIPackageModal({ modalType, modalData, aiSuggestions, mszComment
             fontSize: "14px",
             color: "#14532d"
           }}>
-            <strong style={{ fontSize: "13px", color: "#166534" }}>{t('ai.aiComment')}</strong>
+            <strong style={{ fontSize: "13px", color: "#166534" }}>
+              {t('ai.aiComment')}
+            </strong>
             <br />
             {mszComment}
           </div>
         )}
+
         <p style={{ fontWeight: 600, marginBottom: "10px", color: "#0f172a" }}>
           {t('ai.totalPrice')}: {modalData.totalPrice} {modalData.currency}
         </p>
-        <div>
-          {modalData.items.map((item: any, idx: number) => (
-            <div key={idx} style={{
+
+        {items.map((item: any, idx: number) => (
+          <div
+            key={idx}
+            style={{
               marginTop: "8px",
               padding: "10px",
               borderRadius: "10px",
               border: "1px solid #e2e8f0"
+            }}
+          >
+            <p style={{
+              fontSize: "11px",
+              color: "#6b7280",
+              marginBottom: "4px",
+              textTransform: "uppercase"
             }}>
-              <p style={{
-                fontSize: "11px",
-                color: "#6b7280",
-                marginBottom: "4px",
-                textTransform: "uppercase"
-              }}>
-                {item.type}
+              {item.type}
+            </p>
+
+            <strong style={{ color: "#0f172a" }}>
+              {item.name || item.title}
+            </strong>
+
+            {(item.price || item.minPrice) && (
+              <p style={{ fontSize: "13px", color: "#334155" }}>
+                {(item.price || item.minPrice) + " " + (item.currency || modalData.currency)}
               </p>
-              <strong style={{ color: "#0f172a" }}>{item.name || item.title}</strong>
-              {(item.price || item.minPrice) && (
-                <p style={{ fontSize: "13px", color: "#334155" }}>
-                  {(item.price || item.minPrice) + " " + (item.currency || modalData.currency)}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        ))}
       </>
     );
   }
