@@ -1,4 +1,5 @@
-import { t } from '../../i18n';
+import { useLanguage } from "../../i18n/LanguageProvider";
+import { t } from "@packages/i18n";
 
 type Hotel = {
   id: number;
@@ -16,6 +17,8 @@ type HotelCardProps = {
 };
 
 export function HotelCard({ hotel, isSelected, onCardClick, onToggleSelection }: HotelCardProps) {
+  useLanguage(); // Re-render için subscribe
+
   return (
     <div
       style={{

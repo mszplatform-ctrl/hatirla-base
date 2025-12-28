@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { t, getLang } from '../i18n';
+import { useState } from "react";
+import { t, getLanguage } from "@packages/i18n";
 
 type AISuggestion = {
   type: "hotel" | "experience" | "flight";
@@ -40,13 +40,14 @@ export function useAI() {
     try {
       setAiLoading(true);
       setAiSuggestions([]);
-      const res = await fetch(`${AI_BASE}/suggestions`);
+      const language = getLanguage();
+      const res = await fetch(`${AI_BASE}/suggestions?lang=${language}`);
       const data = await res.json();
       setAiSuggestions(data);
       return data;
     } catch (err) {
-      console.error('AI SUGGEST ERROR:', err);
-      alert(t('ai.suggestionsError'));
+      console.error("AI SUGGEST ERROR:", err);
+      alert(t("ai.suggestionsError"));
       return [];
     } finally {
       setAiLoading(false);
@@ -58,14 +59,14 @@ export function useAI() {
     selectedExperiences: Experience[]
   ) {
     if (selectedHotels.length + selectedExperiences.length === 0) {
-      alert(t('ai.selectAtLeastOne'));
+      alert(t("ai.selectAtLeastOne"));
       return null;
     }
 
     try {
       setComposeLoading(true);
       const selections: PackageSelection[] = [];
-      
+
       selectedHotels.forEach((h) => {
         selections.push({
           type: "hotel",
@@ -74,7 +75,7 @@ export function useAI() {
           currency: h.currency,
         });
       });
-      
+
       selectedExperiences.forEach((e) => {
         selections.push({
           type: "experience",
@@ -84,20 +85,18 @@ export function useAI() {
         });
       });
 
-      // Get user's current language
-      const language = getLang();
-
+      const language = getLanguage();
       const res = await fetch(`${AI_BASE}/compose`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ selections, language }),
       });
-      
+
       const data = await res.json();
       return data.itinerary;
     } catch (err) {
-      console.error('AI COMPOSE ERROR:', err);
-      alert(t('ai.packageError'));
+      console.error("AI COMPOSE ERROR:", err);
+      alert(t("ai.packageError"));
       return null;
     } finally {
       setComposeLoading(false);

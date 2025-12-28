@@ -1,4 +1,5 @@
-import { t } from '../../i18n';
+import { useLanguage } from "../../i18n/LanguageProvider";
+import { t } from "@packages/i18n";
 
 type Experience = {
   id: number;
@@ -17,6 +18,8 @@ type ExperienceCardProps = {
 };
 
 export function ExperienceCard({ experience, isSelected, onCardClick, onToggleSelection }: ExperienceCardProps) {
+  useLanguage(); // Re-render için subscribe
+
   return (
     <div
       style={{

@@ -53,6 +53,7 @@
     "score": "score",
     "packageSummary": "AI Package Summary",
     "aiComment": "AI's brief comment:",
+    "fallbackComment": "A balanced and enjoyable travel plan has been created based on your selections.",
     "totalPrice": "Total Price",
     "suggestionsError": "An error occurred while getting AI suggestions.",
     "packageError": "An error occurred while creating the AI package.",

@@ -1,4 +1,5 @@
-import { t } from '../../i18n';
+import { useLanguage } from "../../i18n/LanguageProvider";
+import { t } from "@packages/i18n";
 import { HotelCard } from './HotelCard';
 
 type Hotel = {
@@ -17,6 +18,8 @@ type HotelListProps = {
 };
 
 export function HotelList({ hotels, selectedIds, onHotelClick, onToggleSelection }: HotelListProps) {
+  useLanguage(); // Re-render için subscribe
+
   return (
     <div>
       <h3 style={{ fontSize: "18px", color: "#0f172a", fontWeight: 700 }}>

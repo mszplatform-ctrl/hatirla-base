@@ -1,6 +1,9 @@
-import { t } from '../../i18n';
+import { useLanguage } from "../../i18n/LanguageProvider";
+import { t } from "@packages/i18n";
 
 export function Header() {
+  useLanguage(); // Re-render için subscribe
+
   return (
     <>
       {/* LOGO */}
@@ -24,7 +27,6 @@ export function Header() {
           {t('common.appName')}
         </h1>
       </div>
-
       {/* Description */}
       <p style={{ fontSize: "13px", color: "#475569", marginBottom: "20px" }}>
         {t('home.aiTracking')}

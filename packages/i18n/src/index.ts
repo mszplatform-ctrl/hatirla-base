@@ -1,5 +1,3 @@
-// packages/i18n/src/index.ts
-
 import tr from "../locales/tr.json";
 import en from "../locales/en.json";
 
@@ -18,6 +16,17 @@ const messages: Record<Locale, any> = {
 };
 
 /**
+ * Internal listeners to notify React on language change
+ */
+type Listener = (lang: Locale) => void;
+const listeners = new Set<Listener>();
+
+export function subscribeLanguage(listener: Listener) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/**
  * Check if language is enabled (coming soon guard)
  */
 export function isLangEnabled(lang: string): lang is Locale {
@@ -25,10 +34,11 @@ export function isLangEnabled(lang: string): lang is Locale {
 }
 
 /**
- * Set active language (safe)
+ * Set active language (safe) + notify subscribers
  */
 export function setLanguage(lang: Locale) {
   currentLanguage = lang;
+  listeners.forEach((l) => l(currentLanguage));
 }
 
 /**
@@ -39,16 +49,28 @@ export function getCurrentLanguage(): Locale {
 }
 
 /**
- * Translation function
+ * Translation function with debug logging
  */
 export function t(key: string): string {
   const parts = key.split(".");
   let value: any = messages[currentLanguage];
-
+  
   for (const part of parts) {
     value = value?.[part];
-    if (!value) return key;
+    if (!value) {
+      console.warn(`[i18n] Missing translation: "${key}" for language: "${currentLanguage}"`);
+      return key;
+    }
   }
-
+  
   return value;
 }
+
+/**
+ * Backward / frontend compatibility alias
+ */
+export function getLanguage(): Locale {
+  return getCurrentLanguage();
+}
+
+export * from './provider';

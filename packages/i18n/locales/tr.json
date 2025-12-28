@@ -53,6 +53,7 @@
     "score": "skor",
     "packageSummary": "AI Paket Özeti",
     "aiComment": "AI'nin kısa yorumu:",
+    "fallbackComment": "Seçimlerine göre dengeli ve keyifli bir seyahat planı oluşturuldu.",
     "totalPrice": "Toplam Fiyat",
     "suggestionsError": "AI önerileri alınırken bir hata oluştu.",
     "packageError": "AI paket oluşturulurken bir hata oluştu.",

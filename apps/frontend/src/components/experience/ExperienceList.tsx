@@ -1,4 +1,5 @@
-import { t } from '../../i18n';
+import { useLanguage } from "../../i18n/LanguageProvider";
+import { t } from "@packages/i18n";
 import { ExperienceCard } from './ExperienceCard';
 
 type Experience = {
@@ -18,6 +19,8 @@ type ExperienceListProps = {
 };
 
 export function ExperienceList({ experiences, selectedIds, onExperienceClick, onToggleSelection }: ExperienceListProps) {
+  useLanguage(); // Re-render için subscribe
+
   return (
     <div>
       <h3 style={{ fontSize: "18px", color: "#0f172a", fontWeight: 700 }}>

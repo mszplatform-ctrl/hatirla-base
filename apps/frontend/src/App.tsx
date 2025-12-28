@@ -1,22 +1,28 @@
 import { useState, useEffect } from "react";
 import MSZ from "./MSZCore";
 import "./xotiji-brand.css";
-import { LanguageSwitcher } from './components/LanguageSwitcher';
-import { Header } from './components/layout/Header';
-import { Footer } from './components/layout/Footer';
-import { Modal } from './components/common/Modal';
-import { CityList } from './components/city/CityList';
-import { HotelList } from './components/hotel/HotelList';
-import { ExperienceList } from './components/experience/ExperienceList';
-import { AIPackageModal } from './components/ai/AIPackageModal';
-import { useCities } from './hooks/useCities';
-import { useCityDetails } from './hooks/useCityDetails';
-import { useAI } from './hooks/useAI';
+
+import { LanguageSwitcher } from "./components/LanguageSwitcher";
+import { Header } from "./components/layout/Header";
+import { Footer } from "./components/layout/Footer";
+import { Modal } from "./components/common/Modal";
+import { CityList } from "./components/city/CityList";
+import { HotelList } from "./components/hotel/HotelList";
+import { ExperienceList } from "./components/experience/ExperienceList";
+import { AIPackageModal } from "./components/ai/AIPackageModal";
+
+import { useCities } from "./hooks/useCities";
+import { useCityDetails } from "./hooks/useCityDetails";
+import { useAI } from "./hooks/useAI";
+
 import { t } from "@packages/i18n";
+import { useLanguage } from "./i18n/LanguageProvider";
 
 export default function App() {
+  useLanguage(); // Re-render için subscribe
+
   const { cities, loading: loadingCities } = useCities();
-  
+
   const {
     selectedCity,
     hotels,
@@ -39,10 +45,11 @@ export default function App() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState<any>(null);
-  const [modalType, setModalType] = useState<"hotel" | "experience" | "ai" | "itinerary" | null>(null);
+  const [modalType, setModalType] =
+    useState<"hotel" | "experience" | "ai" | "itinerary" | null>(null);
   const [mszComment, setMszComment] = useState<string | null>(null);
 
-  // MSZ: Remember selections
+  /** 🧠 MSZ – selections */
   useEffect(() => {
     const items: any[] = [];
 
@@ -75,31 +82,27 @@ export default function App() {
 
   async function handleAiSuggest() {
     const suggestions = await getSuggestions();
-    if (suggestions && suggestions.length > 0) {
+    if (suggestions?.length) {
       setModalType("ai");
       setModalVisible(true);
     }
   }
 
   async function handleComposeItinerary() {
-    const selectedHotelsArr = hotels.filter((h) => selectedHotelIds.includes(h.id));
-    const selectedExpArr = experiences.filter((e) => selectedExperienceIds.includes(e.id));
+    const selectedHotelsArr = hotels.filter((h) =>
+      selectedHotelIds.includes(h.id)
+    );
+    const selectedExpArr = experiences.filter((e) =>
+      selectedExperienceIds.includes(e.id)
+    );
 
-    const selections: any[] = [];
-    selectedHotelsArr.forEach((h) => {
-      selections.push({ type: "hotel", name: h.name, price: h.minPrice, currency: h.currency });
-    });
-    selectedExpArr.forEach((e) => {
-      selections.push({ type: "experience", title: e.title, price: e.price, currency: e.currency });
-    });
+    const itinerary = await composePackage(
+      selectedHotelsArr,
+      selectedExpArr
+    );
 
-    // MSZ analizi sadece log için
-    const analysis = MSZ.analyzeBeforeCompose(selections);
-
-    const itinerary = await composePackage(selectedHotelsArr, selectedExpArr);
     if (itinerary) {
-      // Backend'den gelen aiComment'i kullan
-      setMszComment(itinerary.aiComment || analysis);
+      setMszComment(itinerary.aiComment || t("ai.fallbackComment"));
       setModalType("itinerary");
       setModalData(itinerary);
       setModalVisible(true);
@@ -109,32 +112,32 @@ export default function App() {
   const totalSelected = selectedHotelIds.length + selectedExperienceIds.length;
 
   return (
-    <div style={{
-      padding: "40px",
-      fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
-      background: "#f7fafc",
-      width: "100%",
-      minHeight: "100vh",
-      margin: "0 auto",
-      boxSizing: "border-box",
-    }}>
-      {/* LANGUAGE SWITCHER */}
-      <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 9999 }}>
+    <div
+      style={{
+        padding: "40px",
+        fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+        background: "#eef6ff",
+        minHeight: "100vh",
+      }}
+    >
+      {/* 🌍 Language */}
+      <div style={{ position: "fixed", top: 16, right: 16, zIndex: 9999 }}>
         <LanguageSwitcher />
       </div>
 
-      {/* HEADER */}
       <Header />
 
-      {/* AI SUGGESTIONS BUTTON */}
-      <div style={{
-        marginTop: "8px",
-        marginBottom: "16px",
-        display: "flex",
-        gap: "12px",
-        alignItems: "center",
-        flexWrap: "wrap"
-      }}>
+      {/* 🤖 AI BUTTON */}
+      <div
+        style={{
+          marginTop: "8px",
+          marginBottom: "16px",
+          display: "flex",
+          gap: "12px",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
         <button
           onClick={handleAiSuggest}
           disabled={aiLoading}
@@ -149,15 +152,18 @@ export default function App() {
             display: "flex",
             alignItems: "center",
             gap: "6px",
-            whiteSpace: "nowrap"
+            whiteSpace: "nowrap",
           }}
         >
-          {aiLoading ? t('home.aiThinking') : `✨ ${t('home.aiGet3Suggestions')}`}
+          {aiLoading
+            ? t("home.aiThinking")
+            : `✨ ${t("home.aiGet3Suggestions")}`}
         </button>
-        <span style={{ fontSize: "12px", color: "#6b7280" }}>{t('home.mockNote')}</span>
+        <span style={{ fontSize: "12px", color: "#6b7280" }}>
+          {t("home.mockNote")}
+        </span>
       </div>
 
-      {/* CITIES LIST */}
       <CityList
         cities={cities}
         selectedCityId={selectedCity?.id || null}
@@ -165,31 +171,32 @@ export default function App() {
         loading={loadingCities}
       />
 
-      {/* CITY DETAILS */}
       {selectedCity && (
-        <div style={{
-          marginTop: "32px",
-          padding: "24px",
-          borderRadius: "18px",
-          background: "white",
-          boxShadow: "0 6px 18px rgba(15,23,42,0.08)"
-        }}>
-          <h2 style={{ marginBottom: "8px", fontSize: "26px", fontWeight: 700, color: "#0f172a" }}>
-            🧭 {selectedCity.name} — {t('home.cityDetails')}
+        <div
+          style={{
+            marginTop: "32px",
+            padding: "24px",
+            borderRadius: "18px",
+            background: "white",
+            boxShadow: "0 6px 18px rgba(15,23,42,0.08)",
+          }}
+        >
+          <h2 style={{ fontSize: "26px", fontWeight: 700 }}>
+            🧭 {selectedCity.name} — {t("home.cityDetails")}
           </h2>
-          <p style={{ fontSize: "13px", color: "#475569", marginBottom: "12px" }}>
-            {t('home.clickForDetails')}
-          </p>
 
           {loadingDetails ? (
-            <p>{t('home.detailsLoading')}</p>
+            <p>{t("home.detailsLoading")}</p>
           ) : (
             <>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
-                gap: "28px"
-              }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: "28px",
+                  marginTop: "24px",
+                }}
+              >
                 <HotelList
                   hotels={hotels}
                   selectedIds={selectedHotelIds}
@@ -201,34 +208,40 @@ export default function App() {
                   experiences={experiences}
                   selectedIds={selectedExperienceIds}
                   onExperienceClick={openExperienceModal}
-                  onToggleSelection={(e) => toggleExperienceSelection(e.id)}
+                  onToggleSelection={(e) =>
+                    toggleExperienceSelection(e.id)
+                  }
                 />
               </div>
 
-              <div style={{
-                marginTop: "24px",
-                paddingTop: "12px",
-                borderTop: "1px solid #e5e7eb",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}>
-                <span style={{ fontSize: "13px", color: totalSelected > 0 ? "#0f766e" : "#64748b" }}>
-                  {totalSelected > 0 ? `${totalSelected} ${t('home.itemsSelected')}` : t('home.selectItems')}
-                </span>
+              <div
+                style={{
+                  marginTop: "24px",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                }}
+              >
                 <button
                   onClick={handleComposeItinerary}
                   disabled={composeLoading || totalSelected === 0}
                   style={{
-                    background: composeLoading || totalSelected === 0 ? "#cbd5e1" : "#2563eb",
+                    background:
+                      composeLoading || totalSelected === 0
+                        ? "#cbd5e1"
+                        : "#2563eb",
                     color: "white",
                     border: "none",
                     padding: "10px 16px",
                     borderRadius: "999px",
-                    cursor: composeLoading || totalSelected === 0 ? "default" : "pointer"
+                    cursor:
+                      composeLoading || totalSelected === 0
+                        ? "default"
+                        : "pointer",
                   }}
                 >
-                  {composeLoading ? t('home.aiCreatingPackage') : `📦 ${t('home.createWithAI')}`}
+                  {composeLoading
+                    ? t("home.aiCreatingPackage")
+                    : `📦 ${t("home.createWithAI")}`}
                 </button>
               </div>
             </>
@@ -236,7 +249,6 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL */}
       <Modal visible={modalVisible} onClose={() => setModalVisible(false)}>
         <AIPackageModal
           modalType={modalType}
@@ -246,7 +258,6 @@ export default function App() {
         />
       </Modal>
 
-      {/* FOOTER */}
       <Footer />
     </div>
   );

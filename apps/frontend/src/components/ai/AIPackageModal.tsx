@@ -1,4 +1,5 @@
-import { t } from '../../i18n';
+import { useLanguage } from "../../i18n/LanguageProvider";
+import { t, getCurrentLanguage } from "@packages/i18n";
 
 type AISuggestion = {
   type: "hotel" | "experience" | "flight";
@@ -19,13 +20,22 @@ export function AIPackageModal({
   aiSuggestions = [],
   mszComment
 }: AIPackageModalProps) {
+  useLanguage(); // Re-render için subscribe
+  const lang = getCurrentLanguage();
 
   /* ================= HOTEL ================= */
   if (modalType === "hotel" && modalData) {
     return (
       <>
         <h2 style={{ marginBottom: "8px", color: "#0f172a" }}>🏨 {modalData.name}</h2>
-        {modalData.description && <p style={{ color: "#334155" }}>{modalData.description}</p>}
+        {lang === 'tr' && modalData.description && (
+          <p style={{ color: "#334155" }}>{modalData.description}</p>
+        )}
+        {lang === 'en' && (
+          <p style={{ color: "#94a3b8", fontStyle: "italic", fontSize: "13px" }}>
+            Description available in Turkish only
+          </p>
+        )}
         {modalData.minPrice && (
           <p style={{ color: "#334155", fontWeight: 600 }}>
             {t('home.price')}: {modalData.minPrice} {modalData.currency}
@@ -45,7 +55,14 @@ export function AIPackageModal({
             {t('home.category')}: {modalData.category}
           </p>
         )}
-        {modalData.description && <p style={{ color: "#334155" }}>{modalData.description}</p>}
+        {lang === 'tr' && modalData.description && (
+          <p style={{ color: "#334155" }}>{modalData.description}</p>
+        )}
+        {lang === 'en' && (
+          <p style={{ color: "#94a3b8", fontStyle: "italic", fontSize: "13px" }}>
+            Description available in Turkish only
+          </p>
+        )}
         {modalData.price && (
           <p style={{ color: "#334155", fontWeight: 600 }}>
             {t('home.price')}: {modalData.price} {modalData.currency}

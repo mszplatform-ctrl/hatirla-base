@@ -1,4 +1,5 @@
-import { t } from '../../i18n';
+import { useLanguage } from "../../i18n/LanguageProvider";
+import { t } from "@packages/i18n";
 
 type CitySummary = {
   id: number;
@@ -15,6 +16,8 @@ type CityCardProps = {
 };
 
 export function CityCard({ city, isSelected, onClick }: CityCardProps) {
+  useLanguage(); // Re-render için subscribe
+
   return (
     <div
       style={{
