@@ -1,43 +1,40 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { setLanguage as setI18nLanguage, getCurrentLanguage, subscribeLanguage, t } from './index';
-import type { Locale } from './index';
+import { useEffect, useState } from "react";
 
-interface I18nContextValue {
-  language: Locale;
-  setLanguage: (lang: Locale) => void;
-  t: (key: string) => string;
+type Lang = "tr" | "en";
+
+let currentLang: Lang = "tr";
+const listeners = new Set<(l: Lang) => void>();
+
+export function getCurrentLanguage(): Lang {
+  return currentLang;
 }
 
-const I18nContext = createContext<I18nContextValue | null>(null);
+export function setLanguage(lang: Lang) {
+  currentLang = lang;
+  listeners.forEach((fn) => fn(lang));
+}
 
-export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Locale>(getCurrentLanguage());
+export function subscribeLanguage(fn: (l: Lang) => void) {
+  listeners.add(fn);
+  return () => {
+    listeners.delete(fn);
+  };
+}
+
+/**
+ * 🔥 ÖNEMLİ KISIM
+ * React useEffect boolean değil cleanup function ister
+ */
+export function useLanguageProvider() {
+  const [lang, setLang] = useState<Lang>(getCurrentLanguage());
 
   useEffect(() => {
-    // Subscribe to language changes from module-level state
-    const unsubscribe = subscribeLanguage((newLang) => {
-      setLanguageState(newLang);
-    });
-    return unsubscribe;
+    const unsubscribe = subscribeLanguage(setLang);
+
+    return () => {
+      unsubscribe(); // ✅ cleanup function
+    };
   }, []);
 
-  const setLanguage = (lang: Locale) => {
-    setI18nLanguage(lang); // Updates module state + notifies subscribers
-  };
-
-  const value = {
-    language,
-    setLanguage,
-    t, // Same t() function but context triggers re-render
-  };
-
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
-};
-
-export const useTranslation = () => {
-  const context = useContext(I18nContext);
-  if (!context) {
-    throw new Error('useTranslation must be used within I18nProvider');
-  }
-  return context;
-};
+  return { lang, setLang: setLanguage };
+}
