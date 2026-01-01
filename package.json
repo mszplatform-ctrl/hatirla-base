@@ -1,9 +1,14 @@
 {
   "name": "hatirla-base",
+  "private": true,
   "version": "1.0.0",
   "description": "Hatırla proje temel package.json",
   "main": "index.js",
   "type": "commonjs",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "start": "node index.js",
     "dev:frontend": "npm run dev --prefix apps/frontend -- --host",
