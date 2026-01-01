@@ -4,12 +4,12 @@
   "description": "XOTIJI internationalization support (TR/EN/AR/ES)",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "keywords": [
-    "xotiji",
-    "i18n",
-    "internationalization"
-  ],
+  "private": true,
   "dependencies": {
-    "react": "^19.2.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0"
   }
 }
