@@ -1,13 +1,15 @@
-import express from "express";
+const express = require('express');
 const router = express.Router();
 
-// GET /api/users?email=mock@user.com
-router.get("/", (req, res) => {
-  const { email } = req.query;
-  if (email === "mock@user.com") {
-    return res.json({ ok: true, id: 1, email, name: "Test User" });
-  }
-  res.status(404).json({ ok: false, message: "User not found" });
+// GET /api/users
+router.get('/', (req, res) => {
+  res.json([{ id: 'u1', name: 'Test User' }]);
 });
 
-export default router;
+// POST /api/users
+router.post('/', (req, res) => {
+  const { name } = req.body;
+  res.json({ id: 'u2', name });
+});
+
+module.exports = router;
