@@ -1,26 +1,20 @@
 const express = require('express');
 const cors = require('cors');
-
 const usersRouter = require('./routes/users');
 const userRouter = require('./routes/user');
 const referralRouter = require('./routes/referral');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 app.use(cors());
 app.use(express.json());
-
 // Test
 app.get('/api/ping', (req, res) => {
   res.json({ msg: 'pong' });
 });
-
 // Routes
 app.use('/api/users', usersRouter);
 app.use('/api/user', userRouter);
 app.use('/api/referral', referralRouter);
-
 // AI Suggestions
 app.get('/api/ai/suggestions', (req, res) => {
   res.json([
@@ -29,12 +23,10 @@ app.get('/api/ai/suggestions', (req, res) => {
     { id: 3, type: 'flight', title: 'Paris Sanat & AI Deneyimi', price: 799 }
   ]);
 });
-
 // Login
 app.post('/api/auth/login', (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email gerekli' });
-
   res.json({
     user: {
       id: 'u1',
@@ -45,14 +37,12 @@ app.post('/api/auth/login', (req, res) => {
     token: 'mock-jwt-token'
   });
 });
-
 // Compose
 app.post('/api/ai/compose', (req, res) => {
   const { selections = [] } = req.body;
   const total = selections.reduce((sum, item) => sum + (item.price || 0), 0);
   res.json({ itinerary: { items: selections, total_price: total } });
 });
-
 // Reel
 app.post('/api/reel/generate', (req, res) => {
   const { itinerary_id } = req.body;
@@ -61,7 +51,6 @@ app.post('/api/reel/generate', (req, res) => {
   }
   res.json({ jobId: 'job-' + Date.now(), status: 'pending' });
 });
-
 app.get('/api/reel/status/:jobId', (req, res) => {
   const { jobId } = req.params;
   res.json({
@@ -71,15 +60,20 @@ app.get('/api/reel/status/:jobId', (req, res) => {
       'https://sample-videos.com/video123/mp4/240/big_buck_bunny_240p_1mb.mp4'
   });
 });
-
 // Referral
 app.post('/api/referral/generate', (req, res) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).json({ error: 'userId gerekli' });
-
   const code = 'REF' + Math.floor(Math.random() * 100000);
   res.json({ code });
 });
+
+// Modular routes (v2)
+const usersModule = require('./modules/users');
+const referralModule = require('./modules/referral');
+
+app.use('/api/v2/users', usersModule.routes);
+app.use('/api/v2/referral', referralModule.routes);
 
 app.listen(PORT, () => {
   console.log(`✅ API running on http://localhost:${PORT}`);

@@ -1,12 +1,12 @@
 {
   "name": "api",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "license": "MIT",
   "scripts": {
     "seed": "node seed.js",
-    "start": "node index.js",
-    "dev:api": "nodemon index.js"
+    "start": "node src/index.js",
+    "dev:api": "nodemon src/index.js"
   },
   "dependencies": {
     "@prisma/client": "^7.0.1",
