@@ -1,10 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-
 const usersRouter = require('./routes/users');
 const userRouter = require('./routes/user');
 const referralRouter = require('./routes/referral');
-
 // v2 modular routes
 const usersModule = require('./modules/users');
 const referralModule = require('./modules/referral');
@@ -18,7 +16,6 @@ const PORT = process.env.PORT || 3000;
  * express-rate-limit X-Forwarded-For için ZORUNLU
  */
 app.set('trust proxy', 1);
-
 app.use(cors());
 app.use(express.json());
 
@@ -57,7 +54,6 @@ app.get('/api/ai/suggestions', (req, res) => {
 app.post('/api/auth/login', (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email gerekli' });
-
   res.json({
     user: {
       id: 'u1',
@@ -72,7 +68,6 @@ app.post('/api/auth/login', (req, res) => {
 app.post('/api/ai/compose', (req, res) => {
   const { selections = [] } = req.body;
   const total = selections.reduce((sum, item) => sum + (item.price || 0), 0);
-
   res.json({
     itinerary: {
       items: selections,
@@ -89,7 +84,6 @@ app.post('/api/reel/generate', (req, res) => {
   if (!itinerary_id) {
     return res.status(400).json({ error: 'itinerary_id gerekli' });
   }
-
   res.json({
     jobId: 'job-' + Date.now(),
     status: 'pending'
@@ -98,7 +92,6 @@ app.post('/api/reel/generate', (req, res) => {
 
 app.get('/api/reel/status/:jobId', (req, res) => {
   const { jobId } = req.params;
-
   res.json({
     jobId,
     status: 'completed',
@@ -113,7 +106,6 @@ app.get('/api/reel/status/:jobId', (req, res) => {
 app.post('/api/referral/generate', (req, res) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).json({ error: 'userId gerekli' });
-
   const code = 'REF' + Math.floor(Math.random() * 100000);
   res.json({ code });
 });
