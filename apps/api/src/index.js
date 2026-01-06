@@ -13,9 +13,9 @@ const PORT = process.env.PORT || 3000;
 /**
  * ✅ RENDER FIX
  * Render + Cloudflare proxy kullanır
- * express-rate-limit X-Forwarded-For için ZORUNLU
  */
-app.set('trust proxy', 1);
+app.set('trust proxy', true);
+
 app.use(cors());
 app.use(express.json());
 
