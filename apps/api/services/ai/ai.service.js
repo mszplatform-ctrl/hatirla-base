@@ -7,7 +7,8 @@ const packageRepository = require('../../repositories/data/package.repository');
 const { composeSchema } = require('../../src/validation/compose.schema');
 
 // ✅ AI BRIDGE (Stage 4.5)
-const ai = require('../../src/ai');
+// DOĞRU KAYNAK: src/routes/ai.js
+const ai = require('../../src/routes/ai');
 
 /**
  * GET /api/ai/packages

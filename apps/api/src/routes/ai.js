@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const aiController = require('../../controllers/ai/ai.controller');
-const { composeRateLimit } = require('../gateway/rateLimit');
+
+// ❌ rateLimit KALDIRILDI (dosya projede yok)
 
 // AI service root (sanity check)
 router.get('/', (req, res) => {
@@ -16,7 +17,7 @@ router.get('/', (req, res) => {
 // READ PATH → packages
 router.get('/packages', aiController.getPackages);
 
-// WRITE PATH → create package (RATE LIMITED)
-router.post('/compose', composeRateLimit, aiController.composePackage);
+// WRITE PATH → create package (NO RATE LIMIT)
+router.post('/compose', aiController.composePackage);
 
 module.exports = router;
