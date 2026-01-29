@@ -19,8 +19,10 @@ export function useCities() {
     async function fetchCities() {
       try {
         const res = await fetch(`${API_BASE}/cities`);
-        const data = await res.json();
-        setCities(data);
+        const json = await res.json();
+
+        // 🔑 KRİTİK SATIR
+        setCities(json.cities ?? []);
       } catch (err) {
         console.error('CITY FETCH ERROR:', err);
         setError('Failed to fetch cities');
