@@ -84,4 +84,111 @@ router.get('/cities', (req, res) => {
   }
 });
 
+// GET /api/data/hotels
+router.get('/hotels', (req, res) => {
+  try {
+    const { city, country } = req.query;
+
+    let query = `
+      SELECT
+        id,
+        name,
+        description,
+        city,
+        country,
+        images,
+        rating,
+        price_per_night,
+        amenities,
+        location
+      FROM hotels
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (city) {
+      query += ' AND city = ?';
+      params.push(city);
+    }
+
+    if (country) {
+      query += ' AND country = ?';
+      params.push(country);
+    }
+
+    query += ' ORDER BY rating DESC';
+
+    const hotels = db.prepare(query).all(...params);
+
+    res.json({
+      success: true,
+      data: {
+        hotels,
+        count: hotels.length
+      }
+    });
+
+  } catch (error) {
+    console.error('GET /data/hotels error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'FAILED_TO_FETCH_HOTELS'
+    });
+  }
+});
+
+// GET /api/data/experiences
+router.get('/experiences', (req, res) => {
+  try {
+    const { city, country } = req.query;
+
+    let query = `
+      SELECT
+        id,
+        title,
+        description,
+        city,
+        country,
+        images,
+        category,
+        rating,
+        price,
+        duration_hours,
+        location
+      FROM experiences
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (city) {
+      query += ' AND city = ?';
+      params.push(city);
+    }
+
+    if (country) {
+      query += ' AND country = ?';
+      params.push(country);
+    }
+
+    query += ' ORDER BY rating DESC';
+
+    const experiences = db.prepare(query).all(...params);
+
+    res.json({
+      success: true,
+      data: {
+        experiences,
+        count: experiences.length
+      }
+    });
+
+  } catch (error) {
+    console.error('GET /data/experiences error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'FAILED_TO_FETCH_EXPERIENCES'
+    });
+  }
+});
+
 module.exports = router;
