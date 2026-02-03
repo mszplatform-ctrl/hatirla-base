@@ -8,15 +8,12 @@
  * - Request/Response logging
  * - Error handling
  */
-
 const express = require('express');
 const { randomUUID } = require('crypto');
 const rateLimit = require('express-rate-limit');
 const logger = require('../middleware/logger');
 const errorHandler = require('../middleware/errorHandler');
-
 const router = express.Router();
-
 // ============================================
 // 1. REQUEST ID GENERATION
 // ============================================
@@ -26,7 +23,6 @@ router.use((req, res, next) => {
   res.setHeader('X-Request-Id', requestId);
   next();
 });
-
 // ============================================
 // 1.5. LANGUAGE RESOLVER (i18n)
 // ============================================
@@ -40,12 +36,10 @@ router.use((req, res, next) => {
   
   next();
 });
-
 // ============================================
 // 2. RATE LIMITING - ENVIRONMENT AWARE
 // ============================================
 const isProd = process.env.NODE_ENV === 'production';
-
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: isProd ? 100 : 1000,
@@ -53,9 +47,7 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-
 router.use(limiter);
-
 // ============================================
 // 3. REQUEST LOGGING WITH REQUEST ID
 // ============================================
@@ -78,7 +70,6 @@ router.use((req, res, next) => {
   
   next();
 });
-
 // ============================================
 // 4. AUTHENTICATION (Placeholder - inactive)
 // ============================================
@@ -86,10 +77,8 @@ const authenticate = (req, res, next) => {
   // TODO: Implement JWT/Session validation
   next();
 };
-
 // Şimdilik kapalı:
 // router.use(authenticate);
-
 // ============================================
 // 5. SERVICE ROUTING
 // ============================================
@@ -103,13 +92,12 @@ router.get('/health', (req, res) => {
   });
 });
 
-router.use('/ai', require('../src/routes/ai'));
+// BETA: AI routes temporarily disabled (no package.repository yet)
+// router.use('/ai', require('../src/routes/ai'));
+
 router.use('/data', require('../src/routes/data'));
-
-
 // ============================================
 // 6. ERROR HANDLING
 // ============================================
 router.use(errorHandler);
-
 module.exports = router;
