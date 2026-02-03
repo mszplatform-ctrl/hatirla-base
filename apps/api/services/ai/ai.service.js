@@ -2,14 +2,11 @@
  * AI Service
  * Business logic layer for AI-related operations
  */
-
-const packageRepository = require('../../repositories/data/package.repository');
+const packageRepository = require('../../data/package.repository');
 const { composeSchema } = require('../../src/validation/compose.schema');
-
 // ✅ AI BRIDGE (Stage 4.5)
 // DOĞRU KAYNAK: src/routes/ai.js
 const ai = require('../../src/routes/ai');
-
 /**
  * GET /api/ai/packages
  */
@@ -21,7 +18,6 @@ async function getPackages() {
     packages,
   };
 }
-
 /**
  * POST /api/ai/compose
  * Create a new package in DB (validated + user-aware)
@@ -33,7 +29,6 @@ async function composePackage({
 }) {
   console.log('🔍 [SERVICE] composePackage START');
   console.log('📦 Input:', { selections, language, userId });
-
   try {
     // 🔒 INPUT VALIDATION (ZOD)
     console.log('🔒 [SERVICE] Validating with Zod...');
@@ -42,9 +37,7 @@ async function composePackage({
       language,
     });
     console.log('✅ [SERVICE] Validation passed:', parsed);
-
     const { selections: validSelections } = parsed;
-
     // 💰 totalPrice hesapla
     console.log('💰 [SERVICE] Calculating totalPrice...');
     const totalPrice = validSelections.reduce((sum, item) => {
@@ -57,7 +50,6 @@ async function composePackage({
       return sum + (typeof price === 'number' ? price : 0);
     }, 0);
     console.log('✅ [SERVICE] totalPrice:', totalPrice);
-
     // 🧱 DB write
     console.log('🧱 [SERVICE] Calling repository.createPackage...');
     const created = await packageRepository.createPackage({
@@ -68,14 +60,12 @@ async function composePackage({
       status: 'draft',
     });
     console.log('✅ [SERVICE] Repository returned:', created);
-
     // 🤖 AI BRIDGE (Stage 4.5)
     console.log('🤖 [SERVICE] Generating itinerary (AI bridge)...');
     const itinerary = await ai.generateItinerary({
       selections: validSelections,
       language,
     });
-
     // 🔁 Response
     const response = {
       success: true,
@@ -87,28 +77,23 @@ async function composePackage({
       },
       itinerary,
     };
-
     console.log('✅ [SERVICE] Final response:', response);
     return response;
-
   } catch (error) {
     console.error('💣 [SERVICE] ERROR:', error.message);
     console.error('💣 [SERVICE] Stack:', error.stack);
     throw error;
   }
 }
-
 /**
  * Placeholders
  */
 async function getSuggestions() {
   return [];
 }
-
 async function generateSuggestions() {
   return { success: true };
 }
-
 module.exports = {
   getPackages,
   composePackage,
