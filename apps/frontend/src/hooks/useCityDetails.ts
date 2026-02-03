@@ -49,8 +49,12 @@ export function useCityDetails() {
         fetch(`${API_BASE}/experiences?cityId=${city.id}`),
       ]);
 
-      setHotels(await hotelsRes.json());
-      setExperiences(await expRes.json());
+      const hotelsJson = await hotelsRes.json();
+      const expJson = await expRes.json();
+
+      // Backend response: { success, data }
+      setHotels(hotelsJson.data ?? []);
+      setExperiences(expJson.data ?? []);
     } catch (err) {
       console.error('DETAIL FETCH ERROR:', err);
     } finally {

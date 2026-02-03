@@ -20,9 +20,9 @@ export function useCities() {
       try {
         const res = await fetch(`${API_BASE}/cities`);
         const json = await res.json();
-
-        // 🔑 KRİTİK SATIR
-        setCities(json.cities ?? []);
+        
+        // Backend response: { success, data }
+        setCities(json.data ?? []);
       } catch (err) {
         console.error('CITY FETCH ERROR:', err);
         setError('Failed to fetch cities');
@@ -30,7 +30,6 @@ export function useCities() {
         setLoading(false);
       }
     }
-
     fetchCities();
   }, []);
 

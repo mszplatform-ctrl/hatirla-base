@@ -86,7 +86,6 @@ export function useAI() {
 
       // Get user's current language
       const language = getLang();
-
       const res = await fetch(`${AI_BASE}/compose`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
