@@ -10,7 +10,7 @@ export default function AdminPanel() {
 
   const [loading, setLoading] = useState(true);
 
-  const API = "http://localhost:4000/api";
+  const API = import.meta.env.VITE_API_URL || "https://hatirla-base.onrender.com/api";
 
   useEffect(() => {
     async function loadAll() {
