@@ -93,7 +93,7 @@ router.get('/health', (req, res) => {
 });
 
 // BETA: AI routes temporarily disabled (no package.repository yet)
-router.use('/ai', require('../src/routes/ai'));
+// router.use('/ai', require('../src/routes/ai'));
 
 router.use('/data', require('../src/routes/data'));
 // ============================================
