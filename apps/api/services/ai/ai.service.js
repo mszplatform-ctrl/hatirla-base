@@ -6,7 +6,7 @@ const packageRepository = require('../../data/package.repository');
 const { composeSchema } = require('../../src/validation/compose.schema');
 // ✅ AI BRIDGE (Stage 4.5)
 // DOĞRU KAYNAK: src/routes/ai.js
-const ai = require('../../src/routes/ai');
+// AI bridge removed - stub inline
 /**
  * GET /api/ai/packages
  */
@@ -62,10 +62,7 @@ async function composePackage({
     console.log('✅ [SERVICE] Repository returned:', created);
     // 🤖 AI BRIDGE (Stage 4.5)
     console.log('🤖 [SERVICE] Generating itinerary (AI bridge)...');
-    const itinerary = await ai.generateItinerary({
-      selections: validSelections,
-      language,
-    });
+    const itinerary = { days: [], summary: 'Hazirlaniyor...' };
     // 🔁 Response
     const response = {
       success: true,
@@ -100,3 +97,4 @@ module.exports = {
   getSuggestions,
   generateSuggestions,
 };
+
