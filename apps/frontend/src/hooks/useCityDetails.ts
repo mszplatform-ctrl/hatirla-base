@@ -62,7 +62,7 @@ export function useCityDetails() {
           .map((h: any, i: number) => ({
             id: h.id ?? i + 1,
             name: h.name,
-            description: h.description ?? null,
+            description: (h.description ?? '').replace(/^\[beta_seed\]\s*/i, '') || null,
             minPrice: h.price_per_night ?? h.minPrice ?? null,
             currency: h.currency ?? null,
           }))
@@ -74,7 +74,7 @@ export function useCityDetails() {
           .map((e: any, i: number) => ({
             id: e.id ?? i + 1,
             title: e.title,
-            description: e.description ?? null,
+            description: (e.description ?? '').replace(/^\[beta_seed\]\s*/i, '') || null,
             price: e.price ?? null,
             currency: e.currency ?? null,
             category: e.category ?? null,

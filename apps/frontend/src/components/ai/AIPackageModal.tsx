@@ -1,4 +1,4 @@
-import { t } from '../../i18n';
+import { t, type Lang } from '../../i18n';
 
 type AISuggestion = {
   title: string;
@@ -11,14 +11,17 @@ type AIPackageModalProps = {
   modalData: any;
   aiSuggestions: AISuggestion[];
   mszComment: string | null;
+  lang: Lang;
 };
 
 export function AIPackageModal({
   modalType,
   modalData,
   aiSuggestions,
-  mszComment
+  mszComment,
+  lang,
 }: AIPackageModalProps) {
+  const T = (key: string) => t(key, lang);
 
   if (modalType === "hotel" && modalData) {
     return (
@@ -33,7 +36,7 @@ export function AIPackageModal({
 
         {modalData.minPrice && (
           <p style={{ color: "#334155", fontWeight: 600 }}>
-            {t('home.price')}: {modalData.minPrice} {modalData.currency}
+            {T('home.price')}: {modalData.minPrice} {modalData.currency}
           </p>
         )}
       </>
@@ -49,7 +52,7 @@ export function AIPackageModal({
 
         {modalData.category && (
           <p style={{ fontSize: "13px", color: "#64748b" }}>
-            {t('home.category')}: {modalData.category}
+            {T('home.category')}: {modalData.category}
           </p>
         )}
 
@@ -59,7 +62,7 @@ export function AIPackageModal({
 
         {modalData.price && (
           <p style={{ color: "#334155", fontWeight: 600 }}>
-            {t('home.price')}: {modalData.price} {modalData.currency}
+            {T('home.price')}: {modalData.price} {modalData.currency}
           </p>
         )}
       </>
@@ -70,12 +73,12 @@ export function AIPackageModal({
     return (
       <>
         <h2 style={{ marginBottom: "12px", color: "#0f172a" }}>
-          ✨ {t('ai.suggestions')}
+          ✨ {T('ai.suggestions')}
         </h2>
 
         {aiSuggestions.length === 0 && (
           <p style={{ color: "#64748b" }}>
-            {t('ai.noSuggestions')}
+            {T('ai.noSuggestions')}
           </p>
         )}
 
@@ -89,16 +92,18 @@ export function AIPackageModal({
               borderRadius: "12px"
             }}
           >
-            <p
-              style={{
-                fontSize: "12px",
-                color: "#64748b",
-                marginBottom: "4px",
-                textTransform: "uppercase"
-              }}
-            >
-              {t('ai.score')}: {s.score.toFixed(2)}
-            </p>
+            {s.score != null && (
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#64748b",
+                  marginBottom: "4px",
+                  textTransform: "uppercase"
+                }}
+              >
+                {T('ai.score')}: {s.score.toFixed(2)}
+              </p>
+            )}
 
             <strong style={{ color: "#0f172a" }}>
               {s.title}
@@ -119,7 +124,7 @@ export function AIPackageModal({
     return (
       <>
         <h2 style={{ marginBottom: "10px", color: "#0f172a" }}>
-          📦 {t('ai.packageSummary')}
+          📦 {T('ai.packageSummary')}
         </h2>
 
         {mszComment && (
@@ -135,7 +140,7 @@ export function AIPackageModal({
             }}
           >
             <strong style={{ fontSize: "13px", color: "#166534" }}>
-              {t('ai.aiComment')}
+              {T('ai.aiComment')}
             </strong>
             <br />
             {mszComment}
@@ -143,7 +148,7 @@ export function AIPackageModal({
         )}
 
         <p style={{ fontWeight: 600, marginBottom: "10px", color: "#0f172a" }}>
-          {t('ai.totalPrice')}: {modalData.totalPrice} {modalData.currency}
+          {T('ai.totalPrice')}: {modalData.totalPrice} {modalData.currency}
         </p>
 
         <div>
