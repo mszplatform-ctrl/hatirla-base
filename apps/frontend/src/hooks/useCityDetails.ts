@@ -52,9 +52,34 @@ export function useCityDetails() {
       const hotelsJson = await hotelsRes.json();
       const expJson = await expRes.json();
 
-      // Backend response: { success, data }
-      setHotels(hotelsJson.data ?? []);
-      setExperiences(expJson.data ?? []);
+      // Backend returns { success, data: { hotels: [], count } }
+      const rawHotels: any[] = hotelsJson.data?.hotels ?? hotelsJson.data ?? [];
+      const rawExp: any[] = expJson.data?.experiences ?? expJson.data ?? [];
+
+      setHotels(
+        rawHotels
+          .filter((h: any) => !h.city || h.city === city.name)
+          .map((h: any, i: number) => ({
+            id: h.id ?? i + 1,
+            name: h.name,
+            description: h.description ?? null,
+            minPrice: h.price_per_night ?? h.minPrice ?? null,
+            currency: h.currency ?? null,
+          }))
+      );
+
+      setExperiences(
+        rawExp
+          .filter((e: any) => !e.city || e.city === city.name)
+          .map((e: any, i: number) => ({
+            id: e.id ?? i + 1,
+            title: e.title,
+            description: e.description ?? null,
+            price: e.price ?? null,
+            currency: e.currency ?? null,
+            category: e.category ?? null,
+          }))
+      );
     } catch (err) {
       console.error('DETAIL FETCH ERROR:', err);
     } finally {

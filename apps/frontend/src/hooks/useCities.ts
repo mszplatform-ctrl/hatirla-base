@@ -21,8 +21,17 @@ export function useCities() {
         const res = await fetch(`${API_BASE}/cities`);
         const json = await res.json();
         
-        // Backend response: { success, data }
-        setCities(json.data ?? []);
+        // Backend returns { success, data: [{ name, hotel_count, experience_count }] }
+        const raw: any[] = json.data ?? [];
+        setCities(
+          raw.map((c: any, i: number) => ({
+            id: c.id ?? i + 1,
+            name: c.name,
+            countryCode: c.countryCode ?? c.country_code ?? '',
+            hotels: c.hotels ?? c.hotel_count ?? 0,
+            experiences: c.experiences ?? c.experience_count ?? 0,
+          }))
+        );
       } catch (err) {
         console.error('CITY FETCH ERROR:', err);
         setError('Failed to fetch cities');
