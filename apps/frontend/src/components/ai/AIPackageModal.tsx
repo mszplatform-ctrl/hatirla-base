@@ -1,9 +1,9 @@
 import { t } from '../../i18n';
 
 type AISuggestion = {
-  type: "hotel" | "experience" | "flight";
+  title: string;
+  description: string;
   score: number;
-  payload: any;
 };
 
 type AIPackageModalProps = {
@@ -97,16 +97,16 @@ export function AIPackageModal({
                 textTransform: "uppercase"
               }}
             >
-              {s.type} • {t('ai.score')}: {s.score.toFixed(2)}
+              {t('ai.score')}: {s.score.toFixed(2)}
             </p>
 
             <strong style={{ color: "#0f172a" }}>
-              {s.payload.name || s.payload.title}
+              {s.title}
             </strong>
 
-            {s.payload.price && (
-              <p style={{ color: "#334155", fontWeight: 600 }}>
-                {t('home.price')}: {s.payload.price} {s.payload.currency}
+            {s.description && (
+              <p style={{ color: "#334155" }}>
+                {s.description}
               </p>
             )}
           </div>

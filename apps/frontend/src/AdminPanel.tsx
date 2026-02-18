@@ -186,18 +186,16 @@ export default function AdminPanel() {
         <table border={1} cellPadding={8}>
           <thead>
             <tr>
-              <th>Tür</th>
-              <th>Ad / Başlık</th>
-              <th>Fiyat</th>
+              <th>Başlık</th>
+              <th>Açıklama</th>
               <th>Skor</th>
             </tr>
           </thead>
           <tbody>
             {suggestions.map((s, i) => (
               <tr key={i}>
-                <td>{s.type}</td>
-                <td>{s.payload.name || s.payload.title}</td>
-                <td>{s.payload.price}</td>
+                <td>{s.title}</td>
+                <td>{s.description}</td>
                 <td>{s.score}</td>
               </tr>
             ))}
