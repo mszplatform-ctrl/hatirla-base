@@ -147,7 +147,7 @@ export function AIPackageModal({
         </p>
 
         <div>
-          {modalData.items.map((item: any, idx: number) => (
+          {(modalData.items ?? []).map((item: any, idx: number) => (
             <div
               key={idx}
               style={{

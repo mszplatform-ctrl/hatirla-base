@@ -68,6 +68,7 @@ async function composePackage({
       success: true,
       package: {
         id: created.id,
+        items: validSelections,
         totalPrice,
         currency: 'USD',
         status: 'draft',

@@ -9,7 +9,10 @@
       "Bash(npm install:*)",
       "Bash(npm view:*)",
       "WebSearch",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:hatirla-base.onrender.com)"
     ]
   }
 }
