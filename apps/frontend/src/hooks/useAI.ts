@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { t, getLang } from '../i18n';
 
 type AISuggestion = {
-  type: "hotel" | "experience" | "flight";
+  title: string;
+  description: string;
   score: number;
-  payload: Record<string, unknown>;
 };
 
 type Hotel = {
@@ -42,7 +42,7 @@ export function useAI() {
       setAiSuggestions([]);
       const res = await fetch(`${AI_BASE}/suggestions`);
       const data = await res.json();
-      setAiSuggestions(data);
+      setAiSuggestions(Array.isArray(data) ? data : []);
       return data;
     } catch (err) {
       console.error('AI SUGGEST ERROR:', err);

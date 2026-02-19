@@ -12,7 +12,7 @@ import { AIPackageModal } from './components/ai/AIPackageModal';
 import { useCities } from './hooks/useCities';
 import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
-import { t } from './i18n';
+import { t, getLang, type Lang } from './i18n';
 
 export default function App() {
   const { cities, loading: loadingCities } = useCities();
@@ -41,6 +41,7 @@ export default function App() {
   const [modalData, setModalData] = useState<any>(null);
   const [modalType, setModalType] = useState<"hotel" | "experience" | "ai" | "itinerary" | null>(null);
   const [mszComment, setMszComment] = useState<string | null>(null);
+  const [lang] = useState<Lang>(getLang);
 
   // MSZ: Remember selections
   useEffect(() => {
@@ -243,6 +244,7 @@ export default function App() {
           modalData={modalData}
           aiSuggestions={aiSuggestions}
           mszComment={mszComment}
+          lang={lang}
         />
       </Modal>
 

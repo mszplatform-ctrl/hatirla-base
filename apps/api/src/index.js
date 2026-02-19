@@ -21,9 +21,9 @@ app.use("/api/referral", referralRouter);
 // AI Suggestions
 app.get("/api/ai/suggestions", (req,res) => {
   res.json([
-    { id: 1, type: "hotel", title: "Roma 3 Günlük AI Paketi", price: 450 },
-    { id: 2, type: "experience", title: "Dubai Lüks AI Tatili", price: 1299 },
-    { id: 3, type: "flight", title: "Paris Sanat & AI Deneyimi", price: 799 }
+    { id: 1, type: "hotel", title: "Roma 3 Günlük AI Paketi", description: "Kolosseum ve tarihi merkezin yakınında lüks bir konaklamayla Roma'yı keşfedin.", score: 0.95, price: 450 },
+    { id: 2, type: "experience", title: "Dubai Lüks AI Tatili", description: "Çöl safarisi ve Burj Khalifa'yı kapsayan unutulmaz bir Dubai deneyimi.", score: 0.88, price: 1299 },
+    { id: 3, type: "flight", title: "Paris Sanat & AI Deneyimi", description: "Louvre, Eyfel Kulesi ve Seine nehri turunu içeren Paris sanat yolculuğu.", score: 0.82, price: 799 }
   ]);
 });
 
