@@ -29,7 +29,7 @@ type PackageSelection = {
   currency: string | null;
 };
 
-const AI_BASE = `${import.meta.env.VITE_API_URL}/api/ai`;
+const AI_BASE = `${import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com'}/api/ai`;
 
 export function useAI() {
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
