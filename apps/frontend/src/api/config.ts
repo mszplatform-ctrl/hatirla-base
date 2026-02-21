@@ -6,8 +6,10 @@
 import axios from 'axios';
 import { getLang } from '../i18n';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com';
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: `${API_BASE}/api`,
   timeout: 10000,
 });
 

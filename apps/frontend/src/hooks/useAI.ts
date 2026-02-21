@@ -42,8 +42,9 @@ export function useAI() {
       setAiSuggestions([]);
       const res = await fetch(`${AI_BASE}/suggestions`);
       const data = await res.json();
-      setAiSuggestions(Array.isArray(data) ? data : []);
-      return data;
+      const suggestions = Array.isArray(data) ? data : [];
+      setAiSuggestions(suggestions);
+      return suggestions;
     } catch (err) {
       console.error('AI SUGGEST ERROR:', err);
       alert(t('ai.suggestionsError'));

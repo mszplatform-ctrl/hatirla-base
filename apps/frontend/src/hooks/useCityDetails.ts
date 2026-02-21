@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getLang } from '../i18n';
 
 type Hotel = {
   id: number;
@@ -44,9 +45,10 @@ export function useCityDetails() {
     setSelectedExperienceIds([]);
 
     try {
+      const lang = getLang();
       const [hotelsRes, expRes] = await Promise.all([
-        fetch(`${API_BASE}/hotels?cityId=${city.id}`),
-        fetch(`${API_BASE}/experiences?cityId=${city.id}`),
+        fetch(`${API_BASE}/hotels?cityId=${city.id}&lang=${lang}`),
+        fetch(`${API_BASE}/experiences?cityId=${city.id}&lang=${lang}`),
       ]);
 
       const hotelsJson = await hotelsRes.json();

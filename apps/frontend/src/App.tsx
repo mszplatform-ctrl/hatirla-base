@@ -76,7 +76,7 @@ export default function App() {
 
   async function handleAiSuggest() {
     const suggestions = await getSuggestions();
-    if (suggestions && suggestions.length > 0) {
+    if (suggestions.length > 0) {
       setModalType("ai");
       setModalVisible(true);
     }
