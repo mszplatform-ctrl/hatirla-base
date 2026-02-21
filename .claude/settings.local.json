@@ -12,7 +12,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "WebFetch(domain:hatirla-base.onrender.com)"
+      "WebFetch(domain:hatirla-base.onrender.com)",
+      "Bash(git diff:*)",
+      "Bash(python:*)"
     ]
   }
 }
