@@ -16,25 +16,7 @@ router.get('/', (req, res) => {
 router.get('/packages', aiController.getPackages);
 
 // ✅ AI suggestions (frontend bunu bekliyor)
-router.get('/suggestions', (req, res) => {
-  res.json([
-    {
-      title: "AI Öneri 1",
-      description: "Örnek öneri açıklaması",
-      score: 0.9
-    },
-    {
-      title: "AI Öneri 2",
-      description: "Örnek öneri açıklaması",
-      score: 0.8
-    },
-    {
-      title: "AI Öneri 3",
-      description: "Örnek öneri açıklaması",
-      score: 0.7
-    }
-  ]);
-});
+router.get('/suggestions', aiController.getSuggestions);
 
 // WRITE PATH → create package
 router.post('/compose', aiController.composePackage);
