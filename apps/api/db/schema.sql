@@ -1,55 +1,120 @@
--- Tabloları temizle (dev için)
-DROP TABLE IF EXISTS reels;
+-- Drop all tables in dependency order
+DROP TABLE IF EXISTS ai_logs;
 DROP TABLE IF EXISTS referrals;
+DROP TABLE IF EXISTS packages;
+DROP TABLE IF EXISTS suggestions;
 DROP TABLE IF EXISTS experiences;
-DROP TABLE IF EXISTS destinations;
+DROP TABLE IF EXISTS flights;
+DROP TABLE IF EXISTS hotels;
+DROP TABLE IF EXISTS admin_users;
 DROP TABLE IF EXISTS users;
 
 -- USERS
 CREATE TABLE users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email TEXT NOT NULL UNIQUE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT,
+  name TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- DESTINATIONS
-CREATE TABLE destinations (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+-- ADMIN USERS
+CREATE TABLE admin_users (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT DEFAULT 'editor',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- HOTELS
+CREATE TABLE hotels (
+  id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  country TEXT NOT NULL,
-  slug TEXT NOT NULL UNIQUE
+  description TEXT,
+  city TEXT,
+  country TEXT,
+  images TEXT,
+  rating REAL,
+  price_per_night REAL,
+  amenities TEXT,
+  location TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- FLIGHTS
+CREATE TABLE flights (
+  id TEXT PRIMARY KEY,
+  airline TEXT NOT NULL,
+  from_city TEXT,
+  from_country TEXT,
+  to_city TEXT,
+  to_country TEXT,
+  departure_time TEXT,
+  arrival_time TEXT,
+  price REAL,
+  duration_min INTEGER,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 -- EXPERIENCES
 CREATE TABLE experiences (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  destination_id INTEGER NOT NULL,
+  id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
-  tags TEXT,
-  price_range TEXT,
-  FOREIGN KEY (destination_id) REFERENCES destinations(id)
+  city TEXT,
+  country TEXT,
+  images TEXT,
+  category TEXT,
+  price REAL,
+  rating REAL,
+  duration_hours INTEGER,
+  location TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 -- REFERRALS
 CREATE TABLE referrals (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  code TEXT NOT NULL UNIQUE,
-  used_count INTEGER DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  id TEXT PRIMARY KEY,
+  ref_code TEXT UNIQUE NOT NULL,
+  inviter_user_id TEXT,
+  invited_email TEXT,
+  joined_user_id TEXT,
+  clicked_at TEXT,
+  joined_at TEXT
 );
 
--- REELS
-CREATE TABLE reels (
+-- PACKAGES
+CREATE TABLE packages (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER,
-  destination_id INTEGER,
-  experience_id INTEGER,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (destination_id) REFERENCES destinations(id),
-  FOREIGN KEY (experience_id) REFERENCES experiences(id)
+  items TEXT NOT NULL,
+  total_price REAL NOT NULL,
+  user_id TEXT,
+  currency TEXT DEFAULT 'USD',
+  status TEXT DEFAULT 'draft',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- SUGGESTIONS
+CREATE TABLE suggestions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL,
+  payload TEXT NOT NULL,
+  score REAL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- AI LOGS
+CREATE TABLE ai_logs (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  type TEXT,
+  input TEXT,
+  output TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
