@@ -15,7 +15,8 @@
       "WebFetch(domain:hatirla-base.onrender.com)",
       "Bash(git diff:*)",
       "Bash(python:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(rm:*)"
     ]
   }
 }
