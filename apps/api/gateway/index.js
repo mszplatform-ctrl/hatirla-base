@@ -96,6 +96,12 @@ router.get('/health', (req, res) => {
 router.use('/ai', require('../src/routes/ai'));
 
 router.use('/data', require('../src/routes/data'));
+router.use('/auth', require('../routes/auth'));
+router.use('/referral', require('../routes/referral'));
+router.use('/reel', require('../routes/reel'));
+router.use('/share', require('../routes/share'));
+router.use('/user', require('../routes/user'));
+router.use('/users', require('../routes/users'));
 // ============================================
 // 6. ERROR HANDLING
 // ============================================
