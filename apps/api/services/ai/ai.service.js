@@ -62,7 +62,8 @@ async function composePackage({
     console.log('✅ [SERVICE] Repository returned:', created);
     // 🤖 AI BRIDGE (Stage 4.5)
     console.log('🤖 [SERVICE] Generating itinerary (AI bridge)...');
-    const itinerary = { days: [], summary: 'Hazirlaniyor...' };
+    const summaryByLang = { tr: 'Hazırlanıyor...', en: 'Preparing...', ar: 'جارٍ التحضير...', es: 'Preparando...', de: 'Wird vorbereitet...', ru: 'Подготовка...' };
+    const itinerary = { days: [], summary: summaryByLang[language] || summaryByLang.en };
     // 🔁 Response
     const response = {
       success: true,
