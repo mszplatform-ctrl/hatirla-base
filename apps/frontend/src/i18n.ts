@@ -4,7 +4,7 @@
  */
 
 // Supported languages
-export const SUPPORTED = ["tr", "en", "ar", "es", "de", "ru"] as const;
+export const SUPPORTED = ["tr", "en"] as const;
 export type Lang = typeof SUPPORTED[number];
 
 /**
@@ -128,10 +128,6 @@ const translations: Record<Lang, any> = {
       contact: "Contact",
     },
   },
-  ar: {},
-  es: {},
-  de: {},
-  ru: {},
 };
 
 /**

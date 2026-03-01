@@ -17,7 +17,7 @@ export interface AppConfig {
 }
 
 export const config: AppConfig = {
-  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  apiUrl: import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com',
   environment: (import.meta.env.MODE as any) || 'development',
   features: {
     aiRecommendations: true,
@@ -29,7 +29,7 @@ export const config: AppConfig = {
     timeout: 30000,
     retryAttempts: 3
   },
-  supportedLanguages: ['tr', 'en', 'ar', 'es']
+  supportedLanguages: ['tr', 'en']
 };
 
 export default config;
