@@ -100,7 +100,7 @@ router.use('/auth', require('../routes/auth'));
 router.use('/referral', require('../routes/referral'));
 router.use('/reel', require('../routes/reel'));
 router.use('/share', require('../routes/share'));
-router.use('/user', require('../routes/user'));
+router.use('/user', require('../src/routes/user'));
 router.use('/users', require('../routes/users'));
 // ============================================
 // 6. ERROR HANDLING
