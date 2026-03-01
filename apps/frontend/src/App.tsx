@@ -155,7 +155,6 @@ export default function App() {
         >
           {aiLoading ? t('home.aiThinking') : `✨ ${t('home.aiGet3Suggestions')}`}
         </button>
-        <span style={{ fontSize: "12px", color: "#6b7280" }}>{t('home.mockNote')}</span>
       </div>
 
       {/* CITIES LIST */}

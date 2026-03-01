@@ -94,6 +94,7 @@ router.get('/hotels', (req, res) => {
         id,
         name,
         description,
+        description_tr,
         city,
         country,
         images,
@@ -118,7 +119,12 @@ router.get('/hotels', (req, res) => {
 
     query += ' ORDER BY rating DESC';
 
-    const hotels = db.prepare(query).all(...params);
+    const lang = req.lang || 'tr';
+    const hotels = db.prepare(query).all(...params).map(h => ({
+      ...h,
+      description: (lang === 'tr' && h.description_tr) ? h.description_tr : h.description,
+      description_tr: undefined
+    }));
 
     res.json({
       success: true,
@@ -147,6 +153,7 @@ router.get('/experiences', (req, res) => {
         id,
         title,
         description,
+        description_tr,
         city,
         country,
         images,
@@ -172,7 +179,12 @@ router.get('/experiences', (req, res) => {
 
     query += ' ORDER BY rating DESC';
 
-    const experiences = db.prepare(query).all(...params);
+    const lang = req.lang || 'tr';
+    const experiences = db.prepare(query).all(...params).map(e => ({
+      ...e,
+      description: (lang === 'tr' && e.description_tr) ? e.description_tr : e.description,
+      description_tr: undefined
+    }));
 
     res.json({
       success: true,

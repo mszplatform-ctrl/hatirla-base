@@ -8,6 +8,7 @@
 // Hafif hafıza, seçim analizi ve AI ön-yorumlaması sağlar.
 //
 // ------------------------------------------------------
+import { t } from './i18n';
 
 export type MSZLogItem = {
   ts: number;
@@ -79,15 +80,9 @@ class MSZLiteCore {
     );
 
     // FINAL v1 — profesyonel, sade yorumlar
-    if (score > 0.75) {
-      return "Oldukça zengin bir seçim yaptın. AI bu verilerle son derece güçlü ve tutarlı bir seyahat planı çıkarabilir.";
-    }
-
-    if (score > 0.45) {
-      return "Fena değil. AI bir plan oluşturabilir ancak birkaç seçim daha eklemek sonuçları güçlendirebilir.";
-    }
-
-    return "AI bir plan çıkarabilir fakat seçim sayısı düşük. Birkaç ekleme yapman sonuçları belirgin şekilde iyileştirir.";
+    if (score > 0.75) return t('ai.analysisRich');
+    if (score > 0.45) return t('ai.analysisFair');
+    return t('ai.analysisLow');
   }
 }
 

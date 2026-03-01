@@ -66,6 +66,9 @@ const translations: Record<Lang, any> = {
       suggestionsError: "AI önerileri alınırken bir hata oluştu.",
       packageError: "AI paket oluşturulurken bir hata oluştu.",
       selectAtLeastOne: "Önce en az bir otel veya deneyim seçmelisin.",
+      analysisRich: "Oldukça zengin bir seçim yaptın. AI bu verilerle son derece güçlü ve tutarlı bir seyahat planı çıkarabilir.",
+      analysisFair: "Fena değil. AI bir plan oluşturabilir ancak birkaç seçim daha eklemek sonuçları güçlendirebilir.",
+      analysisLow: "AI bir plan çıkarabilir fakat seçim sayısı düşük. Birkaç ekleme yapman sonuçları belirgin şekilde iyileştirir.",
     },
     footer: {
       rights: "All rights reserved.",
@@ -114,6 +117,9 @@ const translations: Record<Lang, any> = {
       suggestionsError: "An error occurred while getting AI suggestions.",
       packageError: "An error occurred while creating the AI package.",
       selectAtLeastOne: "You must select at least one hotel or experience first.",
+      analysisRich: "Great selection. AI can generate a highly consistent and powerful travel plan with these inputs.",
+      analysisFair: "Not bad. AI can build a plan, but a few more selections would strengthen the results.",
+      analysisLow: "AI can generate a plan, but the selection count is low. A few additions would noticeably improve results.",
     },
     footer: {
       rights: "All rights reserved.",
