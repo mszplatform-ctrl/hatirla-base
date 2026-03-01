@@ -15,7 +15,7 @@ class AIController {
    */
   async getSuggestions(req, res) {
     try {
-      const suggestions = await aiService.getSuggestions();
+      const suggestions = await aiService.getSuggestions(req.lang || 'tr');
       res.json(suggestions);
     } catch (error) {
       console.error('[AI Controller] Get suggestions error:', error);

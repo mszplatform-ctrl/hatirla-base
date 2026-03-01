@@ -40,7 +40,8 @@ export function useAI() {
     try {
       setAiLoading(true);
       setAiSuggestions([]);
-      const res = await fetch(`${AI_BASE}/suggestions`);
+      const lang = getLang();
+      const res = await fetch(`${AI_BASE}/suggestions?lang=${lang}`);
       const data = await res.json();
       const suggestions = Array.isArray(data) ? data : [];
       setAiSuggestions(suggestions);
