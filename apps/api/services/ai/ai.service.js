@@ -27,19 +27,14 @@ async function composePackage({
   language = 'tr',
   userId = null,
 }) {
-  console.log('🔍 [SERVICE] composePackage START');
-  console.log('📦 Input:', { selections, language, userId });
   try {
     // 🔒 INPUT VALIDATION (ZOD)
-    console.log('🔒 [SERVICE] Validating with Zod...');
     const parsed = composeSchema.parse({
       selections,
       language,
     });
-    console.log('✅ [SERVICE] Validation passed:', parsed);
     const { selections: validSelections } = parsed;
     // 💰 totalPrice hesapla
-    console.log('💰 [SERVICE] Calculating totalPrice...');
     const totalPrice = validSelections.reduce((sum, item) => {
       const price =
         item.price ??
@@ -49,9 +44,7 @@ async function composePackage({
         0;
       return sum + (typeof price === 'number' ? price : 0);
     }, 0);
-    console.log('✅ [SERVICE] totalPrice:', totalPrice);
     // 🧱 DB write
-    console.log('🧱 [SERVICE] Calling repository.createPackage...');
     const created = await packageRepository.createPackage({
       userId,
       items: validSelections,
@@ -59,9 +52,7 @@ async function composePackage({
       currency: 'USD',
       status: 'draft',
     });
-    console.log('✅ [SERVICE] Repository returned:', created);
     // 🤖 AI BRIDGE (Stage 4.5)
-    console.log('🤖 [SERVICE] Generating itinerary (AI bridge)...');
     const summaryByLang = { tr: 'Hazırlanıyor...', en: 'Preparing...', ar: 'جارٍ التحضير...', es: 'Preparando...', de: 'Wird vorbereitet...', ru: 'Подготовка...' };
     const itinerary = { days: [], summary: summaryByLang[language] || summaryByLang.en };
     // 🔁 Response
@@ -76,7 +67,6 @@ async function composePackage({
       },
       itinerary,
     };
-    console.log('✅ [SERVICE] Final response:', response);
     return response;
   } catch (error) {
     console.error('💣 [SERVICE] ERROR:', error.message);
