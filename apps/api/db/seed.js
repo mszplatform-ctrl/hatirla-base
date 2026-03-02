@@ -8,8 +8,10 @@ const SCHEMA_PATH = path.join(__dirname, "schema.sql");
 async function main() {
   console.log("⏳ Seeding DB...");
 
+  // Strip sslmode from URL to avoid conflict with explicit ssl option
+  const connectionString = (process.env.DATABASE_URL || '').replace(/[?&]sslmode=[^&]*/g, '').replace(/[?&]$/, '');
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     ssl: { rejectUnauthorized: false },
   });
 
