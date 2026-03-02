@@ -15,8 +15,8 @@ CREATE TABLE users (
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT,
   name TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ADMIN USERS
@@ -25,8 +25,8 @@ CREATE TABLE admin_users (
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   role TEXT DEFAULT 'editor',
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- HOTELS
@@ -42,8 +42,8 @@ CREATE TABLE hotels (
   price_per_night REAL,
   amenities TEXT,
   location TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- FLIGHTS
@@ -58,8 +58,8 @@ CREATE TABLE flights (
   arrival_time TEXT,
   price REAL,
   duration_min INTEGER,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- EXPERIENCES
@@ -76,8 +76,8 @@ CREATE TABLE experiences (
   rating REAL,
   duration_hours INTEGER,
   location TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- REFERRALS
@@ -93,22 +93,22 @@ CREATE TABLE referrals (
 
 -- PACKAGES
 CREATE TABLE packages (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   items TEXT NOT NULL,
   total_price REAL NOT NULL,
   user_id TEXT,
   currency TEXT DEFAULT 'USD',
   status TEXT DEFAULT 'draft',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- SUGGESTIONS
 CREATE TABLE suggestions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   type TEXT NOT NULL,
   payload TEXT NOT NULL,
   score REAL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- AI LOGS
@@ -118,5 +118,5 @@ CREATE TABLE ai_logs (
   type TEXT,
   input TEXT,
   output TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );

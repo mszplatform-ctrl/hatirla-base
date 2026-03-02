@@ -13,27 +13,27 @@ router.get('/health', (req, res) => {
 });
 
 // GET /api/data/cities
-router.get('/cities', (req, res) => {
+router.get('/cities', async (req, res) => {
   try {
     // Hotels'den şehirleri al
-    const hotelCities = db.prepare(`
-      SELECT 
+    const { rows: hotelCities } = await db.query(`
+      SELECT
         city,
         COUNT(*) as hotel_count
       FROM hotels
       WHERE city IS NOT NULL AND city != ''
       GROUP BY city
-    `).all();
+    `);
 
     // Experiences'den şehirleri al
-    const experienceCities = db.prepare(`
-      SELECT 
+    const { rows: experienceCities } = await db.query(`
+      SELECT
         city,
         COUNT(*) as experience_count
       FROM experiences
       WHERE city IS NOT NULL AND city != ''
       GROUP BY city
-    `).all();
+    `);
 
     // Şehirleri birleştir
     const cityMap = new Map();
@@ -85,7 +85,7 @@ router.get('/cities', (req, res) => {
 });
 
 // GET /api/data/hotels
-router.get('/hotels', (req, res) => {
+router.get('/hotels', async (req, res) => {
   try {
     const { city, country } = req.query;
 
@@ -108,19 +108,20 @@ router.get('/hotels', (req, res) => {
     const params = [];
 
     if (city) {
-      query += ' AND city = ?';
       params.push(city);
+      query += ` AND city = $${params.length}`;
     }
 
     if (country) {
-      query += ' AND country = ?';
       params.push(country);
+      query += ` AND country = $${params.length}`;
     }
 
     query += ' ORDER BY rating DESC';
 
     const lang = req.lang || 'tr';
-    const hotels = db.prepare(query).all(...params).map(h => ({
+    const { rows } = await db.query(query, params);
+    const hotels = rows.map(h => ({
       ...h,
       description: (lang === 'tr' && h.description_tr) ? h.description_tr : h.description,
       description_tr: undefined
@@ -144,7 +145,7 @@ router.get('/hotels', (req, res) => {
 });
 
 // GET /api/data/experiences
-router.get('/experiences', (req, res) => {
+router.get('/experiences', async (req, res) => {
   try {
     const { city, country } = req.query;
 
@@ -168,19 +169,20 @@ router.get('/experiences', (req, res) => {
     const params = [];
 
     if (city) {
-      query += ' AND city = ?';
       params.push(city);
+      query += ` AND city = $${params.length}`;
     }
 
     if (country) {
-      query += ' AND country = ?';
       params.push(country);
+      query += ` AND country = $${params.length}`;
     }
 
     query += ' ORDER BY rating DESC';
 
     const lang = req.lang || 'tr';
-    const experiences = db.prepare(query).all(...params).map(e => ({
+    const { rows } = await db.query(query, params);
+    const experiences = rows.map(e => ({
       ...e,
       description: (lang === 'tr' && e.description_tr) ? e.description_tr : e.description,
       description_tr: undefined

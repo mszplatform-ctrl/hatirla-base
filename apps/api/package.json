@@ -9,7 +9,7 @@
     "dev:api": "nodemon index.js"
   },
   "dependencies": {
-    "better-sqlite3": "^12.4.1",
+    "pg": "^8.13.3",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",

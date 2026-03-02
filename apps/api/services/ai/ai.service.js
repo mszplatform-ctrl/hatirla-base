@@ -83,21 +83,21 @@ async function composePackage({
 async function getSuggestions(lang = 'tr') {
   const db = require('../../db');
 
-  const hotels = db.prepare(`
+  const { rows: hotels } = await db.query(`
     SELECT name, city, country, rating, price_per_night, description
     FROM hotels
     WHERE rating IS NOT NULL
     ORDER BY rating DESC
     LIMIT 5
-  `).all();
+  `);
 
-  const experiences = db.prepare(`
+  const { rows: experiences } = await db.query(`
     SELECT title, city, country, rating, price, category, description
     FROM experiences
     WHERE rating IS NOT NULL
     ORDER BY rating DESC
     LIMIT 8
-  `).all();
+  `);
 
   try {
     if (!process.env.OPENAI_API_KEY) {
