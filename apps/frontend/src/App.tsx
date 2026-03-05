@@ -9,12 +9,23 @@ import { CityList } from './components/city/CityList';
 import { HotelList } from './components/hotel/HotelList';
 import { ExperienceList } from './components/experience/ExperienceList';
 import { AIPackageModal } from './components/ai/AIPackageModal';
+import { PrivacyPolicy } from './components/pages/PrivacyPolicy';
+import { TermsOfService } from './components/pages/TermsOfService';
+import { Contact } from './components/pages/Contact';
 import { useCities } from './hooks/useCities';
 import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
 import { t, getLang, type Lang } from './i18n';
 
 export default function App() {
+  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact">("home");
+
+  function handleNavigate(to: string) {
+    if (to === "privacy" || to === "terms" || to === "contact") {
+      setPage(to);
+    }
+  }
+
   const { cities, loading: loadingCities } = useCities();
   
   const {
@@ -124,131 +135,140 @@ export default function App() {
         <LanguageSwitcher />
       </div>
 
-      {/* HEADER */}
-      <Header />
+      {/* STATIC PAGES */}
+      {page === "privacy" && <PrivacyPolicy onBack={() => setPage("home")} />}
+      {page === "terms" && <TermsOfService onBack={() => setPage("home")} />}
+      {page === "contact" && <Contact onBack={() => setPage("home")} />}
 
-      {/* AI SUGGESTIONS BUTTON */}
-      <div style={{
-        marginTop: "8px",
-        marginBottom: "16px",
-        display: "flex",
-        gap: "12px",
-        alignItems: "center",
-        flexWrap: "wrap"
-      }}>
-        <button
-          onClick={handleAiSuggest}
-          disabled={aiLoading}
-          style={{
-            background: "#0f766e",
-            color: "white",
-            border: "none",
-            padding: "10px 18px",
-            borderRadius: "999px",
-            cursor: aiLoading ? "default" : "pointer",
-            fontSize: "14px",
+      {/* HOME PAGE */}
+      {page === "home" && (
+        <>
+          <Header />
+
+          {/* AI SUGGESTIONS BUTTON */}
+          <div style={{
+            marginTop: "8px",
+            marginBottom: "16px",
             display: "flex",
+            gap: "12px",
             alignItems: "center",
-            gap: "6px",
-            whiteSpace: "nowrap"
-          }}
-        >
-          {aiLoading ? t('home.aiThinking') : `✨ ${t('home.aiGet3Suggestions')}`}
-        </button>
-      </div>
-
-      {/* CITIES LIST */}
-      <CityList
-        cities={cities}
-        selectedCityId={selectedCity?.id || null}
-        onCityClick={loadCityDetails}
-        loading={loadingCities}
-      />
-
-      {/* CITY DETAILS */}
-      {selectedCity && (
-        <div style={{
-          marginTop: "32px",
-          padding: "24px",
-          borderRadius: "18px",
-          background: "white",
-          boxShadow: "0 6px 18px rgba(15,23,42,0.08)"
-        }}>
-          <h2 style={{ marginBottom: "8px", fontSize: "26px", fontWeight: 700, color: "#0f172a" }}>
-            🧭 {selectedCity.name} — {t('home.cityDetails')}
-          </h2>
-          <p style={{ fontSize: "13px", color: "#475569", marginBottom: "12px" }}>
-            {t('home.clickForDetails')}
-          </p>
-
-          {loadingDetails ? (
-            <p>{t('home.detailsLoading')}</p>
-          ) : (
-            <>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
-                gap: "28px"
-              }}>
-                <HotelList
-                  hotels={hotels}
-                  selectedIds={selectedHotelIds}
-                  onHotelClick={openHotelModal}
-                  onToggleSelection={(h) => toggleHotelSelection(h.id)}
-                />
-
-                <ExperienceList
-                  experiences={experiences}
-                  selectedIds={selectedExperienceIds}
-                  onExperienceClick={openExperienceModal}
-                  onToggleSelection={(e) => toggleExperienceSelection(e.id)}
-                />
-              </div>
-
-              <div style={{
-                marginTop: "24px",
-                paddingTop: "12px",
-                borderTop: "1px solid #e5e7eb",
+            flexWrap: "wrap"
+          }}>
+            <button
+              onClick={handleAiSuggest}
+              disabled={aiLoading}
+              style={{
+                background: "#0f766e",
+                color: "white",
+                border: "none",
+                padding: "10px 18px",
+                borderRadius: "999px",
+                cursor: aiLoading ? "default" : "pointer",
+                fontSize: "14px",
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}>
-                <span style={{ fontSize: "13px", color: totalSelected > 0 ? "#0f766e" : "#64748b" }}>
-                  {totalSelected > 0 ? `${totalSelected} ${t('home.itemsSelected')}` : t('home.selectItems')}
-                </span>
-                <button
-                  onClick={handleComposeItinerary}
-                  disabled={composeLoading || totalSelected === 0}
-                  style={{
-                    background: composeLoading || totalSelected === 0 ? "#cbd5e1" : "#2563eb",
-                    color: "white",
-                    border: "none",
-                    padding: "10px 16px",
-                    borderRadius: "999px",
-                    cursor: composeLoading || totalSelected === 0 ? "default" : "pointer"
-                  }}
-                >
-                  {composeLoading ? t('home.aiCreatingPackage') : `📦 ${t('home.createWithAI')}`}
-                </button>
-              </div>
-            </>
+                alignItems: "center",
+                gap: "6px",
+                whiteSpace: "nowrap"
+              }}
+            >
+              {aiLoading ? t('home.aiThinking') : `✨ ${t('home.aiGet3Suggestions')}`}
+            </button>
+          </div>
+
+          {/* CITIES LIST */}
+          <CityList
+            cities={cities}
+            selectedCityId={selectedCity?.id || null}
+            onCityClick={loadCityDetails}
+            loading={loadingCities}
+          />
+
+          {/* CITY DETAILS */}
+          {selectedCity && (
+            <div style={{
+              marginTop: "32px",
+              padding: "24px",
+              borderRadius: "18px",
+              background: "white",
+              boxShadow: "0 6px 18px rgba(15,23,42,0.08)"
+            }}>
+              <h2 style={{ marginBottom: "8px", fontSize: "26px", fontWeight: 700, color: "#0f172a" }}>
+                🧭 {selectedCity.name} — {t('home.cityDetails')}
+              </h2>
+              <p style={{ fontSize: "13px", color: "#475569", marginBottom: "12px" }}>
+                {t('home.clickForDetails')}
+              </p>
+
+              {loadingDetails ? (
+                <p>{t('home.detailsLoading')}</p>
+              ) : (
+                <>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
+                    gap: "28px"
+                  }}>
+                    <HotelList
+                      hotels={hotels}
+                      selectedIds={selectedHotelIds}
+                      onHotelClick={openHotelModal}
+                      onToggleSelection={(h) => toggleHotelSelection(h.id)}
+                    />
+
+                    <ExperienceList
+                      experiences={experiences}
+                      selectedIds={selectedExperienceIds}
+                      onExperienceClick={openExperienceModal}
+                      onToggleSelection={(e) => toggleExperienceSelection(e.id)}
+                    />
+                  </div>
+
+                  <div style={{
+                    marginTop: "24px",
+                    paddingTop: "12px",
+                    borderTop: "1px solid #e5e7eb",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                  }}>
+                    <span style={{ fontSize: "13px", color: totalSelected > 0 ? "#0f766e" : "#64748b" }}>
+                      {totalSelected > 0 ? `${totalSelected} ${t('home.itemsSelected')}` : t('home.selectItems')}
+                    </span>
+                    <button
+                      onClick={handleComposeItinerary}
+                      disabled={composeLoading || totalSelected === 0}
+                      style={{
+                        background: composeLoading || totalSelected === 0 ? "#cbd5e1" : "#2563eb",
+                        color: "white",
+                        border: "none",
+                        padding: "10px 16px",
+                        borderRadius: "999px",
+                        cursor: composeLoading || totalSelected === 0 ? "default" : "pointer"
+                      }}
+                    >
+                      {composeLoading ? t('home.aiCreatingPackage') : `📦 ${t('home.createWithAI')}`}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           )}
-        </div>
+
+          {/* MODAL */}
+          <Modal visible={modalVisible} onClose={() => setModalVisible(false)}>
+            <AIPackageModal
+              modalType={modalType}
+              modalData={modalData}
+              aiSuggestions={aiSuggestions}
+              mszComment={mszComment}
+              lang={lang}
+            />
+          </Modal>
+        </>
       )}
 
-      {/* MODAL */}
-      <Modal visible={modalVisible} onClose={() => setModalVisible(false)}>
-        <AIPackageModal
-          modalType={modalType}
-          modalData={modalData}
-          aiSuggestions={aiSuggestions}
-          mszComment={mszComment}
-          lang={lang}
-        />
-      </Modal>
-
       {/* FOOTER */}
-      <Footer />
+      <Footer onNavigate={handleNavigate} />
     </div>
   );
 }

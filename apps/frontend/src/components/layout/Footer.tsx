@@ -1,6 +1,10 @@
 import { t } from '../../i18n';
 
-export function Footer() {
+type FooterProps = {
+  onNavigate?: (page: string) => void;
+};
+
+export function Footer({ onNavigate }: FooterProps) {
   return (
     <footer style={{
       marginTop: "60px",
@@ -13,11 +17,26 @@ export function Footer() {
         © {new Date().getFullYear()} {t('common.appName')}. {t('footer.rights')}
       </p>
       <div style={{ display: "flex", gap: "16px", justifyContent: "center", fontSize: "14px", flexWrap: "wrap" }}>
-        <a href="/privacy" style={{ color: "#0ea5e9", textDecoration: "none" }}>{t('footer.privacy')}</a>
+        <button
+          onClick={() => onNavigate?.("privacy")}
+          style={{ background: "none", border: "none", color: "#0ea5e9", cursor: "pointer", fontSize: "14px", padding: 0, fontFamily: "inherit" }}
+        >
+          {t('footer.privacy')}
+        </button>
         <span style={{ color: "#cbd5e1" }}>|</span>
-        <a href="/terms" style={{ color: "#0ea5e9", textDecoration: "none" }}>{t('footer.terms')}</a>
+        <button
+          onClick={() => onNavigate?.("terms")}
+          style={{ background: "none", border: "none", color: "#0ea5e9", cursor: "pointer", fontSize: "14px", padding: 0, fontFamily: "inherit" }}
+        >
+          {t('footer.terms')}
+        </button>
         <span style={{ color: "#cbd5e1" }}>|</span>
-        <a href="/contact" style={{ color: "#0ea5e9", textDecoration: "none" }}>{t('footer.contact')}</a>
+        <button
+          onClick={() => onNavigate?.("contact")}
+          style={{ background: "none", border: "none", color: "#0ea5e9", cursor: "pointer", fontSize: "14px", padding: 0, fontFamily: "inherit" }}
+        >
+          {t('footer.contact')}
+        </button>
       </div>
     </footer>
   );

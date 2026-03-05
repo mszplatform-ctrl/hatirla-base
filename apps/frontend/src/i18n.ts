@@ -76,6 +76,22 @@ const translations: Record<Lang, any> = {
       terms: "Terms of Service",
       contact: "Contact",
     },
+    privacy: {
+      backToHome: "Ana Sayfaya Dön",
+      lastUpdated: "Son güncelleme",
+    },
+    terms: {
+      backToHome: "Ana Sayfaya Dön",
+      lastUpdated: "Son güncelleme",
+    },
+    contact: {
+      backToHome: "Ana Sayfaya Dön",
+      title: "İletişim",
+      subtitle: "Sorularınız için bize ulaşın.",
+      emailLabel: "E-posta",
+      socialsLabel: "Sosyal Medya",
+      comingSoon: "Yakında",
+    },
   },
   en: {
     common: {
@@ -126,6 +142,22 @@ const translations: Record<Lang, any> = {
       privacy: "Privacy Policy",
       terms: "Terms of Service",
       contact: "Contact",
+    },
+    privacy: {
+      backToHome: "Back to Home",
+      lastUpdated: "Last updated",
+    },
+    terms: {
+      backToHome: "Back to Home",
+      lastUpdated: "Last updated",
+    },
+    contact: {
+      backToHome: "Back to Home",
+      title: "Contact",
+      subtitle: "Reach out with any questions.",
+      emailLabel: "Email",
+      socialsLabel: "Social Media",
+      comingSoon: "Coming soon",
     },
   },
 };
