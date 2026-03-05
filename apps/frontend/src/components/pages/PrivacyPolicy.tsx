@@ -302,7 +302,7 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
               : 'If you have questions about this Privacy Policy or how your data is handled, please reach out:'}
           </p>
           <a
-            href="mailto:info@xotiji.app"
+            href="mailto:hello@xotiji.app"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -317,7 +317,7 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
               fontWeight: 600,
             }}
           >
-            ✉ info@xotiji.app
+            ✉ hello@xotiji.app
           </a>
         </section>
       </div>

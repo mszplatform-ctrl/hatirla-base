@@ -97,7 +97,7 @@ export function Contact({ onBack }: ContactProps) {
           {t('contact.emailLabel')}
         </p>
         <a
-          href="mailto:info@xotiji.app"
+          href="mailto:hello@xotiji.app"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -126,7 +126,7 @@ export function Contact({ onBack }: ContactProps) {
             </svg>
           </span>
           <div>
-            <p style={{ fontWeight: 700, fontSize: '16px', color: '#0f172a', margin: '0 0 2px 0' }}>info@xotiji.app</p>
+            <p style={{ fontWeight: 700, fontSize: '16px', color: '#0f172a', margin: '0 0 2px 0' }}>hello@xotiji.app</p>
             <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
               {isTr ? 'Genellikle 1–2 iş günü içinde yanıt veririz.' : 'We typically respond within 1–2 business days.'}
             </p>

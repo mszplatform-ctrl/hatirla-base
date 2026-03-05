@@ -221,8 +221,8 @@ export function TermsOfService({ onBack }: TermsOfServiceProps) {
             {isTr
               ? 'Bu Kullanım Koşulları hakkında sorularınız için: '
               : 'For questions about these Terms, contact us at: '}
-            <a href="mailto:info@xotiji.app" style={{ color: '#0ea5e9', textDecoration: 'none', fontWeight: 600 }}>
-              info@xotiji.app
+            <a href="mailto:hello@xotiji.app" style={{ color: '#0ea5e9', textDecoration: 'none', fontWeight: 600 }}>
+              hello@xotiji.app
             </a>
           </p>
         </section>
