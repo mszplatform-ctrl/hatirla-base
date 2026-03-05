@@ -116,7 +116,7 @@ export function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
               <strong>{isTr ? 'Dil tercihi:' : 'Language preference:'}</strong>{' '}
               {isTr
                 ? 'Seçtiğiniz arayüz dili (Türkçe veya İngilizce) tarayıcınızın yerel depolama alanında (localStorage) saklanır.'
-                : 'Your selected interface language (Turkish or English) is stored locally in your browser's localStorage.'}
+                : "Your selected interface language (Turkish or English) is stored locally in your browser's localStorage."}
             </li>
             <li style={liStyle}>
               <strong>{isTr ? 'Kullanım verileri:' : 'Usage data:'}</strong>{' '}
