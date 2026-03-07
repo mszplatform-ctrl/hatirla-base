@@ -47,8 +47,8 @@ export function useCityDetails() {
     try {
       const lang = getLang();
       const [hotelsRes, expRes] = await Promise.all([
-        fetch(`${API_BASE}/hotels?cityId=${city.id}&lang=${lang}`),
-        fetch(`${API_BASE}/experiences?cityId=${city.id}&lang=${lang}`),
+        fetch(`${API_BASE}/hotels?city=${encodeURIComponent(city.name)}&lang=${lang}`),
+        fetch(`${API_BASE}/experiences?city=${encodeURIComponent(city.name)}&lang=${lang}`),
       ]);
 
       const hotelsJson = await hotelsRes.json();
@@ -60,7 +60,6 @@ export function useCityDetails() {
 
       setHotels(
         rawHotels
-          .filter((h: any) => !h.city || h.city === city.name)
           .map((h: any, i: number) => ({
             id: h.id ?? i + 1,
             name: h.name,
@@ -72,7 +71,6 @@ export function useCityDetails() {
 
       setExperiences(
         rawExp
-          .filter((e: any) => !e.city || e.city === city.name)
           .map((e: any, i: number) => ({
             id: e.id ?? i + 1,
             title: e.title,
