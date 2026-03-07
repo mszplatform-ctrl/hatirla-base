@@ -15,8 +15,8 @@ const socials = [
         <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
       </svg>
     ),
-    handle: '@xotiji',
-    href: null,
+    handle: '@xotijiapp',
+    href: 'https://instagram.com/xotijiapp',
   },
   {
     name: 'X / Twitter',
@@ -25,19 +25,18 @@ const socials = [
         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
       </svg>
     ),
-    handle: '@xotiji',
-    href: null,
+    handle: '@xotijiapp',
+    href: 'https://x.com/xotijiapp',
   },
   {
-    name: 'LinkedIn',
+    name: 'TikTok',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z" />
-        <circle cx="4" cy="4" r="2" />
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z" />
       </svg>
     ),
-    handle: 'XOTIJI',
-    href: null,
+    handle: '@xotijiapp',
+    href: 'https://tiktok.com/@xotijiapp',
   },
 ];
 
@@ -146,39 +145,30 @@ export function Contact({ onBack }: ContactProps) {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {socials.map((social) => (
-            <div
+            <a
               key={social.name}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
                 padding: '14px 18px',
                 borderRadius: '12px',
                 border: '1px solid #e2e8f0',
                 background: '#f8fafc',
+                textDecoration: 'none',
+                transition: 'border-color 0.15s, background 0.15s',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ color: '#475569', display: 'flex', alignItems: 'center' }}>
-                  {social.icon}
-                </span>
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a', margin: '0 0 1px 0' }}>{social.name}</p>
-                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{social.handle}</p>
-                </div>
-              </div>
-              <span style={{
-                fontSize: '11px',
-                background: '#f1f5f9',
-                color: '#94a3b8',
-                padding: '3px 10px',
-                borderRadius: '999px',
-                fontWeight: 600,
-                letterSpacing: '0.04em',
-              }}>
-                {t('contact.comingSoon')}
+              <span style={{ color: '#475569', display: 'flex', alignItems: 'center', marginRight: '12px' }}>
+                {social.icon}
               </span>
-            </div>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a', margin: '0 0 1px 0' }}>{social.name}</p>
+                <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>{social.handle}</p>
+              </div>
+            </a>
           ))}
         </div>
       </div>
