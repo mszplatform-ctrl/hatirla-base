@@ -9,6 +9,7 @@ import { CityList } from './components/city/CityList';
 import { HotelList } from './components/hotel/HotelList';
 import { ExperienceList } from './components/experience/ExperienceList';
 import { AIPackageModal } from './components/ai/AIPackageModal';
+import { AILoadingIndicator } from './components/ai/AILoadingIndicator';
 import { PrivacyPolicy } from './components/pages/PrivacyPolicy';
 import { TermsOfService } from './components/pages/TermsOfService';
 import { Contact } from './components/pages/Contact';
@@ -154,25 +155,28 @@ export default function App() {
             alignItems: "center",
             flexWrap: "wrap"
           }}>
-            <button
-              onClick={handleAiSuggest}
-              disabled={aiLoading}
-              style={{
-                background: "#0f766e",
-                color: "white",
-                border: "none",
-                padding: "10px 18px",
-                borderRadius: "999px",
-                cursor: aiLoading ? "default" : "pointer",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                whiteSpace: "nowrap"
-              }}
-            >
-              {aiLoading ? t('home.aiThinking') : `✨ ${t('home.aiGet3Suggestions')}`}
-            </button>
+            {aiLoading ? (
+              <AILoadingIndicator lang={lang} />
+            ) : (
+              <button
+                onClick={handleAiSuggest}
+                style={{
+                  background: "#0f766e",
+                  color: "white",
+                  border: "none",
+                  padding: "10px 18px",
+                  borderRadius: "999px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                {`✨ ${t('home.aiGet3Suggestions')}`}
+              </button>
+            )}
           </div>
 
           {/* CITIES LIST */}
