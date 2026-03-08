@@ -1,8 +1,9 @@
-import { t } from '../../i18n';
+import { t, getLang } from '../../i18n';
 
 type Experience = {
   id: number;
   title: string;
+  title_tr?: string | null;
   description: string | null;
   price: number | null;
   currency: string | null;
@@ -17,6 +18,7 @@ type ExperienceCardProps = {
 };
 
 export function ExperienceCard({ experience, isSelected, onCardClick, onToggleSelection }: ExperienceCardProps) {
+  const displayTitle = (getLang() === 'tr' && experience.title_tr) ? experience.title_tr : experience.title;
   return (
     <div
       style={{
@@ -34,7 +36,7 @@ export function ExperienceCard({ experience, isSelected, onCardClick, onToggleSe
       onClick={onCardClick}
     >
       <div>
-        <strong style={{ color: "#0f172a" }}>{experience.title}</strong>
+        <strong style={{ color: "#0f172a" }}>{displayTitle}</strong>
         {experience.price && (
           <p style={{ fontSize: "13px", color: "#334155", fontWeight: 500 }}>
             {t('home.price')}: {experience.price} {experience.currency}

@@ -4,6 +4,7 @@ import { ExperienceCard } from './ExperienceCard';
 type Experience = {
   id: number;
   title: string;
+  title_tr?: string | null;
   description: string | null;
   price: number | null;
   currency: string | null;

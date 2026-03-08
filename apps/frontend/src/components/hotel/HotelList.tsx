@@ -4,6 +4,7 @@ import { HotelCard } from './HotelCard';
 type Hotel = {
   id: number;
   name: string;
+  name_tr?: string | null;
   description: string | null;
   minPrice: number | null;
   currency: string | null;
