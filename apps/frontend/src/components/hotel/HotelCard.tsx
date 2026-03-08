@@ -1,8 +1,9 @@
-import { t } from '../../i18n';
+import { t, getLang } from '../../i18n';
 
 type Hotel = {
   id: number;
   name: string;
+  name_tr: string | null;
   description: string | null;
   minPrice: number | null;
   currency: string | null;
@@ -16,6 +17,7 @@ type HotelCardProps = {
 };
 
 export function HotelCard({ hotel, isSelected, onCardClick, onToggleSelection }: HotelCardProps) {
+  const displayName = (getLang() === 'tr' && hotel.name_tr) ? hotel.name_tr : hotel.name;
   return (
     <div
       style={{
@@ -33,7 +35,7 @@ export function HotelCard({ hotel, isSelected, onCardClick, onToggleSelection }:
       onClick={onCardClick}
     >
       <div>
-        <strong style={{ color: "#0f172a" }}>{hotel.name}</strong>
+        <strong style={{ color: "#0f172a" }}>{displayName}</strong>
         {hotel.minPrice && (
           <p style={{ fontSize: "13px", color: "#334155", fontWeight: 500 }}>
             {t('home.startingPrice')}: {hotel.minPrice} {hotel.currency}

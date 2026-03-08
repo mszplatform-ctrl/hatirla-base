@@ -93,6 +93,7 @@ router.get('/hotels', async (req, res) => {
       SELECT
         id,
         name,
+        name_tr,
         description,
         description_tr,
         city,
@@ -123,8 +124,10 @@ router.get('/hotels', async (req, res) => {
     const { rows } = await db.query(query, params);
     const hotels = rows.map(h => ({
       ...h,
+      name: (lang === 'tr' && h.name_tr) ? h.name_tr : h.name,
+      name_tr: undefined,
       description: (lang === 'tr' && h.description_tr) ? h.description_tr : h.description,
-      description_tr: undefined
+      description_tr: undefined,
     }));
 
     res.json({
@@ -153,6 +156,7 @@ router.get('/experiences', async (req, res) => {
       SELECT
         id,
         title,
+        title_tr,
         description,
         description_tr,
         city,
@@ -184,8 +188,10 @@ router.get('/experiences', async (req, res) => {
     const { rows } = await db.query(query, params);
     const experiences = rows.map(e => ({
       ...e,
+      title: (lang === 'tr' && e.title_tr) ? e.title_tr : e.title,
+      title_tr: undefined,
       description: (lang === 'tr' && e.description_tr) ? e.description_tr : e.description,
-      description_tr: undefined
+      description_tr: undefined,
     }));
 
     res.json({

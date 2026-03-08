@@ -33,6 +33,7 @@ CREATE TABLE admin_users (
 CREATE TABLE hotels (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
+  name_tr TEXT,
   description TEXT,
   description_tr TEXT,
   city TEXT,
@@ -66,6 +67,7 @@ CREATE TABLE flights (
 CREATE TABLE experiences (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
+  title_tr TEXT,
   description TEXT,
   description_tr TEXT,
   city TEXT,

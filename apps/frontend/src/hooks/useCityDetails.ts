@@ -4,6 +4,7 @@ import { getLang } from '../i18n';
 type Hotel = {
   id: number;
   name: string;
+  name_tr: string | null;
   description: string | null;
   minPrice: number | null;
   currency: string | null;
@@ -12,6 +13,7 @@ type Hotel = {
 type Experience = {
   id: number;
   title: string;
+  title_tr: string | null;
   description: string | null;
   price: number | null;
   currency: string | null;
@@ -63,6 +65,7 @@ export function useCityDetails() {
           .map((h: any, i: number) => ({
             id: h.id ?? i + 1,
             name: h.name,
+            name_tr: h.name_tr ?? null,
             description: (h.description ?? '').replace(/^\[beta_seed\]\s*/i, '') || null,
             minPrice: h.price_per_night ?? h.minPrice ?? null,
             currency: h.currency ?? null,
@@ -74,6 +77,7 @@ export function useCityDetails() {
           .map((e: any, i: number) => ({
             id: e.id ?? i + 1,
             title: e.title,
+            title_tr: e.title_tr ?? null,
             description: (e.description ?? '').replace(/^\[beta_seed\]\s*/i, '') || null,
             price: e.price ?? null,
             currency: e.currency ?? null,
