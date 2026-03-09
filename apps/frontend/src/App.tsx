@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import MSZ from "./MSZCore";
 import "./xotiji-brand.css";
 import { LanguageSwitcher } from './components/LanguageSwitcher';
-import { Header } from './components/layout/Header';
 import { HeroSection } from './components/layout/HeroSection';
 import { Footer } from './components/layout/Footer';
 import { Modal } from './components/common/Modal';
