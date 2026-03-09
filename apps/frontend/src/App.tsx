@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import MSZ from "./MSZCore";
 import "./xotiji-brand.css";
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { Header } from './components/layout/Header';
+import { HeroSection } from './components/layout/HeroSection';
 import { Footer } from './components/layout/Footer';
 import { Modal } from './components/common/Modal';
 import { CityList } from './components/city/CityList';
@@ -54,6 +55,15 @@ export default function App() {
   const [modalType, setModalType] = useState<"hotel" | "experience" | "ai" | "itinerary" | null>(null);
   const [mszComment, setMszComment] = useState<string | null>(null);
   const [lang] = useState<Lang>(getLang);
+  const citiesSectionRef = useRef<HTMLDivElement>(null);
+
+  function scrollToCities() {
+    citiesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function handleSpaceSelfie() {
+    // Placeholder — Space Selfie route TBD
+  }
 
   // MSZ: Remember selections
   useEffect(() => {
@@ -144,7 +154,7 @@ export default function App() {
       {/* HOME PAGE */}
       {page === "home" && (
         <>
-          <Header />
+          <HeroSection onScrollToCities={scrollToCities} onSpaceSelfie={handleSpaceSelfie} />
 
           {/* AI SUGGESTIONS BUTTON */}
           <div style={{
@@ -180,12 +190,14 @@ export default function App() {
           </div>
 
           {/* CITIES LIST */}
+          <div ref={citiesSectionRef} style={{ scrollMarginTop: "24px" }}>
           <CityList
             cities={cities}
             selectedCityId={selectedCity?.id || null}
             onCityClick={loadCityDetails}
             loading={loadingCities}
           />
+          </div>
 
           {/* CITY DETAILS */}
           {selectedCity && (

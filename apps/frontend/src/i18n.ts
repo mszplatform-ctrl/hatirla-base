@@ -34,6 +34,13 @@ const translations: Record<Lang, any> = {
       login: "Giriş Yap",
       logout: "Çıkış Yap",
     },
+    hero: {
+      tagline: "toward the sun",
+      subtitle: "Kendi güneşin ol",
+      description: "AI destekli seyahat deneyimleri. Şehirleri keşfet, uzay selfie oluştur, yolculuğunu paylaş.",
+      ctaSpaceSelfie: "Space Selfie Oluştur",
+      ctaExploreCities: "Şehirleri Keşfet",
+    },
     home: {
       aiTracking: "Akıllı asistan seçimlerini takip ediyor ve paket oluşturmadan önce kısa bir yorum hazırlıyor.",
       aiThinking: "AI düşünüyor...",
@@ -103,6 +110,13 @@ const translations: Record<Lang, any> = {
       search: "Search",
       login: "Login",
       logout: "Logout",
+    },
+    hero: {
+      tagline: "toward the sun",
+      subtitle: "Be your own sun",
+      description: "AI-powered travel experiences. Discover cities, create space selfies, share your journey.",
+      ctaSpaceSelfie: "Create Space Selfie",
+      ctaExploreCities: "Explore Cities",
     },
     home: {
       aiTracking: "Smart assistant tracks your selections and prepares a brief comment before creating the package.",
