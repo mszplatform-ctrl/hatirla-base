@@ -13,13 +13,14 @@ import { AILoadingIndicator } from './components/ai/AILoadingIndicator';
 import { PrivacyPolicy } from './components/pages/PrivacyPolicy';
 import { TermsOfService } from './components/pages/TermsOfService';
 import { Contact } from './components/pages/Contact';
+import { SpaceSelfie } from './components/pages/SpaceSelfie';
 import { useCities } from './hooks/useCities';
 import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
 import { t, getLang, type Lang } from './i18n';
 
 export default function App() {
-  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact">("home");
+  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie">("home");
 
   function handleNavigate(to: string) {
     if (to === "privacy" || to === "terms" || to === "contact") {
@@ -65,7 +66,7 @@ export default function App() {
   }
 
   function handleSpaceSelfie() {
-    // Placeholder — Space Selfie route TBD
+    setPage("spaceSelfie");
   }
 
   // MSZ: Remember selections
@@ -133,6 +134,10 @@ export default function App() {
   }
 
   const totalSelected = selectedHotelIds.length + selectedExperienceIds.length;
+
+  if (page === "spaceSelfie") {
+    return <SpaceSelfie onBack={() => setPage("home")} />;
+  }
 
   return (
     <div style={{

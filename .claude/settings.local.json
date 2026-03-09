@@ -25,7 +25,10 @@
       "Bash(NODE_TLS_REJECT_UNAUTHORIZED=0 node:*)",
       "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_v5hopSDAGEu9@ep-square-bread-ag2a03uy-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require\" node:*)",
       "Bash(curl:*)",
-      "Bash(npx sharp-cli:*)"
+      "Bash(npx sharp-cli:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
