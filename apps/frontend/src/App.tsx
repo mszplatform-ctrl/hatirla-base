@@ -57,7 +57,11 @@ export default function App() {
   const citiesSectionRef = useRef<HTMLDivElement>(null);
 
   function scrollToCities() {
-    citiesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el = citiesSectionRef.current;
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 24;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
   }
 
   function handleSpaceSelfie() {
