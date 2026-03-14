@@ -227,10 +227,93 @@ function buildFallbackSuggestions(hotels, experiences, lang = 'tr') {
 async function generateSuggestions() {
   return { success: true };
 }
+
+/**
+ * POST /api/ai/face-swap
+ * Swaps the user's face onto a city template image via Replicate facefusion.
+ * Falls back gracefully — throws on hard failure so the controller can 500.
+ *
+ * @param {string} userPhotoDataUri  — data:image/jpeg;base64,... from the frontend
+ * @param {string} cityId            — e.g. "istanbul"
+ * @returns {Promise<string>}        — result image as a data URI
+ */
+async function faceSwap(userPhotoDataUri, cityId) {
+  const token = process.env.REPLICATE_API_TOKEN;
+  if (!token) throw new Error('REPLICATE_API_TOKEN not configured');
+
+  // City background image hosted on production frontend
+  const targetImageUrl = `https://xotiji.app/cities/${cityId}.jpg`;
+
+  // Start the prediction (uses the model's latest deployed version)
+  const startRes = await fetch(
+    'https://api.replicate.com/v1/models/lucataco/facefusion/predictions',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Token ${token}`,
+        'Content-Type': 'application/json',
+        Prefer: 'wait=60', // ask Replicate to wait synchronously up to 60 s
+      },
+      body: JSON.stringify({
+        input: {
+          source_image: userPhotoDataUri, // data URI accepted by Replicate
+          target_image: targetImageUrl,
+        },
+      }),
+    }
+  );
+
+  if (!startRes.ok) {
+    const txt = await startRes.text();
+    throw new Error(`Replicate API error ${startRes.status}: ${txt}`);
+  }
+
+  let prediction = await startRes.json();
+  console.log(`[FaceSwap] Prediction ${prediction.id} status: ${prediction.status}`);
+
+  // Poll until terminal status (in case Prefer:wait was ignored or timed out)
+  const MAX_ATTEMPTS = 45; // 45 × 2 s = 90 s ceiling
+  let attempts = 0;
+  while (
+    prediction.status !== 'succeeded' &&
+    prediction.status !== 'failed' &&
+    prediction.status !== 'canceled' &&
+    attempts < MAX_ATTEMPTS
+  ) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const pollRes = await fetch(
+      `https://api.replicate.com/v1/predictions/${prediction.id}`,
+      { headers: { Authorization: `Token ${token}` } }
+    );
+    prediction = await pollRes.json();
+    attempts++;
+    console.log(`[FaceSwap] Poll ${attempts}: ${prediction.status}`);
+  }
+
+  if (prediction.status !== 'succeeded' || !prediction.output) {
+    throw new Error(
+      `Face swap prediction did not succeed: ${prediction.error || prediction.status}`
+    );
+  }
+
+  // Output is typically a URL or array of URLs
+  const outputUrl = Array.isArray(prediction.output)
+    ? prediction.output[0]
+    : prediction.output;
+
+  // Download and return as base64 data URI so the frontend can display it directly
+  const imgRes = await fetch(outputUrl);
+  const buffer = await imgRes.arrayBuffer();
+  const contentType = imgRes.headers.get('content-type') || 'image/png';
+  const base64 = Buffer.from(buffer).toString('base64');
+  return `data:${contentType};base64,${base64}`;
+}
+
 module.exports = {
   getPackages,
   composePackage,
   getSuggestions,
   generateSuggestions,
+  faceSwap,
 };
 

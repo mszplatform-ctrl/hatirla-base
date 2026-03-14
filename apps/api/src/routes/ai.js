@@ -21,4 +21,7 @@ router.get('/suggestions', aiController.getSuggestions);
 // WRITE PATH → create package
 router.post('/compose', aiController.composePackage);
 
+// AI face swap via Replicate facefusion
+router.post('/face-swap', aiController.faceSwap);
+
 module.exports = router;

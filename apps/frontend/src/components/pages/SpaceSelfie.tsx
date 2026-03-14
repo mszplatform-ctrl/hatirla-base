@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import { t, getLang } from '../../i18n';
 
+const AI_BASE = `${import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com'}/api/ai`;
+
 const CITIES = [
   { id: 'istanbul', image: '/cities/istanbul.jpg' },
   { id: 'paris',    image: '/cities/paris.jpg'    },
@@ -41,9 +43,30 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   }
 
   async function handleGenerate() {
-    if (!selectedCity || !userPhoto || !canvasRef.current) return;
+    if (!selectedCity || !userPhoto) return;
     setStep(3);
 
+    // ── Try AI face swap via Replicate ──
+    try {
+      const res = await fetch(`${AI_BASE}/face-swap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo: userPhoto, cityId: selectedCity.id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.image) {
+          setResultImage(data.image);
+          setStep(4);
+          return;
+        }
+      }
+    } catch (aiErr) {
+      console.warn('[SpaceSelfie] AI face swap unavailable, falling back to canvas:', aiErr);
+    }
+
+    // ── Canvas fallback ──
+    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d')!;
     const SIZE = 1080;
@@ -485,7 +508,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
               {t('spaceSelfie.step3Title')}
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '14px', margin: 0 }}>
-              Be Your Own Sun...
+              {t('spaceSelfie.step3Subtitle')}
             </p>
           </div>
         )}

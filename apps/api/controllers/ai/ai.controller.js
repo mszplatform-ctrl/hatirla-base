@@ -74,6 +74,23 @@ class AIController {
   }
 
   /**
+   * POST /api/ai/face-swap
+   */
+  async faceSwap(req, res) {
+    try {
+      const { photo, cityId } = req.body;
+      if (!photo || !cityId) {
+        return res.status(400).json({ success: false, error: 'photo and cityId are required' });
+      }
+      const image = await aiService.faceSwap(photo, cityId);
+      res.json({ success: true, image });
+    } catch (error) {
+      console.error('[AI Controller] Face swap error:', error.message);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
    * GET /api/ai/packages
    */
   async getPackages(req, res) {
