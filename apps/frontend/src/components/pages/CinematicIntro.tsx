@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { t } from "../../i18n";
 
 interface Props {
@@ -18,18 +18,6 @@ const TAGLINE_DELAY  = 900;  // pause after last line before tagline
 const BUTTON_DELAY   = 1100; // pause after tagline before button appears
 
 export function CinematicIntro({ onComplete }: Props) {
-  // Deterministic star field — no randomness so it's SSR-safe and never changes
-  const stars = useMemo(
-    () =>
-      Array.from({ length: 78 }, (_, i) => ({
-        x:        (i * 137.508)  % 100,
-        y:        (i * 97.3)     % 100,
-        size:     1 + (i % 3) * 0.5,
-        delay:    (i * 0.27)     % 4,
-        duration: 2 + (i % 3),
-      })),
-    [],
-  );
 
   const [shownLines, setShownLines] = useState<string[]>([]);
   const [currentLine, setCurrentLine] = useState("");
@@ -113,34 +101,51 @@ export function CinematicIntro({ onComplete }: Props) {
         overflow: "hidden",
       }}
     >
-      {/* Star field */}
-      {stars.map((s, i) => (
-        <span
-          key={i}
-          style={{
-            position: "absolute",
-            left: `${s.x}%`,
-            top:  `${s.y}%`,
-            width:  `${s.size}px`,
-            height: `${s.size}px`,
-            borderRadius: "50%",
-            background: "white",
-            animation: `xo-twinkle ${s.duration}s ${s.delay}s ease-in-out infinite alternate`,
-            pointerEvents: "none",
-          }}
-        />
-      ))}
-
-      {/* Subtle teal radial glow at centre */}
-      <div
-        style={{
+      {/* Aurora / nebula blobs — pure CSS animation, no JS */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden",
+      }}>
+        {/* Blob 1 — top-left, teal */}
+        <div style={{
           position: "absolute",
-          inset: 0,
-          background:
-            "radial-gradient(ellipse 60% 40% at 50% 55%, rgba(15,118,110,0.07) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
+          top: "-15%", left: "-10%",
+          width: "65vw", height: "65vw",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(15,118,110,0.18) 0%, transparent 68%)",
+          filter: "blur(48px)",
+          animation: "xo-aurora-1 14s ease-in-out infinite alternate",
+        }} />
+        {/* Blob 2 — bottom-right, deep blue */}
+        <div style={{
+          position: "absolute",
+          bottom: "-20%", right: "-15%",
+          width: "70vw", height: "70vw",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 65%)",
+          filter: "blur(56px)",
+          animation: "xo-aurora-2 18s ease-in-out infinite alternate",
+        }} />
+        {/* Blob 3 — centre-right, indigo/purple whisper */}
+        <div style={{
+          position: "absolute",
+          top: "30%", right: "-5%",
+          width: "45vw", height: "45vw",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%)",
+          filter: "blur(40px)",
+          animation: "xo-aurora-3 22s ease-in-out infinite alternate",
+        }} />
+        {/* Blob 4 — bottom-left, faint warm teal */}
+        <div style={{
+          position: "absolute",
+          bottom: "5%", left: "-5%",
+          width: "40vw", height: "40vw",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(45,212,191,0.07) 0%, transparent 72%)",
+          filter: "blur(36px)",
+          animation: "xo-aurora-2 26s ease-in-out infinite alternate-reverse",
+        }} />
+      </div>
 
       {/* Main content column */}
       <div

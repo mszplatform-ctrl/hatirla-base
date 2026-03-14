@@ -32,9 +32,6 @@ export function CityCard({ city, isSelected, onClick }: CityCardProps) {
         {city.name}
       </h3>
       <p style={{ margin: "4px 0", fontSize: "14px", color: "#1e293b", fontWeight: 500 }}>
-        {t('home.country')}: {city.countryCode}
-      </p>
-      <p style={{ margin: "4px 0", fontSize: "14px", color: "#1e293b", fontWeight: 500 }}>
         🏨 {t('home.hotels')}: {city.hotels}
       </p>
       <p style={{ margin: "4px 0", fontSize: "14px", color: "#1e293b", fontWeight: 500 }}>

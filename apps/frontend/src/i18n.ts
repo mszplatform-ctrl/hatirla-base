@@ -36,10 +36,10 @@ const translations: Record<Lang, any> = {
     },
     hero: {
       tagline: "toward the sun",
-      subtitle: "Node bağlandı. Ağa hoş geldin.",
-      description: "Dünya genelinde sinyalleri keşfet. Kendi iletimini oluştur.",
-      ctaSpaceSelfie: "Sinyal Oluştur",
-      ctaExploreCities: "Node'ları Keşfet",
+      subtitle: "Kendi güneşin ol",
+      description: "AI destekli seyahat deneyimleri. Şehirleri keşfet, uzay selfie oluştur, yolculuğunu paylaş.",
+      ctaSpaceSelfie: "Space Selfie Oluştur",
+      ctaExploreCities: "Şehirleri Keşfet",
     },
     home: {
       aiTracking: "Akıllı asistan seçimlerini takip ediyor ve paket oluşturmadan önce kısa bir yorum hazırlıyor.",
@@ -146,10 +146,10 @@ const translations: Record<Lang, any> = {
     },
     hero: {
       tagline: "toward the sun",
-      subtitle: "Node connected. Welcome to the network.",
-      description: "Explore signals across Earth. Create your own transmission.",
-      ctaSpaceSelfie: "Create Signal",
-      ctaExploreCities: "Explore Nodes",
+      subtitle: "Be your own sun",
+      description: "AI-powered travel experiences. Discover cities, create space selfies, share your journey.",
+      ctaSpaceSelfie: "Create Space Selfie",
+      ctaExploreCities: "Explore Cities",
     },
     home: {
       aiTracking: "Smart assistant tracks your selections and prepares a brief comment before creating the package.",

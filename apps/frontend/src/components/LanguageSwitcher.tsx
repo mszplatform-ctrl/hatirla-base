@@ -22,11 +22,17 @@ export function LanguageSwitcher() {
       value={currentLang}
       onChange={handleChange}
       style={{
-        padding: '8px 12px',
-        borderRadius: '6px',
-        border: '1px solid #ccc',
-        fontSize: '14px',
+        padding: '7px 12px',
+        borderRadius: '8px',
+        border: '1px solid #e2e8f0',
+        fontSize: '13px',
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+        fontWeight: 600,
         cursor: 'pointer',
+        background: 'white',
+        boxShadow: '0 2px 8px rgba(15,23,42,0.10)',
+        color: '#0f172a',
+        outline: 'none',
       }}
     >
       {languages.map((lang) => (
