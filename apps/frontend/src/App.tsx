@@ -157,6 +157,25 @@ export default function App() {
       <LanguageSwitcher />
     </div>
 
+    {/* NODE CONNECTED badge — top-left, mirrors language switcher */}
+    <div style={{
+      position: 'fixed', top: 20, left: 16, zIndex: 9999,
+      fontSize: '11px', fontWeight: 700, color: '#0f766e',
+      letterSpacing: '0.12em', textTransform: 'uppercase',
+      opacity: 0.72,
+      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+      pointerEvents: 'none',
+    }}>
+      ● Node connected
+    </div>
+
+    {/* PAGE-TOP DARK VIGNETTE — smooths the dark-intro → light-page transition */}
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, height: '100px',
+      background: 'linear-gradient(to bottom, rgba(2,8,16,0.38) 0%, transparent 100%)',
+      pointerEvents: 'none', zIndex: 50,
+    }} />
+
     <div style={{
       padding: "40px",
       fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",

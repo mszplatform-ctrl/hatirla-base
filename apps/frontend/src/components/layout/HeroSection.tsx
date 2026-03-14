@@ -10,7 +10,7 @@ export function HeroSection({ onScrollToCities, onSpaceSelfie }: HeroSectionProp
     <div style={{
       margin: "-40px -40px 0 -40px",
       padding: "72px 40px 64px",
-      background: "linear-gradient(160deg, #e0f2fe 0%, #f0fdfa 45%, #ffffff 100%)",
+      background: "linear-gradient(180deg, #031420 0%, #062820 10%, #0a4032 22%, #4eb8b0 36%, #b0e4e0 46%, #d4f0ee 54%, #e0f2fe 64%, #f0fdfa 82%, #ffffff 100%)",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",

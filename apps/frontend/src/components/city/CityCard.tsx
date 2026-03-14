@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { t } from '../../i18n';
 
 type CitySummary = {
@@ -15,13 +16,18 @@ type CityCardProps = {
 };
 
 export function CityCard({ city, isSelected, onClick }: CityCardProps) {
+  const [hovered, setHovered] = useState(false);
   return (
     <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         padding: "24px",
-        border: "1px solid #e2e8f0",
+        border: `1px solid ${hovered ? "rgba(15,118,110,0.35)" : "#e2e8f0"}`,
         borderRadius: "16px",
-        boxShadow: "0 4px 10px rgba(15,23,42,0.06)",
+        boxShadow: hovered
+          ? "0 4px 10px rgba(15,23,42,0.06), 0 0 0 3px rgba(15,118,110,0.10), 0 8px 28px rgba(15,118,110,0.14)"
+          : "0 4px 10px rgba(15,23,42,0.06)",
         cursor: "pointer",
         background: isSelected ? "#e6f4ff" : "white",
         transition: "all 0.25s"
