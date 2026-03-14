@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { t, getLang } from "../../i18n";
+import { t } from "../../i18n";
 
 interface Props {
   onComplete: () => void;
@@ -18,8 +18,6 @@ const TAGLINE_DELAY  = 900;  // pause after last line before tagline
 const BUTTON_DELAY   = 1100; // pause after tagline before button appears
 
 export function CinematicIntro({ onComplete }: Props) {
-  const lang = getLang();
-
   // Deterministic star field — no randomness so it's SSR-safe and never changes
   const stars = useMemo(
     () =>
