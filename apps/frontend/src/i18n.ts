@@ -102,6 +102,10 @@ const translations: Record<Lang, any> = {
       socialsLabel: "Sosyal Medya",
       comingSoon: "Yakında",
     },
+    intro: {
+      button: "TRANSFERİ BAŞLAT",
+      initiated: "Transfer başlatıldı... Hoş geldin, Node.",
+    },
     spaceSelfie: {
       title: "Space Selfie",
       back: "Geri",
@@ -207,6 +211,10 @@ const translations: Record<Lang, any> = {
       emailLabel: "Email",
       socialsLabel: "Social Media",
       comingSoon: "Coming soon",
+    },
+    intro: {
+      button: "INITIATE TRANSFER",
+      initiated: "Transfer initiated... Welcome, Node.",
     },
     spaceSelfie: {
       title: "Space Selfie",

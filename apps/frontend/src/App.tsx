@@ -14,12 +14,23 @@ import { PrivacyPolicy } from './components/pages/PrivacyPolicy';
 import { TermsOfService } from './components/pages/TermsOfService';
 import { Contact } from './components/pages/Contact';
 import { SpaceSelfie } from './components/pages/SpaceSelfie';
+import { CinematicIntro } from './components/pages/CinematicIntro';
 import { useCities } from './hooks/useCities';
 import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
 import { t, getLang, type Lang } from './i18n';
 
 export default function App() {
+  // Show cinematic intro only for first-time visitors
+  const [showIntro, setShowIntro] = useState(
+    () => !localStorage.getItem("xotiji_intro_seen"),
+  );
+
+  function handleIntroComplete() {
+    localStorage.setItem("xotiji_intro_seen", "1");
+    setShowIntro(false);
+  }
+
   const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie">("home");
 
   function handleNavigate(to: string) {
@@ -293,6 +304,9 @@ export default function App() {
 
       {/* FOOTER */}
       <Footer onNavigate={handleNavigate} />
+
+      {/* CINEMATIC INTRO — overlays everything for first-time visitors */}
+      {showIntro && <CinematicIntro onComplete={handleIntroComplete} />}
     </div>
   );
 }

@@ -32,3 +32,41 @@ button {
   border-radius: 16px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.06);
 }
+
+/* === Cinematic Intro Animations === */
+@keyframes xo-twinkle {
+  from { opacity: 0.04; }
+  to   { opacity: 0.92; }
+}
+
+@keyframes xo-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes xo-fadeup {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes xo-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes xo-glow-pulse {
+  from {
+    box-shadow: 0 0 8px rgba(15,118,110,0.5), 0 0 20px rgba(15,118,110,0.15);
+    border-color: #0f766e;
+    color: #5eead4;
+  }
+  to {
+    box-shadow: 0 0 24px rgba(45,212,191,0.95), 0 0 64px rgba(45,212,191,0.4);
+    border-color: #2dd4bf;
+    color: #ffffff;
+  }
+}
+
+.xo-intro-btn:hover {
+  background: rgba(15, 118, 110, 0.14) !important;
+}
