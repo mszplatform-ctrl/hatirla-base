@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { t } from "../../i18n";
+import { LanguageSwitcher } from "../LanguageSwitcher";
 
 interface Props {
   onComplete: () => void;
@@ -140,6 +141,11 @@ export function CinematicIntro({ onComplete }: Props) {
         overflow: "hidden",
       }}
     >
+      {/* Language toggle — top-right, same style as main page */}
+      <div style={{ position: "absolute", top: 16, right: 16, zIndex: 10001 }}>
+        <LanguageSwitcher />
+      </div>
+
       {/* City background slideshow — fast-cycling, low opacity, below aurora */}
       <div style={{
         position: "absolute",

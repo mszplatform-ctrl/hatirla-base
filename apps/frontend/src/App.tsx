@@ -21,13 +21,9 @@ import { useAI } from './hooks/useAI';
 import { t, getLang, type Lang } from './i18n';
 
 export default function App() {
-  // Show cinematic intro only for first-time visitors
-  const [showIntro, setShowIntro] = useState(
-    () => !localStorage.getItem("xotiji_intro_seen"),
-  );
+  const [showIntro, setShowIntro] = useState(true);
 
   function handleIntroComplete() {
-    localStorage.setItem("xotiji_intro_seen", "1");
     setShowIntro(false);
   }
 
