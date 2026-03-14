@@ -151,6 +151,12 @@ export default function App() {
   }
 
   return (
+    <>
+    {/* LANGUAGE SWITCHER — outside app container so position:fixed is always relative to viewport */}
+    <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 9999 }}>
+      <LanguageSwitcher />
+    </div>
+
     <div style={{
       padding: "40px",
       fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
@@ -160,10 +166,6 @@ export default function App() {
       margin: "0 auto",
       boxSizing: "border-box",
     }}>
-      {/* LANGUAGE SWITCHER */}
-      <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 9999 }}>
-        <LanguageSwitcher />
-      </div>
 
       {/* STATIC PAGES */}
       {page === "privacy" && <PrivacyPolicy onBack={() => setPage("home")} />}
@@ -308,5 +310,6 @@ export default function App() {
       {/* CINEMATIC INTRO — overlays everything for first-time visitors */}
       {showIntro && <CinematicIntro onComplete={handleIntroComplete} />}
     </div>
+    </>
   );
 }
