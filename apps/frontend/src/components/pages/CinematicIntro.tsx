@@ -1,16 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { t } from "../../i18n";
 
 interface Props {
   onComplete: () => void;
 }
 
-const TERMINAL_LINES = [
-  "Signal detected...",
-  "Scanning node...",
-  "Location: Earth",
-  "Status: Observer",
-];
+// Resolved at render time so language is always respected
+function getTerminalLines() {
+  return [t("intro.line1"), t("intro.line2"), t("intro.line3"), t("intro.line4")];
+}
 
 const TYPING_SPEED   = 52;   // ms per character
 const LINE_PAUSE     = 460;  // pause between completed lines
@@ -56,6 +54,9 @@ export function CinematicIntro({ onComplete }: Props) {
     }, SLIDE_HOLD + SLIDE_FLASH);
     return () => clearInterval(timer);
   }, []);
+
+  // Resolved once on mount — language won't change mid-intro
+  const TERMINAL_LINES = useMemo(() => getTerminalLines(), []);
 
   const [shownLines, setShownLines] = useState<string[]>([]);
   const [currentLine, setCurrentLine] = useState("");
@@ -286,7 +287,7 @@ export function CinematicIntro({ onComplete }: Props) {
               backgroundClip: "text",
             }}
           >
-            Toward the Sun
+            {t("intro.tagline")}
           </div>
         )}
 

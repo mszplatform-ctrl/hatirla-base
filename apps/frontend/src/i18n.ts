@@ -103,6 +103,11 @@ const translations: Record<Lang, any> = {
       comingSoon: "Yakında",
     },
     intro: {
+      line1: "Sinyal algılandı...",
+      line2: "Node taranıyor...",
+      line3: "Konum: Dünya",
+      line4: "Durum: Gözlemci",
+      tagline: "Güneşe Doğru",
       button: "TRANSFERİ BAŞLAT",
       initiated: "Transfer başlatıldı... Hoş geldin, Node.",
     },
@@ -213,6 +218,11 @@ const translations: Record<Lang, any> = {
       comingSoon: "Coming soon",
     },
     intro: {
+      line1: "Signal detected...",
+      line2: "Scanning node...",
+      line3: "Location: Earth",
+      line4: "Status: Observer",
+      tagline: "Toward the Sun",
       button: "INITIATE TRANSFER",
       initiated: "Transfer initiated... Welcome, Node.",
     },
