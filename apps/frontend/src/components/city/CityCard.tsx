@@ -29,7 +29,7 @@ export function CityCard({ city, isSelected, onClick }: CityCardProps) {
       onClick={onClick}
     >
       <h3 style={{ marginBottom: "10px", fontSize: "20px", fontWeight: 600, color: "#0f172a" }}>
-        {city.name}
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "#0f766e", letterSpacing: "0.12em", marginRight: "6px" }}>NODE:</span>{city.name}
       </h3>
       <p style={{ margin: "4px 0", fontSize: "14px", color: "#1e293b", fontWeight: 500 }}>
         {t('home.country')}: {city.countryCode}
