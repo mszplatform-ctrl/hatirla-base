@@ -228,32 +228,34 @@ async function generateSuggestions() {
   return { success: true };
 }
 
-const CITY_LANDMARKS = {
-  istanbul:  'the Blue Mosque in Istanbul Turkey',
-  paris:     'the Eiffel Tower in Paris France',
-  rome:      'the Colosseum in Rome Italy',
-  barcelona: 'Sagrada Familia in Barcelona Spain',
-  tokyo:     'Shibuya crossing in Tokyo Japan',
-  newyork:   'Times Square in New York City',
-  london:    'Big Ben in London England',
-  dubai:     'Burj Khalifa in Dubai UAE',
+const CITY_PROMPTS = {
+  istanbul:  'A realistic travel photograph of this exact person standing in front of the Blue Mosque in Istanbul Turkey, full body visible, wide angle 35mm lens, natural golden hour lighting, candid tourist moment, person interacting with the environment, realistic travel photography, cinematic composition, the mosque clearly visible in background',
+  paris:     'A realistic travel photograph of this exact person standing near the Eiffel Tower in Paris France, full body visible, wide angle 35mm lens, natural daylight, candid tourist moment, Parisian street atmosphere, realistic travel photography, person looking toward the tower',
+  rome:      'A realistic travel photograph of this exact person walking near the Colosseum in Rome Italy, full body visible, wide angle 35mm lens, natural warm lighting, cobblestone street, candid tourist moment, cinematic travel photography',
+  barcelona: 'A realistic travel photograph of this exact person in front of Sagrada Familia in Barcelona Spain, full body visible, wide angle 35mm lens, bright Mediterranean sunlight, candid tourist moment, realistic travel photography',
+  tokyo:     'A realistic travel photograph of this exact person walking through Shibuya crossing in Tokyo Japan at night, full body visible, wide angle 35mm lens, neon lights reflecting on wet pavement, cinematic travel photography, candid moment',
+  newyork:   'A realistic travel photograph of this exact person in Times Square New York City, full body visible, wide angle 35mm lens, night scene, neon billboards, cinematic street photography, candid tourist moment',
+  london:    'A realistic travel photograph of this exact person near Big Ben in London England, full body visible, wide angle 35mm lens, overcast British sky, cinematic travel photography, candid moment',
+  dubai:     'A realistic travel photograph of this exact person in front of Burj Khalifa in Dubai UAE, full body visible, wide angle 35mm lens, golden sunset lighting, cinematic travel photography, modern city atmosphere',
+  tokyo2050: 'A cinematic sci-fi photograph of this exact person walking through futuristic Tokyo in 2050, full body visible, holographic advertisements, flying vehicles, neon cyberpunk atmosphere, wide angle 35mm lens, ultra realistic, cinematic lighting',
+  mars:      'A cinematic sci-fi photograph of this exact person standing on the surface of Mars, full body visible in a sleek space suit, red rocky landscape, Earth visible in the distant sky, dramatic lighting, ultra realistic, wide angle 35mm lens',
+  orbit:     'A cinematic sci-fi photograph of this exact person floating in Earth orbit inside a space station window, full body visible, Earth visible below, stars in background, dramatic space lighting, ultra realistic',
 };
 
 /**
  * POST /api/ai/face-swap
- * Places the user naturally in front of a city landmark via flux-kontext-pro.
+ * Places the user naturally in a city or cosmic scene via flux-kontext-pro.
  * Falls back gracefully — throws on hard failure so the controller can 500.
  *
  * @param {string} userPhotoDataUri  — data:image/jpeg;base64,... from the frontend
- * @param {string} cityId            — e.g. "istanbul"
+ * @param {string} cityId            — e.g. "istanbul", "mars", "orbit"
  * @returns {Promise<string>}        — result image as a data URI
  */
 async function faceSwap(userPhotoDataUri, cityId) {
   const token = process.env.REPLICATE_API_TOKEN;
   if (!token) throw new Error('REPLICATE_API_TOKEN not configured');
 
-  const landmark = CITY_LANDMARKS[cityId] || cityId;
-  const prompt = `Place this exact person naturally in front of ${landmark}, realistic travel photo, natural lighting, the person looks like they are actually there`;
+  const prompt = CITY_PROMPTS[cityId] || CITY_PROMPTS.paris;
 
   // Start the prediction via flux-kontext-pro
   const startRes = await fetch(
