@@ -330,21 +330,20 @@ function pickPrompt(sceneId) {
 }
 
 /**
- * POST /api/ai/face-swap
- * Places the user in a city, cosmic, or historical scene via flux-kontext-pro.
- * Falls back gracefully — throws on hard failure so the controller can 500.
+ * POST /api/ai/face-swap  (Phase 1)
+ * Starts a flux-kontext-pro prediction and returns the prediction ID immediately.
+ * Does NOT wait for the result — the frontend polls /face-swap/status/:id.
  *
- * @param {string} userPhotoDataUri  — data:image/jpeg;base64,... from the frontend
+ * @param {string} userPhotoDataUri  — data:image/jpeg;base64,...
  * @param {string} cityId            — e.g. "istanbul", "mars", "ancient_egypt"
- * @returns {Promise<string>}        — result image as a data URI
+ * @returns {Promise<string>}        — Replicate prediction ID
  */
-async function faceSwap(userPhotoDataUri, cityId) {
+async function startFaceSwap(userPhotoDataUri, cityId) {
   const token = process.env.REPLICATE_API_TOKEN;
   if (!token) throw new Error('REPLICATE_API_TOKEN not configured');
 
   const prompt = pickPrompt(cityId);
 
-  // Start the prediction via flux-kontext-pro
   const startRes = await fetch(
     'https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions',
     {
@@ -352,13 +351,10 @@ async function faceSwap(userPhotoDataUri, cityId) {
       headers: {
         Authorization: `Token ${token}`,
         'Content-Type': 'application/json',
-        Prefer: 'wait=60', // ask Replicate to wait synchronously up to 60 s
+        // No Prefer:wait header — return immediately with a prediction ID
       },
       body: JSON.stringify({
-        input: {
-          input_image: userPhotoDataUri,
-          prompt,
-        },
+        input: { input_image: userPhotoDataUri, prompt },
       }),
     }
   );
@@ -368,45 +364,54 @@ async function faceSwap(userPhotoDataUri, cityId) {
     throw new Error(`Replicate API error ${startRes.status}: ${txt}`);
   }
 
-  let prediction = await startRes.json();
-  console.log(`[FaceSwap] Prediction ${prediction.id} status: ${prediction.status}`);
+  const prediction = await startRes.json();
+  console.log(`[FaceSwap] Started prediction ${prediction.id} for scene: ${cityId}`);
+  return prediction.id;
+}
 
-  // Poll until terminal status (in case Prefer:wait was ignored or timed out)
-  const MAX_ATTEMPTS = 45; // 45 × 2 s = 90 s ceiling
-  let attempts = 0;
-  while (
-    prediction.status !== 'succeeded' &&
-    prediction.status !== 'failed' &&
-    prediction.status !== 'canceled' &&
-    attempts < MAX_ATTEMPTS
-  ) {
-    await new Promise((r) => setTimeout(r, 2000));
-    const pollRes = await fetch(
-      `https://api.replicate.com/v1/predictions/${prediction.id}`,
-      { headers: { Authorization: `Token ${token}` } }
-    );
-    prediction = await pollRes.json();
-    attempts++;
-    console.log(`[FaceSwap] Poll ${attempts}: ${prediction.status}`);
+/**
+ * GET /api/ai/face-swap/status/:id  (Phase 2)
+ * Fetches the current status of a Replicate prediction.
+ * Returns { status, image? } where image is a base64 data URI once succeeded.
+ *
+ * @param {string} predictionId
+ * @returns {Promise<{ status: string, image?: string, error?: string }>}
+ */
+async function getFaceSwapStatus(predictionId) {
+  const token = process.env.REPLICATE_API_TOKEN;
+  if (!token) throw new Error('REPLICATE_API_TOKEN not configured');
+
+  const pollRes = await fetch(
+    `https://api.replicate.com/v1/predictions/${predictionId}`,
+    { headers: { Authorization: `Token ${token}` } }
+  );
+
+  if (!pollRes.ok) {
+    const txt = await pollRes.text();
+    throw new Error(`Replicate status error ${pollRes.status}: ${txt}`);
+  }
+
+  const prediction = await pollRes.json();
+  console.log(`[FaceSwap] Status ${predictionId}: ${prediction.status}`);
+
+  if (prediction.status === 'failed' || prediction.status === 'canceled') {
+    return { status: prediction.status, error: prediction.error || prediction.status };
   }
 
   if (prediction.status !== 'succeeded' || !prediction.output) {
-    throw new Error(
-      `Face swap prediction did not succeed: ${prediction.error || prediction.status}`
-    );
+    return { status: prediction.status };
   }
 
-  // Output is typically a URL or array of URLs
+  // Download output and convert to base64 data URI
   const outputUrl = Array.isArray(prediction.output)
     ? prediction.output[0]
     : prediction.output;
 
-  // Download and return as base64 data URI so the frontend can display it directly
   const imgRes = await fetch(outputUrl);
   const buffer = await imgRes.arrayBuffer();
   const contentType = imgRes.headers.get('content-type') || 'image/png';
   const base64 = Buffer.from(buffer).toString('base64');
-  return `data:${contentType};base64,${base64}`;
+  return { status: 'succeeded', image: `data:${contentType};base64,${base64}` };
 }
 
 module.exports = {
@@ -414,6 +419,7 @@ module.exports = {
   composePackage,
   getSuggestions,
   generateSuggestions,
-  faceSwap,
+  startFaceSwap,
+  getFaceSwapStatus,
 };
 

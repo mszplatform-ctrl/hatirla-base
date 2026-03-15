@@ -74,7 +74,7 @@ class AIController {
   }
 
   /**
-   * POST /api/ai/face-swap
+   * POST /api/ai/face-swap  — Phase 1: start prediction, return ID immediately
    */
   async faceSwap(req, res) {
     try {
@@ -82,10 +82,27 @@ class AIController {
       if (!photo || !cityId) {
         return res.status(400).json({ success: false, error: 'photo and cityId are required' });
       }
-      const image = await aiService.faceSwap(photo, cityId);
-      res.json({ success: true, image });
+      const predictionId = await aiService.startFaceSwap(photo, cityId);
+      res.json({ success: 'pending', predictionId });
     } catch (error) {
-      console.error('[AI Controller] Face swap error:', error.message);
+      console.error('[AI Controller] Face swap start error:', error.message);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/ai/face-swap/status/:id  — Phase 2: poll prediction status
+   */
+  async getFaceSwapStatus(req, res) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ success: false, error: 'predictionId is required' });
+      }
+      const result = await aiService.getFaceSwapStatus(id);
+      res.json(result);
+    } catch (error) {
+      console.error('[AI Controller] Face swap status error:', error.message);
       res.status(500).json({ success: false, error: error.message });
     }
   }

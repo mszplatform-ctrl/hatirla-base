@@ -100,6 +100,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [timeStopIndex, setTimeStopIndex] = useState(0);
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -126,27 +127,69 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   async function handleGenerate() {
     if (!selectedCity || !userPhoto) return;
     setStep(3);
+    setErrorMsg(null);
 
-    // ── Try AI face swap via Replicate ──
+    // ── Phase 1: Start prediction ──
+    let predictionId: string | null = null;
     try {
       const res = await fetch(`${AI_BASE}/face-swap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ photo: userPhoto, cityId: selectedCity.id }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.image) {
-          setResultImage(data.image);
-          setStep(4);
+      const data = await res.json();
+      if (!res.ok || data.success === false) {
+        const msg = data.error || `Server error ${res.status}`;
+        setErrorMsg(`Transmission failed: ${msg}`);
+        setStep(2);
+        return;
+      }
+      predictionId = data.predictionId ?? null;
+    } catch (err) {
+      setErrorMsg('Transmission failed: Could not reach server. Please try again.');
+      setStep(2);
+      return;
+    }
+
+    // ── Phase 2: Poll for result ──
+    if (predictionId) {
+      const MAX_POLLS = 40; // 40 × 3 s = 120 s ceiling
+      for (let i = 0; i < MAX_POLLS; i++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        try {
+          const statusRes = await fetch(`${AI_BASE}/face-swap/status/${predictionId}`);
+          const statusData = await statusRes.json();
+
+          if (!statusRes.ok || statusData.status === 'failed' || statusData.status === 'canceled') {
+            setErrorMsg(`Transmission failed: ${statusData.error || statusData.status || 'Unknown error'}`);
+            setStep(2);
+            return;
+          }
+          if (statusData.status === 'succeeded' && statusData.image) {
+            setResultImage(statusData.image);
+            setStep(4);
+            return;
+          }
+          // still processing — keep polling
+        } catch (pollErr) {
+          setErrorMsg('Transmission failed: Lost connection while processing. Please try again.');
+          setStep(2);
           return;
         }
       }
-    } catch (aiErr) {
-      console.warn('[SpaceSelfie] AI face swap unavailable, falling back to canvas:', aiErr);
+      // Timed out
+      setErrorMsg('Transmission timed out. The server is busy — please try again.');
+      setStep(2);
+      return;
     }
 
-    // ── Canvas fallback ──
+    // ── Canvas fallback (only for city scenes with a local background image) ──
+    if (!selectedCity.image) {
+      setErrorMsg('Transmission failed. Please try again.');
+      setStep(2);
+      return;
+    }
+
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d')!;
@@ -291,6 +334,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setSelectedCity(null);
     setUserPhoto(null);
     setResultImage(null);
+    setErrorMsg(null);
   }
 
   // Progress bar: 3 segments for steps 1 → 2 → 4
@@ -549,6 +593,29 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
         {/* ── STEP 2: Photo Upload ── */}
         {step === 2 && (
           <div style={{ textAlign: 'center' }}>
+            {/* Error banner */}
+            {errorMsg && (
+              <div style={{
+                background: 'rgba(239,68,68,0.12)',
+                border: '1px solid rgba(239,68,68,0.4)',
+                borderRadius: '12px',
+                padding: '14px 18px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                textAlign: 'left',
+              }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span>
+                <span style={{ color: '#fca5a5', fontFamily: 'monospace', fontSize: '13px', lineHeight: 1.5 }}>
+                  {errorMsg}
+                </span>
+                <button
+                  onClick={() => setErrorMsg(null)}
+                  style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '16px', flexShrink: 0 }}
+                >✕</button>
+              </div>
+            )}
             <h2 style={{ color: 'white', margin: '0 0 8px', fontSize: '22px', fontWeight: 700 }}>
               {t('spaceSelfie.step2Title')}
             </h2>

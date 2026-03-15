@@ -21,7 +21,9 @@ router.get('/suggestions', aiController.getSuggestions);
 // WRITE PATH → create package
 router.post('/compose', aiController.composePackage);
 
-// AI face swap via Replicate facefusion
+// AI face swap — Phase 1: start prediction
 router.post('/face-swap', aiController.faceSwap);
+// AI face swap — Phase 2: poll prediction status
+router.get('/face-swap/status/:id', aiController.getFaceSwapStatus);
 
 module.exports = router;
