@@ -17,161 +17,31 @@ interface Props {
   onError: (msg: string) => void;
 }
 
-// ── Soft circular sprite for PointsMaterial ──────────────────────────────────
-function makeCircleSprite(): THREE.CanvasTexture {
-  const size = 64;
-  const cvs  = document.createElement('canvas');
-  cvs.width  = size;
-  cvs.height = size;
-  const ctx  = cvs.getContext('2d')!;
-  const c    = size / 2;
-  const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
-  grad.addColorStop(0,   'rgba(255,255,255,1)');
-  grad.addColorStop(0.45,'rgba(255,255,255,0.85)');
-  grad.addColorStop(1,   'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  return new THREE.CanvasTexture(cvs);
-}
-
-// ── Canvas-generated Earth texture ───────────────────────────────────────────
-function makeEarthTexture(): THREE.CanvasTexture {
-  const W = 1024, H = 512;
-  const cvs = document.createElement('canvas');
-  cvs.width  = W;
-  cvs.height = H;
-  const ctx  = cvs.getContext('2d')!;
-
-  // Deep ocean gradient
-  const ocean = ctx.createLinearGradient(0, 0, 0, H);
-  ocean.addColorStop(0,   '#061830');
-  ocean.addColorStop(0.5, '#0a2245');
-  ocean.addColorStop(1,   '#040e1e');
-  ctx.fillStyle = ocean;
-  ctx.fillRect(0, 0, W, H);
-
-  // Irregular continent blobs
-  function blob(x: number, y: number, rx: number, ry: number, rot: number, color: string) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rot);
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    const steps = 14;
-    for (let s = 0; s <= steps; s++) {
-      const a = (s / steps) * Math.PI * 2;
-      const r = 0.68 + Math.random() * 0.64;
-      const px = Math.cos(a) * rx * r;
-      const py = Math.sin(a) * ry * r;
-      s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Continents
-  blob(190, 195, 68,  130, -0.25, '#1a3d12'); // Americas N
-  blob(210, 350, 50,  85,   0.15, '#1e3a10'); // Americas S
-  blob(490, 160, 52,  78,   0.1,  '#1f3d16'); // Europe
-  blob(510, 295, 60,  115,  0.0,  '#2a3212'); // Africa
-  blob(700, 160, 130, 90,   0.0,  '#1a3a14'); // Asia W+C
-  blob(820, 185, 75,  58,  -0.2,  '#213818'); // Asia E
-  blob(825, 335, 60,  42,   0.25, '#2e3014'); // Australia
-  blob(318, 78,  42,  30,   0.1,  '#b8d0e0'); // Greenland (ice)
-  // Poles
-  const arcticGrad = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, 100);
-  arcticGrad.addColorStop(0, 'rgba(190,215,235,0.9)');
-  arcticGrad.addColorStop(1, 'rgba(190,215,235,0)');
-  ctx.fillStyle = arcticGrad;
-  ctx.fillRect(0, 0, W, 90);
-  const antarcticGrad = ctx.createRadialGradient(W / 2, H, 0, W / 2, H, 120);
-  antarcticGrad.addColorStop(0, 'rgba(200,220,240,0.95)');
-  antarcticGrad.addColorStop(1, 'rgba(200,220,240,0)');
-  ctx.fillStyle = antarcticGrad;
-  ctx.fillRect(0, H - 100, W, 100);
-
-  return new THREE.CanvasTexture(cvs);
-}
-
-// ── Web Audio API warp sound ──────────────────────────────────────────────────
-function startWarpSound(): AudioContext | null {
-  try {
-    const ac = new AudioContext();
-
-    // Impulse reverb
-    const revLen = Math.floor(ac.sampleRate * 2.8);
-    const revBuf = ac.createBuffer(2, revLen, ac.sampleRate);
-    for (let ch = 0; ch < 2; ch++) {
-      const d = revBuf.getChannelData(ch);
-      for (let i = 0; i < revLen; i++) {
-        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / revLen, 1.6);
-      }
-    }
-    const conv = ac.createConvolver();
-    conv.buffer = revBuf;
-
-    // Master gain: 0.3 → 0 over 10s
-    const master = ac.createGain();
-    master.gain.setValueAtTime(0.3, ac.currentTime);
-    master.gain.linearRampToValueAtTime(0, ac.currentTime + 10);
-    master.connect(ac.destination);
-
-    const dry = ac.createGain(); dry.gain.value = 0.55; dry.connect(master);
-    const wet = ac.createGain(); wet.gain.value = 0.45; conv.connect(wet); wet.connect(master);
-
-    // Osc 1: sawtooth sweep 800 → 100 Hz over 3s
-    const osc1 = ac.createOscillator();
-    osc1.type = 'sawtooth';
-    osc1.frequency.setValueAtTime(800, ac.currentTime);
-    osc1.frequency.exponentialRampToValueAtTime(100, ac.currentTime + 3);
-    osc1.connect(dry);
-    osc1.connect(conv);
-    osc1.start();
-    osc1.stop(ac.currentTime + 10);
-
-    // Osc 2: deep 60 Hz rumble
-    const osc2 = ac.createOscillator();
-    osc2.type = 'sine';
-    osc2.frequency.value = 60;
-    const rumble = ac.createGain(); rumble.gain.value = 0.55;
-    osc2.connect(rumble); rumble.connect(master);
-    osc2.start();
-    osc2.stop(ac.currentTime + 10);
-
-    return ac;
-  } catch {
-    return null; // silently skip if AudioContext unavailable
-  }
-}
-
-// ── Component ─────────────────────────────────────────────────────────────────
 export function CinematicSequence({ scene, apiPromise, onComplete, onError }: Props) {
-  // DOM refs — mutated directly in RAF, no re-renders
+  // DOM refs — mutated directly in RAF, zero re-renders for continuous values
   const mountRef    = useRef<HTMLDivElement>(null);
-  const countRef    = useRef<HTMLDivElement>(null);  // countdown number
   const chromaRRef  = useRef<HTMLDivElement>(null);
   const chromaBRef  = useRef<HTMLDivElement>(null);
-  const arrivingRef = useRef<HTMLDivElement>(null);  // "ARRIVING AT:" block
-  const sunGlowRef  = useRef<HTMLDivElement>(null);  // 3-layer sun glow
-  const goldenRef   = useRef<HTMLDivElement>(null);  // golden light flood
-  const sunTextRef  = useRef<HTMLDivElement>(null);  // "TOWARD THE SUN"
+  const seqTextRef  = useRef<HTMLDivElement>(null); // "INITIATING TEMPORAL SEQUENCE..."
+  const arrivingRef = useRef<HTMLDivElement>(null); // "ARRIVING AT: [ERA]"
+  const earthRef    = useRef<HTMLDivElement>(null); // Earth horizon ellipse
+  const sunRef      = useRef<HTMLDivElement>(null); // Sun glow anchor (position animated)
+  const goldenRef   = useRef<HTMLDivElement>(null); // Golden light flood
+  const sunTextRef  = useRef<HTMLDivElement>(null); // "TOWARD THE SUN"
   const rafRef      = useRef(0);
 
-  // Internal animation state (refs only, no re-renders)
-  const phaseRef      = useRef(0);
+  // Internal animation state — refs only
+  const phaseRef      = useRef(0); // 0=warp(0-6s) 1=earth(6-8s) 2=sunrise(8-10s) 3=done
   const apiResultRef  = useRef<string | null>(null);
   const apiDoneRef    = useRef(false);
   const completingRef = useRef(false);
   const erroredRef    = useRef(false);
-  const signalRef     = useRef(false);
 
-  // React state — only for structural show/hide (≤6 transitions total)
-  const [phase,      setPhaseState]  = useState(0); // 0-5 (5 = signal lock)
-  const [whiteFlash, setWhiteFlash]  = useState(false);
+  // React state — only for structural show/hide (≤4 changes total)
+  const [phase,      setPhaseState] = useState(0); // mirrors phaseRef for JSX
+  const [whiteFlash, setWhiteFlash] = useState(false);
 
   useEffect(() => {
-    // ── API tracking ──
     apiPromise
       .then((img: string) => { apiResultRef.current = img; apiDoneRef.current = true; })
       .catch((err: unknown) => {
@@ -181,11 +51,7 @@ export function CinematicSequence({ scene, apiPromise, onComplete, onError }: Pr
         }
       });
 
-    // ── Sound (immediately after LAUNCH click gesture) ──
-    const audioCtx = startWarpSound();
-
-    // ── Phase helper (called from RAF, safe because refs are stable) ──
-    const advancePhase = (p: number) => {
+    const setPhase = (p: number) => {
       if (phaseRef.current < p) { phaseRef.current = p; setPhaseState(p); }
     };
 
@@ -196,9 +62,9 @@ export function CinematicSequence({ scene, apiPromise, onComplete, onError }: Pr
       setTimeout(() => { if (apiResultRef.current) onComplete(apiResultRef.current); }, 600);
     };
 
-    // ── Three.js ──
+    // ── Three.js — LineSegments warp tunnel only ──────────────────────────────
     const isMobile = window.innerWidth < 768;
-    const N = isMobile ? 2000 : 5000;
+    const N = isMobile ? 1500 : 4000;
 
     const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -211,75 +77,42 @@ export function CinematicSequence({ scene, apiPromise, onComplete, onError }: Pr
     const camera  = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
     camera.position.set(0, 0, 5);
 
-    // ── Warp particles ──
-    const posArr  = new Float32Array(N * 3);
-    const baseVel = new Float32Array(N); // per-particle speed multiplier (0.5-1.5)
-    const colArr  = new Float32Array(N * 3);
+    // Each "star" = one LineSegment: [trail vertex, current vertex]
+    const linePos = new Float32Array(N * 2 * 3); // N lines × 2 vertices × 3 components
+    const lineCol = new Float32Array(N * 2 * 3);
+    const baseVel = new Float32Array(N);           // per-particle speed multiplier
+
     for (let i = 0; i < N; i++) {
-      posArr[i * 3]     = (Math.random() - 0.5) * 40;
-      posArr[i * 3 + 1] = (Math.random() - 0.5) * 40;
-      posArr[i * 3 + 2] = -800 + Math.random() * 790;
-      baseVel[i]        = 0.5 + Math.random();
-      if (Math.random() > 0.65) {        // teal #00d4aa
-        colArr[i * 3] = 0; colArr[i * 3 + 1] = 0.831; colArr[i * 3 + 2] = 0.667;
-      } else {                           // white
-        colArr[i * 3] = 1; colArr[i * 3 + 1] = 1; colArr[i * 3 + 2] = 1;
-      }
+      const x = (Math.random() - 0.5) * 40;
+      const y = (Math.random() - 0.5) * 40;
+      const z = -800 + Math.random() * 790;
+      baseVel[i] = 0.6 + Math.random() * 0.8;
+
+      // current vertex (vertices 0)
+      linePos[i * 6]     = x;
+      linePos[i * 6 + 1] = y;
+      linePos[i * 6 + 2] = z;
+      // trail vertex (vertices 1) — initially same position, 0-length line
+      linePos[i * 6 + 3] = x;
+      linePos[i * 6 + 4] = y;
+      linePos[i * 6 + 5] = z - 0.05;
+
+      // teal #00d4aa (35%) or white (65%)
+      const teal = Math.random() > 0.65;
+      const r = teal ? 0 : 1, g = teal ? 0.831 : 1, b = teal ? 0.667 : 1;
+      lineCol[i * 6]     = r; lineCol[i * 6 + 1] = g; lineCol[i * 6 + 2] = b;
+      lineCol[i * 6 + 3] = r; lineCol[i * 6 + 4] = g; lineCol[i * 6 + 5] = b;
     }
-    const sprite = makeCircleSprite();
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-    geo.setAttribute('color',    new THREE.BufferAttribute(colArr, 3));
-    const mat = new THREE.PointsMaterial({
-      size: 2, sizeAttenuation: true, vertexColors: true,
-      map: sprite, transparent: true, alphaTest: 0.05, depthWrite: false,
-    });
-    scene3d.add(new THREE.Points(geo, mat));
 
-    // ── 200 static background stars ──
-    const starPos = new Float32Array(200 * 3);
-    for (let i = 0; i < 200; i++) {
-      starPos[i * 3]     = (Math.random() - 0.5) * 350;
-      starPos[i * 3 + 1] = (Math.random() - 0.5) * 350;
-      starPos[i * 3 + 2] = -160 - Math.random() * 80;
-    }
-    const starGeo = new THREE.BufferGeometry();
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    const starMat    = new THREE.PointsMaterial({ size: 0.6, color: 0xffffff, sizeAttenuation: true });
-    const starPoints = new THREE.Points(starGeo, starMat);
-    starPoints.visible = false;
-    scene3d.add(starPoints);
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
+    lineGeo.setAttribute('color',    new THREE.BufferAttribute(lineCol, 3));
+    const lineMat = new THREE.LineBasicMaterial({ vertexColors: true });
+    scene3d.add(new THREE.LineSegments(lineGeo, lineMat));
 
-    // ── Earth ──
-    const earthTex = makeEarthTexture();
-    const earthGeo = new THREE.SphereGeometry(2, 64, 64);
-    const earthMat = new THREE.MeshPhongMaterial({
-      map: earthTex, shininess: 25,
-      specular: new THREE.Color(0x1a3366),
-    });
-    const earth = new THREE.Mesh(earthGeo, earthMat);
-    earth.position.set(0, 0, -30);
-    earth.visible = false;
-    scene3d.add(earth);
-
-    // Atmosphere glow: slightly larger, #4488ff, opacity 0.15
-    const atmoGeo = new THREE.SphereGeometry(2.22, 32, 32);
-    const atmoMat = new THREE.MeshPhongMaterial({
-      color: 0x4488ff, transparent: true, opacity: 0,
-      side: THREE.FrontSide, depthWrite: false,
-    });
-    earth.add(new THREE.Mesh(atmoGeo, atmoMat));
-
-    // ── Lights ──
-    scene3d.add(new THREE.AmbientLight(0x1a1a2e, 1.5));
-    const sunLight = new THREE.DirectionalLight(0xffd0a0, 0);
-    sunLight.position.set(0, -2, -4);
-    scene3d.add(sunLight);
-
-    // ── Animation loop ──
+    // ── Animation loop ────────────────────────────────────────────────────────
     const startTime = performance.now();
     let lastTime    = startTime;
-    let lastCt      = 10;
 
     const animate = () => {
       rafRef.current = requestAnimationFrame(animate);
@@ -288,100 +121,97 @@ export function CinematicSequence({ scene, apiPromise, onComplete, onError }: Pr
       const dt      = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
 
+      const ph   = phaseRef.current;
+      const pArr = lineGeo.attributes.position.array as Float32Array;
+
       // ── Phase transitions ──
-      if (elapsed >= 3  && phaseRef.current === 0) advancePhase(1);
-      if (elapsed >= 6  && phaseRef.current === 1) {
-        advancePhase(2);
-        earth.visible      = true;
-        starPoints.visible = true;
-      }
-      if (elapsed >= 8  && phaseRef.current === 2) advancePhase(3);
-      if (elapsed >= 10 && phaseRef.current === 3) {
+      if (elapsed >= 6  && ph === 0) setPhase(1);
+      if (elapsed >= 8  && ph === 1) setPhase(2);
+      if (elapsed >= 10 && ph === 2) {
+        phaseRef.current = 3; // don't use setPhase — may become 5 below
         if (apiDoneRef.current) {
-          advancePhase(4);
           tryComplete();
         } else {
-          signalRef.current = true;
-          advancePhase(5);
+          setPhaseState(5); // signal lock UI
         }
       }
-      if (phaseRef.current === 5 && apiDoneRef.current && !completingRef.current) {
-        advancePhase(4);
-        tryComplete();
-      }
+      // Signal lock: check every frame until API resolves
+      if (ph === 3 && apiDoneRef.current && !completingRef.current) tryComplete();
 
-      const ph   = phaseRef.current;
-      const pArr = geo.attributes.position.array as Float32Array;
+      // ── Warp speed easing: speed = elapsed² × 0.004 (spec) ──
+      const boost    = elapsed * elapsed * 0.004;
+      const trailLen = Math.max(0.05, boost * 120); // 0.05 = nearly a dot at start
 
-      // ── Countdown: update once per second via DOM ref ──
-      const ct = Math.max(1, 10 - Math.floor(elapsed));
-      if (ct !== lastCt && countRef.current) { lastCt = ct; countRef.current.textContent = String(ct); }
-
-      // ── Warp particles: easing speed = elapsed² * 0.003, floored at 0.01 ──
-      if (ph === 0 || ph === 1 || ph === 5) {
-        const boost = Math.max(elapsed * elapsed * 0.003, 0.01);
+      // Particle update: active during warp phases + signal lock
+      const warpActive = ph < 3 || (ph === 3 && !apiDoneRef.current);
+      if (warpActive) {
         for (let i = 0; i < N; i++) {
-          pArr[i * 3 + 2] += baseVel[i] * boost * dt * 4000;
+          const cx = pArr[i * 6];
+          const cy = pArr[i * 6 + 1];
+          let   cz = pArr[i * 6 + 2];
 
-          if (ph === 1) {
-            // Spiral
-            const a = elapsed * 1.5 + i * 0.003;
-            pArr[i * 3]     += Math.cos(a) * 0.01;
-            pArr[i * 3 + 1] += Math.sin(a) * 0.01;
-          }
-          if (pArr[i * 3 + 2] > 8) {
-            pArr[i * 3]     = (Math.random() - 0.5) * 40;
-            pArr[i * 3 + 1] = (Math.random() - 0.5) * 40;
-            pArr[i * 3 + 2] = -800;
+          cz += baseVel[i] * boost * dt * 5000;
+
+          if (cz > 6) {
+            // Reset to far end of tunnel
+            pArr[i * 6]     = (Math.random() - 0.5) * 40;
+            pArr[i * 6 + 1] = (Math.random() - 0.5) * 40;
+            pArr[i * 6 + 2] = -800;
+            pArr[i * 6 + 3] = pArr[i * 6];
+            pArr[i * 6 + 4] = pArr[i * 6 + 1];
+            pArr[i * 6 + 5] = -800.05;
+          } else {
+            pArr[i * 6 + 2] = cz;
+            pArr[i * 6 + 3] = cx;
+            pArr[i * 6 + 4] = cy;
+            pArr[i * 6 + 5] = Math.max(cz - trailLen, -800);
           }
         }
-        geo.attributes.position.needsUpdate = true;
+        lineGeo.attributes.position.needsUpdate = true;
       }
 
-      // ── Earth approach (phase 2: 6-8s) ──
-      if (ph === 2) {
-        const t = Math.min((elapsed - 6) / 2, 1);
-        earth.position.z  = -30 + t * 26;   // -30 → -4
-        atmoMat.opacity   = t * 0.15;
-        camera.rotation.z = Math.sin(t * Math.PI) * 0.04;
-      }
-
-      // ── Sunrise (phase 3: 8-10s) ──
-      if (ph === 3) {
-        const t = Math.min((elapsed - 8) / 2, 1);
-        sunLight.intensity = t * 4;
-        atmoMat.opacity    = 0.15 + t * 0.25;
-        if (sunGlowRef.current) {
-          sunGlowRef.current.style.bottom  = `${-10 + t * 55}%`;
-          sunGlowRef.current.style.opacity = String(Math.min(t * 2.5, 1));
-        }
-        if (goldenRef.current) goldenRef.current.style.opacity = String(t * 0.75);
-        if (sunTextRef.current) sunTextRef.current.style.opacity = String(Math.min((t - 0.3) * 2.5, 1));
-      }
-
-      // ── Chromatic aberration (phase 1: 3-6s) ──
-      if (ph === 1) {
-        const t = Math.min((elapsed - 3) / 3, 1);
+      // ── Chromatic aberration (peaks at elapsed ≈ 5, fades by 8s) ──
+      if (elapsed > 3 && elapsed < 8) {
+        const t = Math.min((elapsed - 3) / 3, 1) * Math.max(0, 1 - (elapsed - 6) / 2);
         const o = t * 16;
         if (chromaRRef.current) { chromaRRef.current.style.transform = `translate(${o}px,0)`;  chromaRRef.current.style.opacity = String(t * 0.22); }
         if (chromaBRef.current) { chromaBRef.current.style.transform = `translate(-${o}px,0)`; chromaBRef.current.style.opacity = String(t * 0.22); }
-      } else if (ph >= 2) {
+      } else if (elapsed >= 8) {
         if (chromaRRef.current) chromaRRef.current.style.opacity = '0';
         if (chromaBRef.current) chromaBRef.current.style.opacity = '0';
       }
 
-      // ── "ARRIVING AT:" fade-in (phase 1) + fade-out (phase 2 start) ──
-      if (ph === 1 && arrivingRef.current) {
-        const t = Math.min((elapsed - 3) / 1.5, 1);
-        arrivingRef.current.style.opacity   = String(t);
-        arrivingRef.current.style.transform = `translate(-50%, ${-50 + (1 - t) * 5}%)`;
-      }
-      if (ph === 2 && arrivingRef.current) {
-        const t = Math.min((elapsed - 6) / 0.6, 1);
-        arrivingRef.current.style.opacity = String(1 - t);
+      // ── "INITIATING TEMPORAL SEQUENCE..." fades in at 2s, out at 6s ──
+      if (seqTextRef.current) {
+        const tIn  = Math.max(0, Math.min((elapsed - 2) / 1.2, 1));
+        const tOut = elapsed > 5.5 ? Math.max(0, 1 - (elapsed - 5.5) / 0.7) : 1;
+        seqTextRef.current.style.opacity = String(tIn * tOut);
       }
 
-      if (earth.visible) earth.rotation.y += 0.004;
+      // ── "ARRIVING AT: [ERA]" fades in at 4s, out at 6s ──
+      if (arrivingRef.current) {
+        const tIn  = Math.max(0, Math.min((elapsed - 4) / 1.2, 1));
+        const tOut = elapsed > 5.5 ? Math.max(0, 1 - (elapsed - 5.5) / 0.7) : 1;
+        arrivingRef.current.style.opacity = String(tIn * tOut);
+      }
+
+      // ── Earth horizon fades in at 6s ──
+      if (ph >= 1 && earthRef.current) {
+        const t = Math.min((elapsed - 6) / 1.8, 1);
+        earthRef.current.style.opacity = String(t);
+      }
+
+      // ── Sunrise: sun rises + golden flood (8-10s) ──
+      if (ph >= 2) {
+        const t = Math.min((elapsed - 8) / 2, 1);
+        if (sunRef.current) {
+          // Sun rises: bottom goes from 32vw (just below horizon) to 46vw (clearly above)
+          sunRef.current.style.bottom  = `${32 + t * 14}vw`;
+          sunRef.current.style.opacity = String(Math.min(t * 3, 1));
+        }
+        if (goldenRef.current) goldenRef.current.style.opacity = String(t * 0.7);
+        if (sunTextRef.current) sunTextRef.current.style.opacity = String(Math.max(0, Math.min((t - 0.4) * 2.5, 1)));
+      }
 
       renderer.render(scene3d, camera);
     };
@@ -398,160 +228,178 @@ export function CinematicSequence({ scene, apiPromise, onComplete, onError }: Pr
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', onResize);
-      try { audioCtx?.close(); } catch { /* ignore */ }
-      geo.dispose(); mat.dispose(); sprite.dispose();
-      starGeo.dispose(); starMat.dispose();
-      earthGeo.dispose(); earthMat.dispose(); earthTex.dispose();
-      atmoGeo.dispose(); atmoMat.dispose();
+      lineGeo.dispose();
+      lineMat.dispose();
       renderer.dispose();
-      try {
-        if (mount && renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
-      } catch { /* ignore */ }
+      try { if (mount && renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement); } catch { /* ignore */ }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const showCountdown = phase === 0 || phase === 1 || phase === 3;
-
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#000000', zIndex: 100, overflow: 'hidden' }}>
-
-      {/* Three.js canvas */}
+    <div style={{
+      position: 'fixed', inset: 0, background: '#000000',
+      zIndex: 100, overflow: 'hidden',
+      fontFamily: 'monospace',
+    }}>
+      {/* Three.js warp tunnel canvas */}
       <div ref={mountRef} style={{ position: 'absolute', inset: 0 }} />
 
       {/* Chromatic aberration */}
       <div ref={chromaRRef} style={{ position: 'absolute', inset: 0, background: 'rgba(255,20,20,0.14)',  opacity: 0, pointerEvents: 'none', mixBlendMode: 'screen' }} />
       <div ref={chromaBRef} style={{ position: 'absolute', inset: 0, background: 'rgba(20,60,255,0.14)', opacity: 0, pointerEvents: 'none', mixBlendMode: 'screen' }} />
 
-      {/* Golden light flood (rises during phase 3) */}
+      {/* "INITIATING TEMPORAL SEQUENCE..." — fades in at 2s */}
       <div
-        ref={goldenRef}
+        ref={seqTextRef}
         style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0,
-          background: 'radial-gradient(ellipse at 50% 70%, rgba(255,195,50,0.85) 0%, rgba(255,100,0,0.4) 45%, transparent 75%)',
+          position: 'absolute', top: '38%', left: '50%',
+          transform: 'translateX(-50%)',
+          opacity: 0, pointerEvents: 'none', zIndex: 2,
+          color: 'rgba(45,212,191,0.65)',
+          fontSize: '11px', letterSpacing: '0.24em', whiteSpace: 'nowrap',
         }}
-      />
+      >
+        INITIATING TEMPORAL SEQUENCE...
+      </div>
 
-      {/* Countdown — large monospace, center screen */}
-      {showCountdown && (
-        <div style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          pointerEvents: 'none', zIndex: 2, textAlign: 'center',
-        }}>
-          <div
-            ref={countRef}
-            style={{
-              fontFamily: 'monospace',
-              fontSize: '15vw',
-              fontWeight: 900,
-              color: '#ffffff',
-              lineHeight: 1,
-              userSelect: 'none',
-              textShadow:
-                '0 0 40px rgba(255,255,255,0.9), 0 0 100px rgba(14,165,233,0.7), 0 0 200px rgba(14,165,233,0.3)',
-            }}
-          >
-            10
-          </div>
-        </div>
-      )}
-
-      {/* "ARRIVING AT:" (phase 1 — always in DOM, opacity via ref) */}
+      {/* "ARRIVING AT: [ERA]" — fades in at 4s */}
       <div
         ref={arrivingRef}
         style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          textAlign: 'center', pointerEvents: 'none', opacity: 0, zIndex: 2,
+          position: 'absolute', top: '46%', left: '50%',
+          transform: 'translateX(-50%)',
+          opacity: 0, pointerEvents: 'none', zIndex: 2, textAlign: 'center',
         }}
       >
-        <div style={{ color: 'rgba(45,212,191,0.7)', fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.28em', marginBottom: '14px' }}>
+        <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: '9px', letterSpacing: '0.24em', marginBottom: '10px' }}>
           ARRIVING AT:
         </div>
         <div style={{
-          color: 'white', fontFamily: 'monospace',
-          fontSize: 'clamp(20px, 3.5vw, 34px)', fontWeight: 800, letterSpacing: '0.1em',
-          textShadow: scene.cosmic ? '0 0 40px rgba(139,92,246,0.9)' : '0 0 40px rgba(45,212,191,0.9)',
+          color: 'white',
+          fontSize: 'clamp(18px, 2.8vw, 28px)', fontWeight: 700, letterSpacing: '0.1em',
+          textShadow: scene.cosmic
+            ? '0 0 30px rgba(139,92,246,0.9)'
+            : '0 0 30px rgba(45,212,191,0.9)',
+          whiteSpace: 'nowrap',
         }}>
           {scene.label}
         </div>
-        <div style={{ color: scene.cosmic ? '#a78bfa' : '#2dd4bf', fontFamily: 'monospace', fontSize: '14px', marginTop: '10px', letterSpacing: '0.15em' }}>
+        <div style={{
+          color: scene.cosmic ? '#a78bfa' : '#2dd4bf',
+          fontSize: '12px', marginTop: '8px', letterSpacing: '0.14em',
+        }}>
           {scene.year}
         </div>
       </div>
 
-      {/* Sun glow — 3 concentric CSS layers, rises during phase 3 */}
+      {/*
+        ── EARTH + SUN LAYER (phase >= 1) ─────────────────────────────────────
+        Earth horizon: wide CSS ellipse at bottom, blue atmosphere boxShadow.
+        Top of ellipse appears at ~40vw from bottom of viewport.
+        Sun: positioned behind Earth (lower z-index), rises from 32vw to 46vw.
+      */}
+
+      {/* Sun glow — rises from behind Earth horizon (z-index below Earth) */}
       <div
-        ref={sunGlowRef}
+        ref={sunRef}
         style={{
-          position: 'absolute', left: '50%', bottom: '-10%',
+          position: 'absolute', left: '50%',
           transform: 'translateX(-50%)',
-          pointerEvents: 'none', opacity: 0, zIndex: 1,
-          width: '1px', height: '1px', // anchor point; children use absolute positioning
+          bottom: '32vw',        // starts just below Earth horizon (~40vw)
+          opacity: 0, pointerEvents: 'none',
+          zIndex: 3,             // BELOW Earth (z-index 4)
+          width: '1px', height: '1px', // anchor point; children are absolutely placed
         }}
       >
-        {/* Outer halo — blur 60px */}
+        {/* Layer 1: wide outer corona — blur 60px */}
         <div style={{
           position: 'absolute', left: '50%', top: '50%',
           transform: 'translate(-50%,-50%)',
-          width: '520px', height: '520px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,179,71,0.4) 0%, rgba(255,120,30,0.15) 50%, transparent 70%)',
+          width: '600px', height: '260px', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(255,163,71,0.45) 0%, rgba(255,80,0,0.15) 55%, transparent 75%)',
           filter: 'blur(60px)',
         }} />
-        {/* Mid halo — blur 20px */}
+        {/* Layer 2: mid halo — blur 20px */}
         <div style={{
           position: 'absolute', left: '50%', top: '50%',
           transform: 'translate(-50%,-50%)',
-          width: '240px', height: '240px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,220,60,0.7) 0%, rgba(255,179,71,0.4) 45%, transparent 70%)',
+          width: '260px', height: '100px', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(255,220,60,0.85) 0%, rgba(255,163,71,0.55) 45%, transparent 70%)',
           filter: 'blur(20px)',
         }} />
-        {/* Inner core — blur 4px */}
+        {/* Layer 3: bright inner core / thin sliver — blur 4px */}
         <div style={{
           position: 'absolute', left: '50%', top: '50%',
           transform: 'translate(-50%,-50%)',
-          width: '72px', height: '72px', borderRadius: '50%',
-          background: 'rgba(255,255,215,1)',
+          width: '160px', height: '6px', borderRadius: '3px',
+          background: 'rgba(255,255,230,1)',
           filter: 'blur(4px)',
-          boxShadow: '0 0 30px 10px rgba(255,240,180,0.8)',
+          boxShadow: '0 0 24px 8px rgba(255,240,180,0.95)',
         }} />
       </div>
 
-      {/* "TOWARD THE SUN" — thin elegant, gold */}
+      {/* Earth curved horizon (z-index above sun, below text) */}
+      <div
+        ref={earthRef}
+        style={{
+          position: 'absolute',
+          bottom: '-80vw',        // most of ellipse below viewport
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '280vw',
+          height: '120vw',
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse at 50% 6%, #0e2244 0%, #060f20 35%, #020810 100%)',
+          boxShadow: [
+            '0 -6px 80px 35px rgba(68,136,255,0.65)',    // outer atmosphere
+            '0 -3px 40px 15px rgba(100,170,255,0.45)',    // inner atmosphere
+            'inset 0 8px 70px rgba(68,136,255,0.12)',     // limb brightening
+          ].join(', '),
+          opacity: 0, pointerEvents: 'none',
+          zIndex: 4,
+        }}
+      />
+
+      {/* Golden light flood (sunrise, z-index below text) */}
+      <div
+        ref={goldenRef}
+        style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0,
+          background: 'radial-gradient(ellipse at 50% 100%, rgba(255,200,50,0.75) 0%, rgba(255,100,0,0.3) 40%, transparent 68%)',
+          zIndex: 2,
+        }}
+      />
+
+      {/* "TOWARD THE SUN" — thin, elegant, gold */}
       <div
         ref={sunTextRef}
         style={{
-          position: 'absolute', bottom: '18%', left: '50%',
+          position: 'absolute', bottom: '48%', left: '50%',
           transform: 'translateX(-50%)',
-          textAlign: 'center', pointerEvents: 'none', opacity: 0, zIndex: 3,
-          whiteSpace: 'nowrap',
+          opacity: 0, pointerEvents: 'none',
+          zIndex: 5, whiteSpace: 'nowrap', textAlign: 'center',
         }}
       >
         <div style={{
-          color: '#FFD700', fontFamily: 'monospace',
-          fontSize: '18px', fontWeight: 300, letterSpacing: '0.4em',
-          textShadow: '0 0 20px rgba(255,215,0,0.95), 0 0 60px rgba(255,150,0,0.7)',
+          color: '#FFD700', fontSize: '15px', fontWeight: 300, letterSpacing: '0.42em',
+          textShadow: '0 0 18px rgba(255,215,0,0.95), 0 0 50px rgba(255,150,0,0.65)',
         }}>
           TOWARD THE SUN
         </div>
       </div>
 
-      {/* Signal lock (phase 5) */}
+      {/* Signal lock (API taking > 10s) */}
       {phase === 5 && (
         <div style={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
-          textAlign: 'center', pointerEvents: 'none', zIndex: 4,
+          textAlign: 'center', pointerEvents: 'none', zIndex: 6,
         }}>
-          <style>{`@keyframes sigBlink { 0%,100%{opacity:1} 50%{opacity:0.12} }`}</style>
-          <div style={{
-            color: '#00d4aa', fontFamily: 'monospace', fontSize: '16px',
-            fontWeight: 700, letterSpacing: '0.22em',
-            animation: 'sigBlink 1.2s ease-in-out infinite',
-          }}>
+          <style>{`@keyframes sigBlink { 0%,100%{opacity:1} 50%{opacity:0.1} }`}</style>
+          <div style={{ color: '#00d4aa', fontSize: '14px', fontWeight: 700, letterSpacing: '0.24em', animation: 'sigBlink 1.2s ease-in-out infinite' }}>
             SIGNAL LOCK...
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', fontSize: '11px', marginTop: '14px', letterSpacing: '0.12em' }}>
+          <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: '10px', marginTop: '12px', letterSpacing: '0.12em' }}>
             TRANSMISSION IN PROGRESS
           </div>
         </div>
