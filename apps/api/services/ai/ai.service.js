@@ -260,6 +260,11 @@ const SCENE_PROMPTS = {
     'A realistic travel photograph of this exact person on Tower Bridge in London England, the Thames River below, full body visible, wide angle 35mm lens, dramatic cloudy sky, cinematic travel photography',
     'A realistic travel photograph of this exact person in front of Buckingham Palace in London England, full body visible, wide angle 35mm lens, royal guards visible, cinematic travel photography, morning light',
   ],
+  berlin: [
+    'A realistic travel photograph of this exact person at Brandenburg Gate in Berlin Germany, full body visible, wide angle 35mm lens, natural lighting, candid tourist moment, realistic travel photography, preserve the person\'s exact gender appearance and clothing',
+    'A realistic travel photograph of this exact person walking along Berlin Wall art district, full body visible, wide angle 35mm lens, urban atmosphere, realistic travel photography, preserve the person\'s exact gender appearance and clothing',
+    'A realistic travel photograph of this exact person at Reichstag building in Berlin Germany, full body visible, wide angle 35mm lens, natural lighting, realistic travel photography, preserve the person\'s exact gender appearance and clothing',
+  ],
   dubai: [
     'A realistic travel photograph of this exact person in front of Burj Khalifa in Dubai UAE, full body visible, wide angle 35mm lens, golden sunset lighting, cinematic travel photography, modern city atmosphere',
     'A realistic travel photograph of this exact person at Dubai Marina waterfront, luxury yachts and skyscrapers, full body visible, wide angle 35mm lens, blue sky, cinematic travel photography, candid moment',

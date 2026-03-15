@@ -11,6 +11,7 @@ const CITIES = [
   { id: 'barcelona', image: '/cities/barcelona.jpg', label: 'BARCELONA, SPAIN' },
   { id: 'dubai',     image: '/cities/dubai.jpg',     label: 'DUBAI, UAE'       },
   { id: 'london',    image: '/cities/london.jpg',    label: 'LONDON, ENGLAND'  },
+  { id: 'berlin',    image: '/cities/berlin.jpg',    label: 'BERLIN, GERMANY'  },
 ];
 
 const COSMIC = [
