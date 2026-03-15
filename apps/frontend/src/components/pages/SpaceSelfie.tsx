@@ -369,7 +369,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                       fontFamily: 'inherit', letterSpacing: '0.05em',
                     }}
                   >
-                    ⚡ LAUNCH
+                    ✦ INITIATE
                   </button>
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
