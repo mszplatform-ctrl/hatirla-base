@@ -288,7 +288,33 @@ const SCENE_PROMPTS = {
     'A cinematic sci-fi photograph of this exact person floating near Saturn\'s rings, ice crystals and ring particles surrounding them, Saturn looming large overhead, full body visible in a space suit, ultra realistic, dramatic lighting',
     'A cinematic sci-fi photograph of this exact person on a small moon orbiting Saturn, the rings arcing across the sky, full body visible in a space suit, cosmic landscape, ultra realistic, wide angle lens, dramatic space lighting',
   ],
-  // ── Time Teleport ──
+  // ── Unified Timeline — new stops ──
+  big_bang: [
+    'A cinematic scene of this exact person floating in the primordial universe moments after the Big Bang, surrounded by swirling cosmic energy, fire and light, full body visible, ultra realistic, dramatic cosmic lighting, wide angle',
+    'A cinematic scene of this exact person at the dawn of creation, surrounded by expanding plasma and cosmic fire, full body visible, ultra realistic, epic dramatic lighting, wide angle',
+    'A cinematic scene of this exact person witnessing the birth of the first stars from the Big Bang, swirling cosmic clouds of energy, full body visible, ultra realistic, dramatic space lighting',
+  ],
+  present: [
+    'A realistic travel photograph of this exact person in a modern city street 2025, full body visible, wide angle 35mm lens, natural lighting, candid moment, preserve exact gender appearance and clothing',
+    'A realistic travel photograph of this exact person in a busy modern urban plaza 2025, glass buildings, electric vehicles, full body visible, wide angle 35mm lens, natural daylight, preserve exact appearance',
+    'A realistic travel photograph of this exact person at a modern waterfront promenade 2025, full body visible, wide angle 35mm lens, golden hour light, candid moment, preserve exact gender appearance',
+  ],
+  deep_space: [
+    'A cinematic sci-fi scene of this exact person in deep space year 5000, surrounded by distant galaxies and nebulae, advanced space suit, full body visible, ultra realistic, dramatic space lighting',
+    'A cinematic sci-fi scene of this exact person aboard a deep space vessel in the year 5000, panoramic window showing distant galaxies, full body visible, advanced space suit, ultra realistic, cinematic lighting',
+    'A cinematic sci-fi scene of this exact person floating beside a massive nebula in deep space year 5000, swirling colours of cosmic gas, full body visible in advanced space suit, ultra realistic, dramatic lighting',
+  ],
+  alien_planet: [
+    'A cinematic sci-fi scene of this exact person on an alien planet year 10000, bizarre alien landscape, two suns in the sky, alien vegetation, full body visible, ultra realistic, cinematic lighting',
+    'A cinematic sci-fi scene of this exact person exploring an alien jungle on a distant planet year 10000, towering alien plants, strange creatures, alien sky, full body visible, ultra realistic, dramatic lighting',
+    'A cinematic sci-fi scene of this exact person on an alien ocean world year 10000, bioluminescent life forms, alien sky with multiple moons, full body visible, ultra realistic, cinematic lighting',
+  ],
+  end_of_time: [
+    'A cinematic scene of this exact person at the end of time, universe collapsing around them, dramatic cosmic energy, full body visible, ultra realistic, surreal and epic lighting',
+    'A cinematic scene of this exact person standing at the heat death of the universe, darkness and fading stars, last light of existence, full body visible, ultra realistic, surreal dramatic lighting',
+    'A cinematic scene of this exact person witnessing the final collapse of all matter at the end of time, swirling black holes, dying galaxies, full body visible, ultra realistic, epic cosmic lighting',
+  ],
+  // ── Time Teleport — historical ──
   ancient_egypt: [
     'A cinematic historical scene of this exact person in Ancient Egypt 2000 BC, the Great Pyramids under construction in the background, desert landscape, Egyptian people and merchants, full body visible, realistic historical photography, cinematic lighting, wide angle',
     'A cinematic historical scene of this exact person beside the Sphinx in Ancient Egypt 2000 BC, pyramids on the horizon, desert sand, Egyptian priests and workers, full body visible, realistic historical photography, golden sunlight',

@@ -14,20 +14,22 @@ const CITIES = [
   { id: 'berlin',    image: '/cities/berlin.jpg',    label: 'BERLIN, GERMANY'  },
 ];
 
-const COSMIC = [
-  { id: 'mars',   image: 'https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg',                                                              label: 'MARS SURFACE' },
-  { id: 'orbit',  image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/1024px-The_Earth_seen_from_Apollo_17.jpg',        label: 'EARTH ORBIT'  },
-  { id: 'saturn', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/1200px-Saturn_during_Equinox.jpg',                        label: 'SATURN RINGS' },
-];
-
 const TIME_STOPS = [
-  { id: 'ancient_egypt',  year: -2000, label: '2000 BC',       scene: 'Ancient Egypt'    },
-  { id: 'ancient_greece', year: -500,  label: '500 BC',        scene: 'Ancient Greece'   },
-  { id: 'roman_era',      year: 0,     label: 'Roman Era',     scene: 'Ancient Rome'     },
-  { id: 'medieval',       year: 1200,  label: 'Medieval',      scene: 'Medieval Europe'  },
-  { id: 'renaissance',    year: 1500,  label: 'Renaissance',   scene: 'Renaissance'      },
-  { id: 'industrial',     year: 1800,  label: 'Industrial Age',scene: 'Victorian London' },
-  { id: 'future2200',     year: 2200,  label: 'Future 2200',   scene: 'Future City 2200' },
+  { id: 'big_bang',       label: 'Big Bang',  year: '-13.8B', era: 'Origin of Universe', cosmic: true  },
+  { id: 'ancient_egypt',  label: '2000 BC',   year: '-2000',  era: 'Ancient Egypt',       cosmic: false },
+  { id: 'ancient_greece', label: '500 BC',    year: '-500',   era: 'Ancient Greece',      cosmic: false },
+  { id: 'roman_era',      label: '0',         year: '0',      era: 'Roman Era',           cosmic: false },
+  { id: 'medieval',       label: '1200',      year: '1200',   era: 'Medieval',            cosmic: false },
+  { id: 'renaissance',    label: '1500',      year: '1500',   era: 'Renaissance',         cosmic: false },
+  { id: 'industrial',     label: '1800',      year: '1800',   era: 'Industrial Age',      cosmic: false },
+  { id: 'present',        label: '2025',      year: '2025',   era: 'Present Day',         cosmic: false },
+  { id: 'future2200',     label: '2200',      year: '2200',   era: 'Future City',         cosmic: true  },
+  { id: 'mars',           label: '2400',      year: '2400',   era: 'Mars Colony',         cosmic: true  },
+  { id: 'orbit',          label: '2600',      year: '2600',   era: 'Earth Orbit',         cosmic: true  },
+  { id: 'saturn',         label: '3000',      year: '3000',   era: 'Saturn Rings',        cosmic: true  },
+  { id: 'deep_space',     label: '5000',      year: '5000',   era: 'Deep Space',          cosmic: true  },
+  { id: 'alien_planet',   label: '10000',     year: '10000',  era: 'Alien World',         cosmic: true  },
+  { id: 'end_of_time',    label: '∞',         year: '∞',      era: 'End of Time',         cosmic: true  },
 ];
 
 type Scene = { id: string; image: string; label: string };
@@ -112,7 +114,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   function handleTimeSelect() {
     const stop = TIME_STOPS[timeStopIndex];
-    setSelectedCity({ id: stop.id, image: '', label: stop.scene.toUpperCase() });
+    setSelectedCity({ id: stop.id, image: '', label: stop.era.toUpperCase() });
     setStep(2);
   }
 
@@ -395,105 +397,84 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
               ))}
             </div>
 
-            {/* Cosmic section */}
-            <div style={{ marginBottom: '36px' }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                marginBottom: '16px',
-              }}>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-                <span style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>
-                  ✦ COSMIC DESTINATIONS
-                </span>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))',
-                gap: '16px',
-              }}>
-                {COSMIC.map(scene => (
-                  <SceneCard key={scene.id} scene={scene} onClick={handleCitySelect} accentColor="#2dd4bf" />
-                ))}
-              </div>
-            </div>
-
-            {/* Time Teleport panel */}
+            {/* Unified Timeline panel */}
             <div style={{
-              background: 'rgba(0,0,0,0.45)',
-              border: '1px solid rgba(45,212,191,0.25)',
+              background: 'rgba(0,0,0,0.55)',
+              border: '1px solid rgba(45,212,191,0.2)',
               borderRadius: '20px',
-              padding: '24px',
+              padding: '24px 20px',
             }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.2)' }} />
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
                 <span style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>
-                  ⏳ TIME TELEPORT
+                  ⏳ TIME &amp; SPACE TELEPORT
                 </span>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.2)' }} />
+                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
               </div>
 
-              {/* Timeline labels */}
-              <div style={{ position: 'relative', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  {TIME_STOPS.map((stop, i) => (
-                    <button
-                      key={stop.id}
-                      onClick={() => setTimeStopIndex(i)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '0 2px',
-                        flex: 1,
-                      }}
-                    >
-                      <div style={{
-                        width: '12px',
-                        height: '12px',
-                        borderRadius: '50%',
-                        background: i === timeStopIndex ? '#2dd4bf' : 'rgba(255,255,255,0.2)',
-                        border: i === timeStopIndex ? '2px solid #2dd4bf' : '2px solid rgba(255,255,255,0.2)',
-                        boxShadow: i === timeStopIndex ? '0 0 10px rgba(45,212,191,0.7)' : 'none',
-                        transition: 'all 0.2s',
-                        flexShrink: 0,
-                      }} />
-                      <span style={{
-                        color: i === timeStopIndex ? '#2dd4bf' : 'rgba(255,255,255,0.35)',
-                        fontFamily: 'monospace',
-                        fontSize: '9px',
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                        textAlign: 'center',
-                        whiteSpace: 'nowrap',
-                        transition: 'color 0.2s',
-                      }}>
-                        {stop.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                {/* Track line behind dots */}
+              {/* Dot timeline */}
+              <div style={{ position: 'relative', marginBottom: '4px' }}>
+                {/* Track */}
                 <div style={{
                   position: 'absolute',
-                  top: '5px',
-                  left: '6%',
-                  right: '6%',
+                  top: '6px',
+                  left: '0',
+                  right: '0',
                   height: '2px',
-                  background: 'rgba(255,255,255,0.1)',
+                  background: 'linear-gradient(to right, rgba(45,212,191,0.3) 0%, rgba(45,212,191,0.3) 53%, rgba(139,92,246,0.3) 53%, rgba(139,92,246,0.3) 100%)',
                   zIndex: 0,
                 }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                  {TIME_STOPS.map((stop, i) => {
+                    const isSelected = i === timeStopIndex;
+                    const color = stop.cosmic ? '#a78bfa' : '#2dd4bf';
+                    const glowColor = stop.cosmic ? 'rgba(139,92,246,0.7)' : 'rgba(45,212,191,0.7)';
+                    return (
+                      <button
+                        key={stop.id}
+                        onClick={() => setTimeStopIndex(i)}
+                        title={stop.era}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '5px',
+                          padding: '0',
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                      >
+                        <div style={{
+                          width: isSelected ? '14px' : '10px',
+                          height: isSelected ? '14px' : '10px',
+                          borderRadius: '50%',
+                          background: isSelected ? color : 'rgba(255,255,255,0.15)',
+                          border: `2px solid ${isSelected ? color : 'rgba(255,255,255,0.2)'}`,
+                          boxShadow: isSelected ? `0 0 12px ${glowColor}` : 'none',
+                          transition: 'all 0.2s',
+                          flexShrink: 0,
+                        }} />
+                        <span style={{
+                          color: isSelected ? color : 'rgba(255,255,255,0.28)',
+                          fontFamily: 'monospace',
+                          fontSize: '8px',
+                          fontWeight: 700,
+                          textAlign: 'center',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          maxWidth: '100%',
+                          transition: 'color 0.2s',
+                        }}>
+                          {stop.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Slider */}
@@ -505,56 +486,71 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                 onChange={e => setTimeStopIndex(Number(e.target.value))}
                 style={{
                   width: '100%',
-                  accentColor: '#2dd4bf',
+                  accentColor: TIME_STOPS[timeStopIndex].cosmic ? '#a78bfa' : '#2dd4bf',
                   cursor: 'pointer',
-                  margin: '12px 0 16px',
+                  margin: '14px 0 20px',
                 }}
               />
 
               {/* Selected era display */}
-              <div style={{
-                textAlign: 'center',
-                marginBottom: '20px',
-              }}>
-                <div style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '10px', letterSpacing: '0.12em', marginBottom: '4px' }}>
-                  DESTINATION ERA
-                </div>
-                <div style={{ color: 'white', fontFamily: 'monospace', fontSize: '18px', fontWeight: 700, letterSpacing: '0.06em' }}>
-                  {TIME_STOPS[timeStopIndex].scene.toUpperCase()}
-                </div>
-                <div style={{ color: 'rgba(45,212,191,0.7)', fontFamily: 'monospace', fontSize: '12px', marginTop: '2px' }}>
-                  {TIME_STOPS[timeStopIndex].label}
-                </div>
-              </div>
+              {(() => {
+                const stop = TIME_STOPS[timeStopIndex];
+                const color = stop.cosmic ? '#a78bfa' : '#2dd4bf';
+                const glowColor = stop.cosmic ? 'rgba(139,92,246,0.15)' : 'rgba(45,212,191,0.1)';
+                const borderColor = stop.cosmic ? 'rgba(139,92,246,0.3)' : 'rgba(45,212,191,0.25)';
+                return (
+                  <div style={{
+                    textAlign: 'center',
+                    marginBottom: '20px',
+                    background: glowColor,
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '12px',
+                    padding: '14px',
+                  }}>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '10px', letterSpacing: '0.12em', marginBottom: '6px' }}>
+                      DESTINATION
+                    </div>
+                    <div style={{ color: 'white', fontFamily: 'monospace', fontSize: '20px', fontWeight: 800, letterSpacing: '0.06em', marginBottom: '4px' }}>
+                      {stop.era.toUpperCase()}
+                    </div>
+                    <div style={{ color, fontFamily: 'monospace', fontSize: '12px', opacity: 0.85 }}>
+                      {stop.year}  ·  {stop.cosmic ? '✦ COSMIC' : '◈ HISTORICAL'}
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div style={{ textAlign: 'center' }}>
-                <button
-                  onClick={handleTimeSelect}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(45,212,191,0.2), rgba(45,212,191,0.1))',
-                    border: '1px solid rgba(45,212,191,0.5)',
-                    color: '#2dd4bf',
-                    padding: '13px 40px',
-                    borderRadius: '999px',
-                    cursor: 'pointer',
-                    fontWeight: 800,
-                    fontSize: '15px',
-                    fontFamily: 'monospace',
-                    letterSpacing: '0.08em',
-                    boxShadow: '0 0 20px rgba(45,212,191,0.2)',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(45,212,191,0.35), rgba(45,212,191,0.2))';
-                    e.currentTarget.style.boxShadow = '0 0 30px rgba(45,212,191,0.4)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(45,212,191,0.2), rgba(45,212,191,0.1))';
-                    e.currentTarget.style.boxShadow = '0 0 20px rgba(45,212,191,0.2)';
-                  }}
-                >
-                  ⏳ TELEPORT
-                </button>
+                {(() => {
+                  const isCosmic = TIME_STOPS[timeStopIndex].cosmic;
+                  const btnColor = isCosmic ? '#a78bfa' : '#2dd4bf';
+                  const btnBg = isCosmic ? 'rgba(139,92,246,0.18)' : 'rgba(45,212,191,0.18)';
+                  const btnBorder = isCosmic ? 'rgba(139,92,246,0.5)' : 'rgba(45,212,191,0.5)';
+                  const btnGlow = isCosmic ? 'rgba(139,92,246,0.25)' : 'rgba(45,212,191,0.25)';
+                  return (
+                    <button
+                      onClick={handleTimeSelect}
+                      style={{
+                        background: btnBg,
+                        border: `1px solid ${btnBorder}`,
+                        color: btnColor,
+                        padding: '13px 48px',
+                        borderRadius: '999px',
+                        cursor: 'pointer',
+                        fontWeight: 800,
+                        fontSize: '15px',
+                        fontFamily: 'monospace',
+                        letterSpacing: '0.1em',
+                        boxShadow: `0 0 24px ${btnGlow}`,
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 0 40px ${btnGlow.replace('0.25', '0.5')}`; }}
+                      onMouseLeave={e => { e.currentTarget.style.boxShadow = `0 0 24px ${btnGlow}`; }}
+                    >
+                      ⏳ TELEPORT
+                    </button>
+                  );
+                })()}
               </div>
             </div>
           </div>
