@@ -4,25 +4,90 @@ import { t, getLang } from '../../i18n';
 const AI_BASE = `${import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com'}/api/ai`;
 
 const CITIES = [
-  { id: 'istanbul',  image: '/cities/istanbul.jpg',  label: 'ISTANBUL, TURKEY'  },
-  { id: 'paris',     image: '/cities/paris.jpg',     label: 'PARIS, FRANCE'     },
-  { id: 'rome',      image: '/cities/rome.jpg',      label: 'ROME, ITALY'       },
-  { id: 'tokyo',     image: '/cities/tokyo.jpg',     label: 'TOKYO, JAPAN'      },
-  { id: 'barcelona', image: '/cities/barcelona.jpg', label: 'BARCELONA, SPAIN'  },
-  { id: 'dubai',     image: '/cities/dubai.jpg',     label: 'DUBAI, UAE'        },
-  { id: 'london',    image: '/cities/london.jpg',    label: 'LONDON, ENGLAND'   },
-  { id: 'newyork',   image: '/cities/newyork.jpg',   label: 'NEW YORK, USA'     },
-  { id: 'tokyo2050', image: '/cities/tokyo.jpg',     label: 'TOKYO 2050'        },
-  { id: 'mars',      image: '/cities/dubai.jpg',     label: 'MARS SURFACE'      },
-  { id: 'orbit',     image: '/cities/istanbul.jpg',  label: 'EARTH ORBIT'       },
+  { id: 'istanbul',  image: '/cities/istanbul.jpg',  label: 'ISTANBUL, TURKEY' },
+  { id: 'paris',     image: '/cities/paris.jpg',     label: 'PARIS, FRANCE'    },
+  { id: 'rome',      image: '/cities/rome.jpg',      label: 'ROME, ITALY'      },
+  { id: 'tokyo',     image: '/cities/tokyo.jpg',     label: 'TOKYO, JAPAN'     },
+  { id: 'barcelona', image: '/cities/barcelona.jpg', label: 'BARCELONA, SPAIN' },
+  { id: 'dubai',     image: '/cities/dubai.jpg',     label: 'DUBAI, UAE'       },
+  { id: 'london',    image: '/cities/london.jpg',    label: 'LONDON, ENGLAND'  },
 ];
+
+const COSMIC = [
+  { id: 'mars',   image: 'https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg',                                                              label: 'MARS SURFACE' },
+  { id: 'orbit',  image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/1024px-The_Earth_seen_from_Apollo_17.jpg',        label: 'EARTH ORBIT'  },
+  { id: 'saturn', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/1200px-Saturn_during_Equinox.jpg',                        label: 'SATURN RINGS' },
+];
+
+const TIME_STOPS = [
+  { id: 'ancient_egypt',  year: -2000, label: '2000 BC',       scene: 'Ancient Egypt'    },
+  { id: 'ancient_greece', year: -500,  label: '500 BC',        scene: 'Ancient Greece'   },
+  { id: 'roman_era',      year: 0,     label: 'Roman Era',     scene: 'Ancient Rome'     },
+  { id: 'medieval',       year: 1200,  label: 'Medieval',      scene: 'Medieval Europe'  },
+  { id: 'renaissance',    year: 1500,  label: 'Renaissance',   scene: 'Renaissance'      },
+  { id: 'industrial',     year: 1800,  label: 'Industrial Age',scene: 'Victorian London' },
+  { id: 'future2200',     year: 2200,  label: 'Future 2200',   scene: 'Future City 2200' },
+];
+
+type Scene = { id: string; image: string; label: string };
 
 const NEXT_DESTINATIONS = ['MARS ORBIT', 'TOKYO 2050', 'LUNAR BASE', 'SATURN RINGS'];
 
 const EXPLORER_ID = String(Math.floor(1000 + Math.random() * 9000));
 const NEXT_DEST = NEXT_DESTINATIONS[Math.floor(Math.random() * NEXT_DESTINATIONS.length)];
 
-type City = typeof CITIES[number];
+function SceneCard({ scene, onClick, accentColor = '#0ea5e9' }: { scene: Scene; onClick: (s: Scene) => void; accentColor?: string }) {
+  return (
+    <button
+      onClick={() => onClick(scene)}
+      style={{
+        position: 'relative',
+        height: '168px',
+        borderRadius: '18px',
+        overflow: 'hidden',
+        border: `2px solid rgba(255,255,255,0.12)`,
+        cursor: 'pointer',
+        padding: 0,
+        backgroundImage: scene.image ? `url(${scene.image})` : undefined,
+        backgroundColor: scene.image ? undefined : 'rgba(255,255,255,0.05)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'scale(1.04)';
+        e.currentTarget.style.borderColor = accentColor;
+        e.currentTarget.style.boxShadow = `0 8px 32px ${accentColor}55`;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.05) 55%)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '14px',
+        left: 0,
+        right: 0,
+        color: 'white',
+        fontWeight: 700,
+        fontSize: '13px',
+        textAlign: 'center',
+        textShadow: '0 1px 6px rgba(0,0,0,0.8)',
+        letterSpacing: '0.04em',
+        fontFamily: 'monospace',
+      }}>
+        {scene.label}
+      </div>
+    </button>
+  );
+}
 
 interface SpaceSelfieProps {
   onBack: () => void;
@@ -30,15 +95,22 @@ interface SpaceSelfieProps {
 
 export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [selectedCity, setSelectedCity] = useState<Scene | null>(null);
+  const [timeStopIndex, setTimeStopIndex] = useState(0);
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  function handleCitySelect(city: City) {
-    setSelectedCity(city);
+  function handleCitySelect(scene: Scene) {
+    setSelectedCity(scene);
+    setStep(2);
+  }
+
+  function handleTimeSelect() {
+    const stop = TIME_STOPS[timeStopIndex];
+    setSelectedCity({ id: stop.id, image: '', label: stop.scene.toUpperCase() });
     setStep(2);
   }
 
@@ -117,7 +189,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
     // 4. Top text
     const lang = getLang();
-    const cityName = t(`spaceSelfie.cities.${selectedCity.id}`);
+    const cityName = selectedCity.label;
     const topText = lang === 'tr' ? `${cityName} Anın` : `Your ${cityName} Moment`;
     ctx.textAlign = 'center';
     ctx.font = 'bold 72px sans-serif';
@@ -286,7 +358,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
       {/* Page content */}
       <div style={{ padding: '28px 24px 60px', maxWidth: '860px', margin: '0 auto' }}>
 
-        {/* ── STEP 1: City Selection ── */}
+        {/* ── STEP 1: Scene Selection ── */}
         {step === 1 && (
           <div>
             <h2 style={{ color: 'white', textAlign: 'center', margin: '0 0 8px', fontSize: '22px', fontWeight: 700 }}>
@@ -295,61 +367,180 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
             <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 28px', fontSize: '14px' }}>
               {t('spaceSelfie.selectCityPrompt')}
             </p>
+
+            {/* City grid */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))',
               gap: '16px',
+              marginBottom: '36px',
             }}>
               {CITIES.map(city => (
+                <SceneCard key={city.id} scene={city} onClick={handleCitySelect} />
+              ))}
+            </div>
+
+            {/* Cosmic section */}
+            <div style={{ marginBottom: '36px' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '16px',
+              }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                <span style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>
+                  ✦ COSMIC DESTINATIONS
+                </span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))',
+                gap: '16px',
+              }}>
+                {COSMIC.map(scene => (
+                  <SceneCard key={scene.id} scene={scene} onClick={handleCitySelect} accentColor="#2dd4bf" />
+                ))}
+              </div>
+            </div>
+
+            {/* Time Teleport panel */}
+            <div style={{
+              background: 'rgba(0,0,0,0.45)',
+              border: '1px solid rgba(45,212,191,0.25)',
+              borderRadius: '20px',
+              padding: '24px',
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '20px',
+              }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.2)' }} />
+                <span style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>
+                  ⏳ TIME TELEPORT
+                </span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.2)' }} />
+              </div>
+
+              {/* Timeline labels */}
+              <div style={{ position: 'relative', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  {TIME_STOPS.map((stop, i) => (
+                    <button
+                      key={stop.id}
+                      onClick={() => setTimeStopIndex(i)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '0 2px',
+                        flex: 1,
+                      }}
+                    >
+                      <div style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '50%',
+                        background: i === timeStopIndex ? '#2dd4bf' : 'rgba(255,255,255,0.2)',
+                        border: i === timeStopIndex ? '2px solid #2dd4bf' : '2px solid rgba(255,255,255,0.2)',
+                        boxShadow: i === timeStopIndex ? '0 0 10px rgba(45,212,191,0.7)' : 'none',
+                        transition: 'all 0.2s',
+                        flexShrink: 0,
+                      }} />
+                      <span style={{
+                        color: i === timeStopIndex ? '#2dd4bf' : 'rgba(255,255,255,0.35)',
+                        fontFamily: 'monospace',
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                        textAlign: 'center',
+                        whiteSpace: 'nowrap',
+                        transition: 'color 0.2s',
+                      }}>
+                        {stop.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {/* Track line behind dots */}
+                <div style={{
+                  position: 'absolute',
+                  top: '5px',
+                  left: '6%',
+                  right: '6%',
+                  height: '2px',
+                  background: 'rgba(255,255,255,0.1)',
+                  zIndex: 0,
+                }} />
+              </div>
+
+              {/* Slider */}
+              <input
+                type="range"
+                min={0}
+                max={TIME_STOPS.length - 1}
+                value={timeStopIndex}
+                onChange={e => setTimeStopIndex(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  accentColor: '#2dd4bf',
+                  cursor: 'pointer',
+                  margin: '12px 0 16px',
+                }}
+              />
+
+              {/* Selected era display */}
+              <div style={{
+                textAlign: 'center',
+                marginBottom: '20px',
+              }}>
+                <div style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '10px', letterSpacing: '0.12em', marginBottom: '4px' }}>
+                  DESTINATION ERA
+                </div>
+                <div style={{ color: 'white', fontFamily: 'monospace', fontSize: '18px', fontWeight: 700, letterSpacing: '0.06em' }}>
+                  {TIME_STOPS[timeStopIndex].scene.toUpperCase()}
+                </div>
+                <div style={{ color: 'rgba(45,212,191,0.7)', fontFamily: 'monospace', fontSize: '12px', marginTop: '2px' }}>
+                  {TIME_STOPS[timeStopIndex].label}
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
                 <button
-                  key={city.id}
-                  onClick={() => handleCitySelect(city)}
+                  onClick={handleTimeSelect}
                   style={{
-                    position: 'relative',
-                    height: '168px',
-                    borderRadius: '18px',
-                    overflow: 'hidden',
-                    border: '2px solid rgba(255,255,255,0.12)',
+                    background: 'linear-gradient(135deg, rgba(45,212,191,0.2), rgba(45,212,191,0.1))',
+                    border: '1px solid rgba(45,212,191,0.5)',
+                    color: '#2dd4bf',
+                    padding: '13px 40px',
+                    borderRadius: '999px',
                     cursor: 'pointer',
-                    padding: 0,
-                    backgroundImage: `url(${city.image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+                    fontWeight: 800,
+                    fontSize: '15px',
+                    fontFamily: 'monospace',
+                    letterSpacing: '0.08em',
+                    boxShadow: '0 0 20px rgba(45,212,191,0.2)',
+                    transition: 'all 0.2s',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.transform = 'scale(1.04)';
-                    e.currentTarget.style.borderColor = '#0ea5e9';
-                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(14,165,233,0.35)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(45,212,191,0.35), rgba(45,212,191,0.2))';
+                    e.currentTarget.style.boxShadow = '0 0 30px rgba(45,212,191,0.4)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(45,212,191,0.2), rgba(45,212,191,0.1))';
+                    e.currentTarget.style.boxShadow = '0 0 20px rgba(45,212,191,0.2)';
                   }}
                 >
-                  <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.05) 55%)',
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '14px',
-                    left: 0,
-                    right: 0,
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    textAlign: 'center',
-                    textShadow: '0 1px 6px rgba(0,0,0,0.8)',
-                    letterSpacing: '0.04em',
-                    fontFamily: 'monospace',
-                  }}>
-                    {city.label}
-                  </div>
+                  ⏳ TELEPORT
                 </button>
-              ))}
+              </div>
             </div>
           </div>
         )}

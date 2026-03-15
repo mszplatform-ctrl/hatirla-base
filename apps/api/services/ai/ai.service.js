@@ -228,34 +228,116 @@ async function generateSuggestions() {
   return { success: true };
 }
 
-const CITY_PROMPTS = {
-  istanbul:  'A realistic travel photograph of this exact person standing in front of the Blue Mosque in Istanbul Turkey, full body visible, wide angle 35mm lens, natural golden hour lighting, candid tourist moment, person interacting with the environment, realistic travel photography, cinematic composition, the mosque clearly visible in background',
-  paris:     'A realistic travel photograph of this exact person standing near the Eiffel Tower in Paris France, full body visible, wide angle 35mm lens, natural daylight, candid tourist moment, Parisian street atmosphere, realistic travel photography, person looking toward the tower',
-  rome:      'A realistic travel photograph of this exact person walking near the Colosseum in Rome Italy, full body visible, wide angle 35mm lens, natural warm lighting, cobblestone street, candid tourist moment, cinematic travel photography',
-  barcelona: 'A realistic travel photograph of this exact person in front of Sagrada Familia in Barcelona Spain, full body visible, wide angle 35mm lens, bright Mediterranean sunlight, candid tourist moment, realistic travel photography',
-  tokyo:     'A realistic travel photograph of this exact person walking through Shibuya crossing in Tokyo Japan at night, full body visible, wide angle 35mm lens, neon lights reflecting on wet pavement, cinematic travel photography, candid moment',
-  newyork:   'A realistic travel photograph of this exact person in Times Square New York City, full body visible, wide angle 35mm lens, night scene, neon billboards, cinematic street photography, candid tourist moment',
-  london:    'A realistic travel photograph of this exact person near Big Ben in London England, full body visible, wide angle 35mm lens, overcast British sky, cinematic travel photography, candid moment',
-  dubai:     'A realistic travel photograph of this exact person in front of Burj Khalifa in Dubai UAE, full body visible, wide angle 35mm lens, golden sunset lighting, cinematic travel photography, modern city atmosphere',
-  tokyo2050: 'A cinematic sci-fi photograph of this exact person walking through futuristic Tokyo in 2050, full body visible, holographic advertisements, flying vehicles, neon cyberpunk atmosphere, wide angle 35mm lens, ultra realistic, cinematic lighting',
-  mars:      'A cinematic sci-fi photograph of this exact person standing on the surface of Mars, full body visible in a sleek space suit, red rocky landscape, Earth visible in the distant sky, dramatic lighting, ultra realistic, wide angle 35mm lens',
-  orbit:     'A cinematic sci-fi photograph of this exact person floating in Earth orbit inside a space station window, full body visible, Earth visible below, stars in background, dramatic space lighting, ultra realistic',
+// Each scene has 3 prompt variations; one is picked randomly per generation.
+const SCENE_PROMPTS = {
+  istanbul: [
+    'A realistic travel photograph of this exact person standing in front of the Blue Mosque in Istanbul Turkey, full body visible, wide angle 35mm lens, natural golden hour lighting, candid tourist moment, cinematic composition, the mosque clearly visible in background',
+    'A realistic travel photograph of this exact person walking through the Grand Bazaar marketplace in Istanbul Turkey, full body visible, wide angle 35mm lens, colourful stalls and lanterns, cinematic travel photography, candid moment',
+    'A realistic travel photograph of this exact person on Galata Bridge overlooking the Bosphorus at sunset in Istanbul Turkey, full body visible, wide angle 35mm lens, warm amber light, boats on the water, cinematic travel photography',
+  ],
+  paris: [
+    'A realistic travel photograph of this exact person standing near the Eiffel Tower in Paris France, full body visible, wide angle 35mm lens, natural daylight, candid tourist moment, Parisian street atmosphere, person looking toward the tower',
+    'A realistic travel photograph of this exact person strolling along the Seine River in Paris France, the Eiffel Tower visible in the distance, full body visible, wide angle 35mm lens, golden hour lighting, cinematic travel photography',
+    'A realistic travel photograph of this exact person sitting at a Parisian café on Champs-Élysées, full body visible, wide angle 35mm lens, soft morning light, croissants on the table, cinematic travel photography, candid moment',
+  ],
+  rome: [
+    'A realistic travel photograph of this exact person walking near the Colosseum in Rome Italy, full body visible, wide angle 35mm lens, natural warm lighting, cobblestone street, candid tourist moment, cinematic travel photography',
+    'A realistic travel photograph of this exact person tossing a coin at the Trevi Fountain in Rome Italy, full body visible, wide angle 35mm lens, crowded tourist scene, cinematic travel photography, golden afternoon light',
+    'A realistic travel photograph of this exact person standing in the Roman Forum in Rome Italy, ancient ruins and columns surrounding them, full body visible, wide angle 35mm lens, warm sunset light, cinematic travel photography',
+  ],
+  barcelona: [
+    'A realistic travel photograph of this exact person in front of Sagrada Familia in Barcelona Spain, full body visible, wide angle 35mm lens, bright Mediterranean sunlight, candid tourist moment, realistic travel photography',
+    'A realistic travel photograph of this exact person walking along La Rambla boulevard in Barcelona Spain, full body visible, wide angle 35mm lens, lively street market, Mediterranean atmosphere, cinematic travel photography',
+    'A realistic travel photograph of this exact person at Park Güell in Barcelona Spain, colourful mosaic architecture in background, full body visible, wide angle 35mm lens, bright sunny day, cinematic travel photography',
+  ],
+  tokyo: [
+    'A realistic travel photograph of this exact person walking through Shibuya crossing in Tokyo Japan at night, full body visible, wide angle 35mm lens, neon lights reflecting on wet pavement, cinematic travel photography, candid moment',
+    'A realistic travel photograph of this exact person at Senso-ji temple in Asakusa Tokyo Japan, full body visible, wide angle 35mm lens, lanterns and crowds, cherry blossoms, cinematic travel photography, golden hour',
+    'A realistic travel photograph of this exact person in Shinjuku district Tokyo Japan at night, full body visible, wide angle 35mm lens, glowing signs and neon lights, cinematic street photography, candid moment',
+  ],
+  london: [
+    'A realistic travel photograph of this exact person near Big Ben in London England, full body visible, wide angle 35mm lens, overcast British sky, cinematic travel photography, candid moment',
+    'A realistic travel photograph of this exact person on Tower Bridge in London England, the Thames River below, full body visible, wide angle 35mm lens, dramatic cloudy sky, cinematic travel photography',
+    'A realistic travel photograph of this exact person in front of Buckingham Palace in London England, full body visible, wide angle 35mm lens, royal guards visible, cinematic travel photography, morning light',
+  ],
+  dubai: [
+    'A realistic travel photograph of this exact person in front of Burj Khalifa in Dubai UAE, full body visible, wide angle 35mm lens, golden sunset lighting, cinematic travel photography, modern city atmosphere',
+    'A realistic travel photograph of this exact person at Dubai Marina waterfront, luxury yachts and skyscrapers, full body visible, wide angle 35mm lens, blue sky, cinematic travel photography, candid moment',
+    'A realistic travel photograph of this exact person at the Dubai Desert Safari, sand dunes stretching to the horizon, camel nearby, full body visible, wide angle 35mm lens, dramatic desert sunset, cinematic travel photography',
+  ],
+  mars: [
+    'A cinematic sci-fi photograph of this exact person standing on the surface of Mars, full body visible in a sleek space suit, red rocky landscape, Earth visible in the distant sky, dramatic lighting, ultra realistic, wide angle 35mm lens',
+    'A cinematic sci-fi photograph of this exact person exploring a Mars canyon in a space suit, towering red rock formations, dust swirling in the atmosphere, full body visible, ultra realistic, wide angle lens, dramatic lighting',
+    'A cinematic sci-fi photograph of this exact person next to a Mars rover on the Martian surface, distant mountains, reddish sky, full body visible in advanced space suit, ultra realistic, cinematic lighting',
+  ],
+  orbit: [
+    'A cinematic sci-fi photograph of this exact person floating in Earth orbit inside a space station window, full body visible, Earth visible below, stars in background, dramatic space lighting, ultra realistic',
+    'A cinematic sci-fi photograph of this exact person in a space suit performing a spacewalk above Earth, planet filling the background, full body visible, dramatic sunlight, ultra realistic, wide angle lens',
+    'A cinematic sci-fi photograph of this exact person inside a futuristic space station observation deck, panoramic window showing Earth from orbit, full body visible, ambient space lighting, ultra realistic',
+  ],
+  saturn: [
+    'A cinematic sci-fi photograph of this exact person standing on the rings of Saturn, full body visible in a sleek space suit, Saturn\'s massive planet visible above, stars and cosmic dust, dramatic space lighting, ultra realistic, wide angle lens',
+    'A cinematic sci-fi photograph of this exact person floating near Saturn\'s rings, ice crystals and ring particles surrounding them, Saturn looming large overhead, full body visible in a space suit, ultra realistic, dramatic lighting',
+    'A cinematic sci-fi photograph of this exact person on a small moon orbiting Saturn, the rings arcing across the sky, full body visible in a space suit, cosmic landscape, ultra realistic, wide angle lens, dramatic space lighting',
+  ],
+  // ── Time Teleport ──
+  ancient_egypt: [
+    'A cinematic historical scene of this exact person in Ancient Egypt 2000 BC, the Great Pyramids under construction in the background, desert landscape, Egyptian people and merchants, full body visible, realistic historical photography, cinematic lighting, wide angle',
+    'A cinematic historical scene of this exact person beside the Sphinx in Ancient Egypt 2000 BC, pyramids on the horizon, desert sand, Egyptian priests and workers, full body visible, realistic historical photography, golden sunlight',
+    'A cinematic historical scene of this exact person on the banks of the Nile River in Ancient Egypt 2000 BC, papyrus reeds, boats, Egyptian temples, full body visible, realistic historical photography, warm cinematic lighting',
+  ],
+  ancient_greece: [
+    'A cinematic historical scene of this exact person in Ancient Greece 500 BC, the Parthenon on the Acropolis in the background, marble columns, Mediterranean sea visible, Greek citizens in robes, full body visible, realistic historical photography',
+    'A cinematic historical scene of this exact person at the Ancient Greek agora marketplace 500 BC, philosophers debating, marble statues, Mediterranean light, full body visible, realistic historical photography, cinematic composition',
+    'A cinematic historical scene of this exact person at the Temple of Zeus in Ancient Olympia Greece 500 BC, olive trees and columns, athletes and spectators, full body visible, realistic historical photography, golden afternoon light',
+  ],
+  roman_era: [
+    'A cinematic historical scene of this exact person in Ancient Rome, the Colosseum and Roman forum visible, Roman citizens and soldiers, cobblestone streets, full body visible, realistic historical photography, cinematic lighting',
+    'A cinematic historical scene of this exact person in a Roman marketplace in Ancient Rome, merchants selling goods, togas and armour, grand architecture, full body visible, realistic historical photography, warm sunlight',
+    'A cinematic historical scene of this exact person watching gladiators at the Colosseum in Ancient Rome, roaring crowds, sand arena, Roman spectacle, full body visible, realistic historical photography, dramatic lighting',
+  ],
+  medieval: [
+    'A cinematic historical scene of this exact person in a Medieval European city 1200 AD, stone castles and cobblestone streets, market stalls, people in medieval clothing, full body visible, realistic historical photography',
+    'A cinematic historical scene of this exact person at a Medieval jousting tournament 1200 AD, knights on horseback, castle in the background, cheering crowd, full body visible, realistic historical photography, cinematic lighting',
+    'A cinematic historical scene of this exact person crossing a drawbridge at a medieval castle 1200 AD, torches and banners, armoured guards, moat below, full body visible, realistic historical photography, overcast dramatic sky',
+  ],
+  renaissance: [
+    'A cinematic historical scene of this exact person in Renaissance Florence 1500, the grand cathedral dome in the background, artists and merchants on the street, beautiful Italian architecture, full body visible, realistic historical photography',
+    'A cinematic historical scene of this exact person in a Renaissance artist\'s studio in Florence 1500, paintings and sculptures, Michelangelo-era setting, full body visible, realistic historical photography, warm candlelight',
+    'A cinematic historical scene of this exact person at a Renaissance festival in Venice 1500, elaborate masks and costumes, canal and gondolas, grand palazzo, full body visible, realistic historical photography, golden hour light',
+  ],
+  industrial: [
+    'A cinematic historical scene of this exact person in 1800s Industrial London, steam engines and factories, Victorian architecture, fog and gaslit streets, full body visible, realistic historical photography',
+    'A cinematic historical scene of this exact person at a Victorian railway station in London 1800s, steam locomotive, top hats and long coats, iron and glass architecture, full body visible, realistic historical photography, atmospheric fog',
+    'A cinematic historical scene of this exact person in a Victorian market street in London 1800s, horse-drawn carriages, gaslit shop fronts, cobblestones, full body visible, realistic historical photography, moody cinematic lighting',
+  ],
+  future2200: [
+    'A cinematic sci-fi scene of this exact person in a futuristic city 2200 AD, flying vehicles, holographic displays, advanced architecture, full body visible, ultra realistic, wide angle lens, cinematic lighting',
+    'A cinematic sci-fi scene of this exact person walking through a floating sky city in 2200 AD, clouds below, transparent walkways, holographic signs, full body visible, ultra realistic, dramatic lighting, wide angle lens',
+    'A cinematic sci-fi scene of this exact person at a futuristic spaceport in 2200 AD, sleek spacecraft, diverse crowd in advanced clothing, neon and chrome architecture, full body visible, ultra realistic, cinematic lighting',
+  ],
 };
+
+function pickPrompt(sceneId) {
+  const variants = SCENE_PROMPTS[sceneId];
+  if (!variants) return SCENE_PROMPTS.paris[0];
+  return variants[Math.floor(Math.random() * variants.length)];
+}
 
 /**
  * POST /api/ai/face-swap
- * Places the user naturally in a city or cosmic scene via flux-kontext-pro.
+ * Places the user in a city, cosmic, or historical scene via flux-kontext-pro.
  * Falls back gracefully — throws on hard failure so the controller can 500.
  *
  * @param {string} userPhotoDataUri  — data:image/jpeg;base64,... from the frontend
- * @param {string} cityId            — e.g. "istanbul", "mars", "orbit"
+ * @param {string} cityId            — e.g. "istanbul", "mars", "ancient_egypt"
  * @returns {Promise<string>}        — result image as a data URI
  */
 async function faceSwap(userPhotoDataUri, cityId) {
   const token = process.env.REPLICATE_API_TOKEN;
   if (!token) throw new Error('REPLICATE_API_TOKEN not configured');
 
-  const prompt = CITY_PROMPTS[cityId] || CITY_PROMPTS.paris;
+  const prompt = pickPrompt(cityId);
 
   // Start the prediction via flux-kontext-pro
   const startRes = await fetch(
