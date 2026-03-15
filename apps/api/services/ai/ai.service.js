@@ -244,9 +244,9 @@ async function faceSwap(userPhotoDataUri, cityId) {
   // City background image hosted on production frontend
   const targetImageUrl = `https://xotiji.app/cities/${cityId}.jpg`;
 
-  // Start the prediction (uses the model's latest deployed version)
+  // Start the prediction — yan-ops/face-swap accepts base64 data URIs directly
   const startRes = await fetch(
-    'https://api.replicate.com/v1/models/lucataco/facefusion/predictions',
+    'https://api.replicate.com/v1/models/yan-ops/face-swap/predictions',
     {
       method: 'POST',
       headers: {
@@ -256,8 +256,8 @@ async function faceSwap(userPhotoDataUri, cityId) {
       },
       body: JSON.stringify({
         input: {
-          source_image: userPhotoDataUri, // data URI accepted by Replicate
-          target_image: targetImageUrl,
+          input_image: userPhotoDataUri, // base64 data URI (accepted by yan-ops/face-swap)
+          swap_image: targetImageUrl,
         },
       }),
     }
