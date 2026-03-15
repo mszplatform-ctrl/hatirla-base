@@ -228,9 +228,20 @@ async function generateSuggestions() {
   return { success: true };
 }
 
+const CITY_LANDMARKS = {
+  istanbul:  'the Blue Mosque in Istanbul Turkey',
+  paris:     'the Eiffel Tower in Paris France',
+  rome:      'the Colosseum in Rome Italy',
+  barcelona: 'Sagrada Familia in Barcelona Spain',
+  tokyo:     'Shibuya crossing in Tokyo Japan',
+  newyork:   'Times Square in New York City',
+  london:    'Big Ben in London England',
+  dubai:     'Burj Khalifa in Dubai UAE',
+};
+
 /**
  * POST /api/ai/face-swap
- * Swaps the user's face onto a city template image via Replicate facefusion.
+ * Places the user naturally in front of a city landmark via flux-kontext-pro.
  * Falls back gracefully — throws on hard failure so the controller can 500.
  *
  * @param {string} userPhotoDataUri  — data:image/jpeg;base64,... from the frontend
@@ -241,12 +252,12 @@ async function faceSwap(userPhotoDataUri, cityId) {
   const token = process.env.REPLICATE_API_TOKEN;
   if (!token) throw new Error('REPLICATE_API_TOKEN not configured');
 
-  // City background image hosted on production frontend
-  const targetImageUrl = `https://xotiji.app/cities/${cityId}.jpg`;
+  const landmark = CITY_LANDMARKS[cityId] || cityId;
+  const prompt = `Place this exact person naturally in front of ${landmark}, realistic travel photo, natural lighting, the person looks like they are actually there`;
 
-  // Start the prediction — yan-ops/face-swap accepts base64 data URIs directly
+  // Start the prediction via flux-kontext-pro
   const startRes = await fetch(
-    'https://api.replicate.com/v1/models/yan-ops/face-swap/predictions',
+    'https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions',
     {
       method: 'POST',
       headers: {
@@ -256,8 +267,8 @@ async function faceSwap(userPhotoDataUri, cityId) {
       },
       body: JSON.stringify({
         input: {
-          input_image: userPhotoDataUri, // base64 data URI (accepted by yan-ops/face-swap)
-          swap_image: targetImageUrl,
+          input_image: userPhotoDataUri,
+          prompt,
         },
       }),
     }
