@@ -1,17 +1,18 @@
 import { useState, useRef } from 'react';
 import { t, getLang } from '../../i18n';
+import { CinematicSequence, SelectedScene } from './CinematicSequence';
 
 const AI_BASE = `${import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com'}/api/ai`;
 
-const CITIES = [
-  { id: 'istanbul',  image: '/cities/istanbul.jpg',  label: 'ISTANBUL, TURKEY' },
-  { id: 'paris',     image: '/cities/paris.jpg',     label: 'PARIS, FRANCE'    },
-  { id: 'rome',      image: '/cities/rome.jpg',      label: 'ROME, ITALY'      },
-  { id: 'tokyo',     image: '/cities/tokyo.jpg',     label: 'TOKYO, JAPAN'     },
-  { id: 'barcelona', image: '/cities/barcelona.jpg', label: 'BARCELONA, SPAIN' },
-  { id: 'dubai',     image: '/cities/dubai.jpg',     label: 'DUBAI, UAE'       },
-  { id: 'london',    image: '/cities/london.jpg',    label: 'LONDON, ENGLAND'  },
-  { id: 'berlin',    image: '/cities/berlin.jpg',    label: 'BERLIN, GERMANY'  },
+const CITIES: SelectedScene[] = [
+  { id: 'istanbul',  image: '/cities/istanbul.jpg',  label: 'ISTANBUL, TURKEY', year: '2026', era: 'Istanbul',  cosmic: false },
+  { id: 'paris',     image: '/cities/paris.jpg',     label: 'PARIS, FRANCE',    year: '2026', era: 'Paris',     cosmic: false },
+  { id: 'rome',      image: '/cities/rome.jpg',      label: 'ROME, ITALY',      year: '2026', era: 'Rome',      cosmic: false },
+  { id: 'tokyo',     image: '/cities/tokyo.jpg',     label: 'TOKYO, JAPAN',     year: '2026', era: 'Tokyo',     cosmic: false },
+  { id: 'barcelona', image: '/cities/barcelona.jpg', label: 'BARCELONA, SPAIN', year: '2026', era: 'Barcelona', cosmic: false },
+  { id: 'dubai',     image: '/cities/dubai.jpg',     label: 'DUBAI, UAE',       year: '2026', era: 'Dubai',     cosmic: false },
+  { id: 'london',    image: '/cities/london.jpg',    label: 'LONDON, ENGLAND',  year: '2026', era: 'London',    cosmic: false },
+  { id: 'berlin',    image: '/cities/berlin.jpg',    label: 'BERLIN, GERMANY',  year: '2026', era: 'Berlin',    cosmic: false },
 ];
 
 const TIME_STOPS = [
@@ -32,60 +33,19 @@ const TIME_STOPS = [
   { id: 'end_of_time',    label: '∞',         year: '∞',      era: 'End of Time',         cosmic: true  },
 ];
 
-type Scene = { id: string; image: string; label: string };
-
 const EXPLORER_ID = String(Math.floor(1000 + Math.random() * 9000));
 
-function SceneCard({ scene, onClick, accentColor = '#0ea5e9' }: { scene: Scene; onClick: (s: Scene) => void; accentColor?: string }) {
-  return (
-    <button
-      onClick={() => onClick(scene)}
-      style={{
-        position: 'relative',
-        height: '168px',
-        borderRadius: '18px',
-        overflow: 'hidden',
-        border: `2px solid rgba(255,255,255,0.12)`,
-        cursor: 'pointer',
-        padding: 0,
-        backgroundImage: scene.image ? `url(${scene.image})` : undefined,
-        backgroundColor: scene.image ? undefined : 'rgba(255,255,255,0.05)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'scale(1.04)';
-        e.currentTarget.style.borderColor = accentColor;
-        e.currentTarget.style.boxShadow = `0 8px 32px ${accentColor}55`;
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'scale(1)';
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
-    >
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.05) 55%)',
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '14px',
-        left: 0,
-        right: 0,
-        color: 'white',
-        fontWeight: 700,
-        fontSize: '13px',
-        textAlign: 'center',
-        textShadow: '0 1px 6px rgba(0,0,0,0.8)',
-        letterSpacing: '0.04em',
-        fontFamily: 'monospace',
-      }}>
-        {scene.label}
-      </div>
-    </button>
+function callFaceSwap(photo: string, sceneId: string): Promise<string> {
+  return fetch(`${AI_BASE}/face-swap`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ photo, cityId: sceneId }),
+  }).then(res =>
+    res.json().then((data: { success: boolean; image?: string; error?: string }) => {
+      if (!res.ok || data.success === false) throw new Error(`Transmission failed: ${data.error || `Server error ${res.status}`}`);
+      if (!data.image) throw new Error('No image in response');
+      return data.image;
+    })
   );
 }
 
@@ -94,227 +54,86 @@ interface SpaceSelfieProps {
 }
 
 export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [selectedCity, setSelectedCity] = useState<Scene | null>(null);
-  const [timeStopIndex, setTimeStopIndex] = useState(0);
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  const [flowStep, setFlowStep] = useState<'select' | 'photo-modal' | 'cinematic' | 'result'>('select');
+  const [selectedScene, setSelectedScene] = useState<SelectedScene | null>(null);
+  const [timeStopIndex, setTimeStopIndex] = useState(7); // default: Present Day
+  const [userPhoto, setUserPhoto]   = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [teleportPhase, setTeleportPhase] = useState<0 | 1 | 2 | 3 | 4>(0); // 0=off 1=fade 2=text 3=countdown 4=flash
-  const [teleportStop, setTeleportStop] = useState<typeof TIME_STOPS[0] | null>(null);
-  const [countdownNum, setCountdownNum] = useState(3);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [errorMsg, setErrorMsg]     = useState<string | null>(null);
+  const apiPromiseRef = useRef<Promise<string> | null>(null);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  function handleCitySelect(scene: Scene) {
-    setSelectedCity(scene);
-    setStep(2);
+  function openPhotoModal(scene: SelectedScene) {
+    setSelectedScene(scene);
+    setUserPhoto(null);
+    setErrorMsg(null);
+    setFlowStep('photo-modal');
   }
 
-  async function handleTimeSelect() {
+  function handleCitySelect(city: SelectedScene) {
+    openPhotoModal(city);
+  }
+
+  function handleTimeSelect() {
     const stop = TIME_STOPS[timeStopIndex];
-    setTeleportStop(stop);
-
-    // Phase 1 — fade to black (0–1s)
-    setTeleportPhase(1);
-    await new Promise(r => setTimeout(r, 1000));
-
-    // Phase 2 — show text (1–2s)
-    setTeleportPhase(2);
-    await new Promise(r => setTimeout(r, 1000));
-
-    // Phase 3 — countdown 3…2…1 (2–4s, ~600ms each)
-    setTeleportPhase(3);
-    for (const n of [3, 2, 1]) {
-      setCountdownNum(n);
-      await new Promise(r => setTimeout(r, 650));
-    }
-
-    // Phase 4 — white flash (brief)
-    setTeleportPhase(4);
-    await new Promise(r => setTimeout(r, 300));
-
-    // Done — go to photo step
-    setTeleportPhase(0);
-    setSelectedCity({ id: stop.id, image: '', label: stop.era.toUpperCase() });
-    setStep(2);
+    openPhotoModal({
+      id: stop.id, image: '', label: stop.era.toUpperCase(),
+      year: stop.year, era: stop.era, cosmic: stop.cosmic,
+    });
   }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => setUserPhoto(ev.target?.result as string);
+    reader.onload = ev => setUserPhoto(ev.target?.result as string);
     reader.readAsDataURL(file);
   }
 
-  async function handleGenerate() {
-    if (!selectedCity || !userPhoto) return;
-    setStep(3);
+  function handleLaunch() {
+    if (!selectedScene || !userPhoto) return;
+    apiPromiseRef.current = callFaceSwap(userPhoto, selectedScene.id);
+    setFlowStep('cinematic');
+  }
+
+  function handleCinematicComplete(image: string) {
+    setResultImage(image);
+    setFlowStep('result');
+  }
+
+  function handleCinematicError(msg: string) {
+    setErrorMsg(msg);
+    setFlowStep('photo-modal');
+  }
+
+  function handleTryAgain() {
+    setFlowStep('select');
+    setSelectedScene(null);
+    setUserPhoto(null);
+    setResultImage(null);
     setErrorMsg(null);
-
-    // ── Try AI via fal.ai (waits synchronously on the backend) ──
-    try {
-      const res = await fetch(`${AI_BASE}/face-swap`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ photo: userPhoto, cityId: selectedCity.id }),
-      });
-      const data = await res.json();
-      if (!res.ok || data.success === false) {
-        setErrorMsg(`Transmission failed: ${data.error || `Server error ${res.status}`}`);
-        setStep(2);
-        return;
-      }
-      if (data.success === true && data.image) {
-        setResultImage(data.image);
-        setStep(4);
-        return;
-      }
-    } catch (err) {
-      setErrorMsg('Transmission failed: Could not reach server. Please try again.');
-      setStep(2);
-      return;
-    }
-
-    // ── Canvas fallback (only for city scenes with a local background image) ──
-    if (!selectedCity.image) {
-      setErrorMsg('Transmission failed. Please try again.');
-      setStep(2);
-      return;
-    }
-
-    if (!canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d')!;
-    const SIZE = 1080;
-    canvas.width = SIZE;
-    canvas.height = SIZE;
-
-    const loadImg = (src: string): Promise<HTMLImageElement> =>
-      new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
-      });
-
-    const [bgImg, userImg] = await Promise.all([
-      loadImg(selectedCity.image),
-      loadImg(userPhoto),
-    ]);
-
-    // 1. City background — cover crop
-    const ba = bgImg.width / bgImg.height;
-    let bx = 0, by = 0, bw = SIZE, bh = SIZE;
-    if (ba > 1) { bw = SIZE * ba; bx = -(bw - SIZE) / 2; }
-    else        { bh = SIZE / ba; by = -(bh - SIZE) / 2; }
-    ctx.drawImage(bgImg, bx, by, bw, bh);
-
-    // 2. Top gradient overlay
-    const topG = ctx.createLinearGradient(0, 0, 0, 280);
-    topG.addColorStop(0, 'rgba(0,0,0,0.75)');
-    topG.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = topG;
-    ctx.fillRect(0, 0, SIZE, 280);
-
-    // 3. Bottom gradient overlay
-    const botG = ctx.createLinearGradient(0, SIZE - 180, 0, SIZE);
-    botG.addColorStop(0, 'rgba(0,0,0,0)');
-    botG.addColorStop(1, 'rgba(0,0,0,0.80)');
-    ctx.fillStyle = botG;
-    ctx.fillRect(0, SIZE - 180, SIZE, 180);
-
-    // 4. Top text
-    const lang = getLang();
-    const cityName = selectedCity.label;
-    const topText = lang === 'tr' ? `${cityName} Anın` : `Your ${cityName} Moment`;
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 72px sans-serif';
-    ctx.shadowColor = 'rgba(0,0,0,0.6)';
-    ctx.shadowBlur = 16;
-    ctx.fillStyle = 'white';
-    ctx.fillText(topText, SIZE / 2, 108);
-    ctx.shadowBlur = 0;
-
-    // 5. User photo — circular, centered
-    const photoR = 280;
-    const cx = SIZE / 2;
-    const cy = SIZE / 2 + 30;
-
-    // Sky-blue glow ring
-    ctx.save();
-    ctx.shadowColor = 'rgba(14,165,233,0.9)';
-    ctx.shadowBlur = 70;
-    ctx.strokeStyle = '#0ea5e9';
-    ctx.lineWidth = 10;
-    ctx.beginPath();
-    ctx.arc(cx, cy, photoR + 18, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-
-    // White inner ring
-    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.arc(cx, cy, photoR + 6, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Clip user photo to circle — square cover crop
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, photoR, 0, Math.PI * 2);
-    ctx.clip();
-    const ua = userImg.width / userImg.height;
-    let sx = 0, sy = 0, sw = userImg.width, sh = userImg.height;
-    if (ua > 1) { sw = userImg.height; sx = (userImg.width - sw) / 2; }
-    else        { sh = userImg.width;  sy = (userImg.height - sh) / 2; }
-    ctx.drawImage(userImg, sx, sy, sw, sh, cx - photoR, cy - photoR, photoR * 2, photoR * 2);
-    ctx.restore();
-
-    // 6. "Be Your Own Sun" below photo
-    ctx.textAlign = 'center';
-    ctx.font = 'italic bold 38px sans-serif';
-    ctx.fillStyle = 'rgba(251,146,60,1)';
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur = 10;
-    ctx.fillText('☀  Be Your Own Sun', SIZE / 2, cy + photoR + 68);
-    ctx.shadowBlur = 0;
-
-    // 7. Watermark
-    ctx.textAlign = 'center';
-    ctx.font = '500 28px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.fillText('XOTIJI  |  xotiji.app', SIZE / 2, SIZE - 38);
-
-    setResultImage(canvas.toDataURL('image/png'));
-    setStep(4);
+    apiPromiseRef.current = null;
   }
 
   function handleDownload() {
-    if (!resultImage || !selectedCity) return;
+    if (!resultImage || !selectedScene) return;
     const a = document.createElement('a');
     a.href = resultImage;
-    a.download = `xotiji-space-selfie-${selectedCity.id}.png`;
+    a.download = `xotiji-space-selfie-${selectedScene.id}.png`;
     a.click();
   }
 
   const tagline = 'My cosmic travel identity was generated by XOTIJI — xotiji.app';
 
   function handleShareX() {
-    const label = selectedCity?.label ?? '';
-    const text = `🚀 COSMIC IDENTITY GENERATED — ${label} ✨ ${tagline} #XOTIJI #SpaceSelfie`;
+    const text = `🚀 COSMIC IDENTITY GENERATED — ${selectedScene?.label ?? ''} ✨ ${tagline} #XOTIJI #SpaceSelfie`;
     navigator.clipboard?.writeText(tagline).catch(() => {});
-    window.open(
-      `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://xotiji.app')}`,
-      '_blank'
-    );
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://xotiji.app')}`, '_blank');
   }
 
   function handleShareWhatsApp() {
-    const label = selectedCity?.label ?? '';
-    const text = `🚀 ${label} — Cosmic identity generated! ${tagline}`;
+    const text = `🚀 ${selectedScene?.label ?? ''} — Cosmic identity generated! ${tagline}`;
     navigator.clipboard?.writeText(tagline).catch(() => {});
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
@@ -324,17 +143,90 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     window.open('https://www.instagram.com/', '_blank');
   }
 
-  function handleTryAgain() {
-    setStep(1);
-    setSelectedCity(null);
-    setUserPhoto(null);
-    setResultImage(null);
-    setErrorMsg(null);
+  // ── Cinematic: full-screen, replaces everything ──
+  if (flowStep === 'cinematic' && selectedScene && apiPromiseRef.current) {
+    return (
+      <CinematicSequence
+        scene={selectedScene}
+        apiPromise={apiPromiseRef.current}
+        onComplete={handleCinematicComplete}
+        onError={handleCinematicError}
+      />
+    );
   }
 
-  // Progress bar: 3 segments for steps 1 → 2 → 4
-  const progressIndex = step === 1 ? 0 : step === 2 ? 1 : 2;
+  // ── Result: full-screen ──
+  if (flowStep === 'result' && resultImage && selectedScene) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 50, overflowY: 'auto', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
+        {/* Image area (85vh) */}
+        <div style={{ position: 'relative', width: '100%', height: '85vh', overflow: 'hidden' }}>
+          <img
+            src={resultImage}
+            alt="Space Selfie"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
 
+          {/* Bottom gradient overlay */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '45%', background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 100%)', pointerEvents: 'none' }} />
+
+          {/* Location + Explorer ID (bottom left) */}
+          <div style={{ position: 'absolute', bottom: '20px', left: '20px', pointerEvents: 'none' }}>
+            <div style={{ color: 'rgba(45,212,191,0.65)', fontFamily: 'monospace', fontSize: '10px', letterSpacing: '0.15em', marginBottom: '4px' }}>
+              XOTIJI TRANSMISSION
+            </div>
+            <div style={{ color: 'white', fontFamily: 'monospace', fontSize: '14px', fontWeight: 700, letterSpacing: '0.06em', marginBottom: '3px' }}>
+              {selectedScene.label}
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'monospace', fontSize: '10px' }}>
+              EXPLORER ID: {EXPLORER_ID}
+            </div>
+          </div>
+
+          {/* Share buttons (bottom right) — icon-only 44px circles */}
+          <div style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', gap: '10px' }}>
+            {[
+              { label: '⬇', title: 'Download',  action: handleDownload        },
+              { label: '📸', title: 'Instagram', action: handleShareInstagram  },
+              { label: '𝕏',  title: 'X',         action: handleShareX          },
+              { label: '💬', title: 'WhatsApp',  action: handleShareWhatsApp   },
+            ].map(btn => (
+              <button
+                key={btn.title}
+                onClick={btn.action}
+                title={btn.title}
+                style={{
+                  width: '44px', height: '44px', borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.92)', border: 'none',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontSize: '18px', lineHeight: 1,
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
+                  fontFamily: 'system-ui',
+                }}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Below image */}
+        <div style={{ padding: '22px 24px 40px', textAlign: 'center', background: '#000' }}>
+          <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.04em', margin: '0 0 20px' }}>
+            {tagline}
+          </p>
+          <button
+            onClick={handleTryAgain}
+            style={{ background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.15)', padding: '10px 24px', borderRadius: '999px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' }}
+          >
+            🔄 {t('spaceSelfie.tryAgain')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Select screen ──
   return (
     <div style={{
       minHeight: '100vh',
@@ -343,682 +235,258 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     }}>
       {/* Header */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        padding: '18px 24px',
+        display: 'flex', alignItems: 'center', padding: '18px 24px',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
-        position: 'sticky',
-        top: 0,
-        background: 'rgba(15,23,42,0.85)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 10,
+        position: 'sticky', top: 0,
+        background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(12px)', zIndex: 10,
       }}>
         <button
           onClick={onBack}
-          style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '999px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: 600,
-            fontFamily: 'inherit',
-          }}
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '8px 16px', borderRadius: '999px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, fontFamily: 'inherit' }}
         >
           ← {t('spaceSelfie.back')}
         </button>
-        <div style={{
-          flex: 1,
-          textAlign: 'center',
-          color: 'white',
-          fontWeight: 800,
-          fontSize: '17px',
-          letterSpacing: '-0.01em',
-        }}>
+        <div style={{ flex: 1, textAlign: 'center', color: 'white', fontWeight: 800, fontSize: '17px', letterSpacing: '-0.01em' }}>
           🚀 {t('spaceSelfie.title')}
         </div>
         <div style={{ width: '80px' }} />
       </div>
 
-      {/* Step progress bar */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '18px 24px 0' }}>
-        {[0, 1, 2].map((i) => (
-          <div key={i} style={{
-            height: '4px',
-            width: '60px',
-            borderRadius: '2px',
-            background: i <= progressIndex ? '#0ea5e9' : 'rgba(255,255,255,0.15)',
-            transition: 'background 0.3s',
-          }} />
-        ))}
-      </div>
-
-      {/* Page content */}
-      <div style={{ padding: '28px 24px 60px', maxWidth: '860px', margin: '0 auto' }}>
-
-        {/* ── STEP 1: Scene Selection ── */}
-        {step === 1 && (
-          <div>
-            <h2 style={{ color: 'white', textAlign: 'center', margin: '0 0 8px', fontSize: '22px', fontWeight: 700 }}>
-              {t('spaceSelfie.step1Title')}
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 28px', fontSize: '14px' }}>
-              {t('spaceSelfie.selectCityPrompt')}
-            </p>
-
-            {/* City grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))',
-              gap: '16px',
-              marginBottom: '36px',
-            }}>
-              {CITIES.map(city => (
-                <SceneCard key={city.id} scene={city} onClick={handleCitySelect} />
-              ))}
-            </div>
-
-            {/* Unified Timeline panel */}
-            <div style={{
-              background: 'rgba(0,0,0,0.55)',
-              border: '1px solid rgba(45,212,191,0.2)',
-              borderRadius: '20px',
-              padding: '24px 20px',
-            }}>
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
-                <span style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>
-                  ⏳ TIME &amp; SPACE TELEPORT
-                </span>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
+      {/* Photo modal overlay */}
+      {flowStep === 'photo-modal' && selectedScene && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 50,
+          background: 'rgba(5,10,20,0.97)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex', flexDirection: 'column',
+          fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+        }}>
+          {/* Modal header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '18px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <button
+              onClick={() => setFlowStep('select')}
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '8px 16px', borderRadius: '999px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 }}
+            >
+              ← {t('spaceSelfie.back')}
+            </button>
+            <div style={{ flex: 1, textAlign: 'center' }}>
+              <div style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'monospace', fontSize: '10px', letterSpacing: '0.18em', marginBottom: '4px' }}>
+                TELEPORTING TO
               </div>
-
-              {/* Dot timeline */}
-              <div style={{ position: 'relative', marginBottom: '4px' }}>
-                {/* Track */}
-                <div style={{
-                  position: 'absolute',
-                  top: '6px',
-                  left: '0',
-                  right: '0',
-                  height: '2px',
-                  background: 'linear-gradient(to right, rgba(45,212,191,0.3) 0%, rgba(45,212,191,0.3) 53%, rgba(139,92,246,0.3) 53%, rgba(139,92,246,0.3) 100%)',
-                  zIndex: 0,
-                }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-                  {TIME_STOPS.map((stop, i) => {
-                    const isSelected = i === timeStopIndex;
-                    const color = stop.cosmic ? '#a78bfa' : '#2dd4bf';
-                    const glowColor = stop.cosmic ? 'rgba(139,92,246,0.7)' : 'rgba(45,212,191,0.7)';
-                    return (
-                      <button
-                        key={stop.id}
-                        onClick={() => setTimeStopIndex(i)}
-                        title={stop.era}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '5px',
-                          padding: '0',
-                          flex: 1,
-                          minWidth: 0,
-                        }}
-                      >
-                        <div style={{
-                          width: isSelected ? '14px' : '10px',
-                          height: isSelected ? '14px' : '10px',
-                          borderRadius: '50%',
-                          background: isSelected ? color : 'rgba(255,255,255,0.15)',
-                          border: `2px solid ${isSelected ? color : 'rgba(255,255,255,0.2)'}`,
-                          boxShadow: isSelected ? `0 0 12px ${glowColor}` : 'none',
-                          transition: 'all 0.2s',
-                          flexShrink: 0,
-                        }} />
-                        <span style={{
-                          color: isSelected ? color : 'rgba(255,255,255,0.28)',
-                          fontFamily: 'monospace',
-                          fontSize: '8px',
-                          fontWeight: 700,
-                          textAlign: 'center',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          maxWidth: '100%',
-                          transition: 'color 0.2s',
-                        }}>
-                          {stop.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Slider */}
-              <input
-                type="range"
-                min={0}
-                max={TIME_STOPS.length - 1}
-                value={timeStopIndex}
-                onChange={e => setTimeStopIndex(Number(e.target.value))}
-                style={{
-                  width: '100%',
-                  accentColor: TIME_STOPS[timeStopIndex].cosmic ? '#a78bfa' : '#2dd4bf',
-                  cursor: 'pointer',
-                  margin: '14px 0 20px',
-                }}
-              />
-
-              {/* Selected era display */}
-              {(() => {
-                const stop = TIME_STOPS[timeStopIndex];
-                const color = stop.cosmic ? '#a78bfa' : '#2dd4bf';
-                const glowColor = stop.cosmic ? 'rgba(139,92,246,0.15)' : 'rgba(45,212,191,0.1)';
-                const borderColor = stop.cosmic ? 'rgba(139,92,246,0.3)' : 'rgba(45,212,191,0.25)';
-                return (
-                  <div style={{
-                    textAlign: 'center',
-                    marginBottom: '20px',
-                    background: glowColor,
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '12px',
-                    padding: '14px',
-                  }}>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '10px', letterSpacing: '0.12em', marginBottom: '6px' }}>
-                      DESTINATION
-                    </div>
-                    <div style={{ color: 'white', fontFamily: 'monospace', fontSize: '20px', fontWeight: 800, letterSpacing: '0.06em', marginBottom: '4px' }}>
-                      {stop.era.toUpperCase()}
-                    </div>
-                    <div style={{ color, fontFamily: 'monospace', fontSize: '12px', opacity: 0.85 }}>
-                      {stop.year}  ·  {stop.cosmic ? '✦ COSMIC' : '◈ HISTORICAL'}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <div style={{ textAlign: 'center' }}>
-                {(() => {
-                  const isCosmic = TIME_STOPS[timeStopIndex].cosmic;
-                  const btnColor = isCosmic ? '#a78bfa' : '#2dd4bf';
-                  const btnBg = isCosmic ? 'rgba(139,92,246,0.18)' : 'rgba(45,212,191,0.18)';
-                  const btnBorder = isCosmic ? 'rgba(139,92,246,0.5)' : 'rgba(45,212,191,0.5)';
-                  const btnGlow = isCosmic ? 'rgba(139,92,246,0.25)' : 'rgba(45,212,191,0.25)';
-                  return (
-                    <button
-                      onClick={handleTimeSelect}
-                      style={{
-                        background: btnBg,
-                        border: `1px solid ${btnBorder}`,
-                        color: btnColor,
-                        padding: '13px 48px',
-                        borderRadius: '999px',
-                        cursor: 'pointer',
-                        fontWeight: 800,
-                        fontSize: '15px',
-                        fontFamily: 'monospace',
-                        letterSpacing: '0.1em',
-                        boxShadow: `0 0 24px ${btnGlow}`,
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 0 40px ${btnGlow.replace('0.25', '0.5')}`; }}
-                      onMouseLeave={e => { e.currentTarget.style.boxShadow = `0 0 24px ${btnGlow}`; }}
-                    >
-                      ⏳ TELEPORT
-                    </button>
-                  );
-                })()}
+              <div style={{
+                color: selectedScene.cosmic ? '#a78bfa' : '#2dd4bf',
+                fontFamily: 'monospace', fontSize: '14px', fontWeight: 800, letterSpacing: '0.1em',
+              }}>
+                {selectedScene.label}
               </div>
             </div>
+            <div style={{ width: '80px' }} />
           </div>
-        )}
 
-        {/* ── STEP 2: Photo Upload ── */}
-        {step === 2 && (
-          <div style={{ textAlign: 'center' }}>
-            {/* Error banner */}
-            {errorMsg && (
-              <div style={{
-                background: 'rgba(239,68,68,0.12)',
-                border: '1px solid rgba(239,68,68,0.4)',
-                borderRadius: '12px',
-                padding: '14px 18px',
-                marginBottom: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                textAlign: 'left',
-              }}>
-                <span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span>
-                <span style={{ color: '#fca5a5', fontFamily: 'monospace', fontSize: '13px', lineHeight: 1.5 }}>
-                  {errorMsg}
-                </span>
-                <button
-                  onClick={() => setErrorMsg(null)}
-                  style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '16px', flexShrink: 0 }}
-                >✕</button>
-              </div>
-            )}
-            <h2 style={{ color: 'white', margin: '0 0 8px', fontSize: '22px', fontWeight: 700 }}>
-              {t('spaceSelfie.step2Title')}
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.5)', margin: '0 0 32px', fontSize: '14px' }}>
-              {t('spaceSelfie.uploadPrompt')}
-            </p>
+          {/* Error banner */}
+          {errorMsg && (
+            <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '12px', padding: '12px 18px', margin: '16px 24px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '16px', flexShrink: 0 }}>⚠️</span>
+              <span style={{ color: '#fca5a5', fontFamily: 'monospace', fontSize: '13px', lineHeight: 1.5, flex: 1 }}>{errorMsg}</span>
+              <button onClick={() => setErrorMsg(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '16px', flexShrink: 0 }}>✕</button>
+            </div>
+          )}
 
+          {/* Upload content */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}>
             {!userPhoto ? (
-              <div style={{
-                border: '2px dashed rgba(14,165,233,0.4)',
-                borderRadius: '24px',
-                padding: '56px 24px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '20px',
-                background: 'rgba(14,165,233,0.04)',
-              }}>
-                <div style={{ fontSize: '56px', lineHeight: 1 }}>📸</div>
-                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>
-                  {getLang() === 'tr' ? 'Fotoğrafın seçildikten sonra önizleme görünür' : 'Preview appears after selecting your photo'}
+              <div style={{ width: '100%', maxWidth: '440px', textAlign: 'center' }}>
+                <div style={{ color: 'white', fontWeight: 700, fontSize: '20px', marginBottom: '8px' }}>
+                  {t('spaceSelfie.step2Title')}
                 </div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      background: '#0ea5e9',
-                      color: 'white',
-                      border: 'none',
-                      padding: '13px 28px',
-                      borderRadius: '999px',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      fontSize: '15px',
-                      fontFamily: 'inherit',
-                    }}
-                  >
-                    📁 {t('spaceSelfie.chooseFile')}
-                  </button>
-                  <button
-                    onClick={() => cameraInputRef.current?.click()}
-                    style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      color: 'white',
-                      border: '2px solid rgba(255,255,255,0.2)',
-                      padding: '12px 28px',
-                      borderRadius: '999px',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      fontSize: '15px',
-                      fontFamily: 'inherit',
-                    }}
-                  >
-                    📷 {t('spaceSelfie.takePhoto')}
-                  </button>
+                <p style={{ color: 'rgba(255,255,255,0.45)', margin: '0 0 28px', fontSize: '14px' }}>
+                  {t('spaceSelfie.uploadPrompt')}
+                </p>
+                <div style={{
+                  border: '2px dashed rgba(14,165,233,0.35)', borderRadius: '24px',
+                  padding: '52px 24px',
+                  background: 'rgba(14,165,233,0.04)',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px',
+                }}>
+                  <div style={{ fontSize: '52px', lineHeight: 1 }}>📸</div>
+                  <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '13px' }}>
+                    {getLang() === 'tr' ? 'Fotoğrafın seçildikten sonra önizleme görünür' : 'Preview appears after selecting your photo'}
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{ background: '#0ea5e9', color: 'white', border: 'none', padding: '13px 28px', borderRadius: '999px', cursor: 'pointer', fontWeight: 700, fontSize: '15px', fontFamily: 'inherit' }}
+                    >
+                      📁 {t('spaceSelfie.chooseFile')}
+                    </button>
+                    <button
+                      onClick={() => cameraInputRef.current?.click()}
+                      style={{ background: 'rgba(255,255,255,0.08)', color: 'white', border: '2px solid rgba(255,255,255,0.2)', padding: '12px 28px', borderRadius: '999px', cursor: 'pointer', fontWeight: 700, fontSize: '15px', fontFamily: 'inherit' }}
+                    >
+                      📷 {t('spaceSelfie.takePhoto')}
+                    </button>
+                  </div>
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={handlePhotoChange}
-                />
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="user"
-                  style={{ display: 'none' }}
-                  onChange={handlePhotoChange}
-                />
+                <input ref={fileInputRef}  type="file" accept="image/*"                style={{ display: 'none' }} onChange={handlePhotoChange} />
+                <input ref={cameraInputRef} type="file" accept="image/*" capture="user" style={{ display: 'none' }} onChange={handlePhotoChange} />
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}>
-                {/* City badge */}
-                {selectedCity && (
-                  <div style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    background: 'rgba(14,165,233,0.15)',
-                    border: '1px solid rgba(14,165,233,0.35)',
-                    borderRadius: '999px',
-                    padding: '6px 16px',
-                    color: '#7dd3fc',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                  }}>
-                    🏙️ {selectedCity.label}
-                  </div>
-                )}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', width: '100%', maxWidth: '440px' }}>
                 {/* Photo preview */}
-                <div style={{
-                  width: '220px',
-                  height: '220px',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  border: '4px solid #0ea5e9',
-                  boxShadow: '0 0 50px rgba(14,165,233,0.45)',
-                }}>
-                  <img
-                    src={userPhoto}
-                    alt="preview"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
+                <div style={{ width: '200px', height: '200px', borderRadius: '50%', overflow: 'hidden', border: `4px solid ${selectedScene.cosmic ? '#a78bfa' : '#0ea5e9'}`, boxShadow: `0 0 50px ${selectedScene.cosmic ? 'rgba(139,92,246,0.45)' : 'rgba(14,165,233,0.45)'}` }}>
+                  <img src={userPhoto} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
+
+                {/* Destination badge */}
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  background: selectedScene.cosmic ? 'rgba(139,92,246,0.12)' : 'rgba(14,165,233,0.12)',
+                  border: `1px solid ${selectedScene.cosmic ? 'rgba(139,92,246,0.3)' : 'rgba(14,165,233,0.3)'}`,
+                  borderRadius: '999px', padding: '6px 16px',
+                  color: selectedScene.cosmic ? '#c4b5fd' : '#7dd3fc',
+                  fontSize: '13px', fontWeight: 600,
+                }}>
+                  {selectedScene.cosmic ? '✦' : '🏙️'} {selectedScene.label}
+                </div>
+
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
                   <button
                     onClick={() => { setUserPhoto(null); setTimeout(() => fileInputRef.current?.click(), 50); }}
-                    style={{
-                      background: 'rgba(255,255,255,0.07)',
-                      color: 'rgba(255,255,255,0.7)',
-                      border: '1px solid rgba(255,255,255,0.18)',
-                      padding: '12px 24px',
-                      borderRadius: '999px',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      fontSize: '14px',
-                      fontFamily: 'inherit',
-                    }}
+                    style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.18)', padding: '12px 24px', borderRadius: '999px', cursor: 'pointer', fontWeight: 600, fontSize: '14px', fontFamily: 'inherit' }}
                   >
                     🔄 {t('spaceSelfie.chooseFile')}
                   </button>
                   <button
-                    onClick={handleGenerate}
+                    onClick={handleLaunch}
                     style={{
-                      background: 'linear-gradient(135deg, #0f766e 0%, #0ea5e9 100%)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '13px 36px',
-                      borderRadius: '999px',
-                      cursor: 'pointer',
-                      fontWeight: 800,
-                      fontSize: '16px',
-                      boxShadow: '0 4px 24px rgba(14,165,233,0.45)',
-                      fontFamily: 'inherit',
+                      background: selectedScene.cosmic
+                        ? 'linear-gradient(135deg, #6d28d9 0%, #a78bfa 100%)'
+                        : 'linear-gradient(135deg, #0f766e 0%, #0ea5e9 100%)',
+                      color: 'white', border: 'none', padding: '13px 36px', borderRadius: '999px',
+                      cursor: 'pointer', fontWeight: 800, fontSize: '16px',
+                      boxShadow: selectedScene.cosmic ? '0 4px 24px rgba(139,92,246,0.5)' : '0 4px 24px rgba(14,165,233,0.45)',
+                      fontFamily: 'inherit', letterSpacing: '0.05em',
                     }}
                   >
-                    ✨ {t('spaceSelfie.generate')}
+                    ⚡ LAUNCH
                   </button>
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={handlePhotoChange}
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
               </div>
             )}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── STEP 3: Generating ── */}
-        {step === 3 && (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: 'white' }}>
-            <div style={{ fontSize: '72px', marginBottom: '28px', animation: 'pulse 1s infinite' }}>⚡</div>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 12px' }}>
-              {t('spaceSelfie.step3Title')}
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '14px', margin: 0 }}>
-              {t('spaceSelfie.step3Subtitle')}
-            </p>
-          </div>
-        )}
+      {/* Select screen content */}
+      {flowStep === 'select' && (
+        <div style={{ padding: '28px 24px 60px', maxWidth: '860px', margin: '0 auto' }}>
+          <h2 style={{ color: 'white', textAlign: 'center', margin: '0 0 8px', fontSize: '22px', fontWeight: 700 }}>
+            {t('spaceSelfie.step1Title')}
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 28px', fontSize: '14px' }}>
+            {t('spaceSelfie.selectCityPrompt')}
+          </p>
 
-        {/* ── STEP 4: Result ── */}
-        {step === 4 && resultImage && (
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{ color: '#0ea5e9', margin: '0 0 4px', fontSize: '20px', fontWeight: 800, letterSpacing: '0.08em', fontFamily: 'monospace' }}>
-              ✦ COSMIC IDENTITY GENERATED
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.45)', margin: '0 0 24px', fontSize: '13px' }}>
-              Your transmission is ready. Where will you go next?
-            </p>
-
-            {/* Result image with HUD overlay */}
-            <div style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: '460px',
-              margin: '0 auto 28px',
-              borderRadius: '20px',
-              overflow: 'hidden',
-              boxShadow: '0 24px 64px rgba(0,0,0,0.55)',
-            }}>
-              <img
-                src={resultImage}
-                alt="Space Selfie"
-                style={{ width: '100%', display: 'block' }}
-              />
-
-              {/* HUD — top left */}
-              <div style={{
-                position: 'absolute',
-                top: '12px',
-                left: '14px',
-                fontFamily: 'monospace',
-                fontSize: '9px',
-                lineHeight: 1.7,
-                color: 'rgba(45,212,191,0.5)',
-                pointerEvents: 'none',
-              }}>
-                <div style={{ letterSpacing: '0.1em' }}>XOTIJI TRANSMISSION</div>
-                <div style={{ opacity: 0.7 }}>EXPLORER ID: {EXPLORER_ID}</div>
-              </div>
-
-              {/* HUD — bottom bar */}
-              <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0) 100%)',
-                padding: '28px 16px 14px',
-                fontFamily: 'monospace',
-                pointerEvents: 'none',
-              }}>
-                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '9px', letterSpacing: '0.14em', marginBottom: '3px' }}>
-                  CURRENT LOCATION
+          {/* City grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))', gap: '16px', marginBottom: '36px' }}>
+            {CITIES.map(city => (
+              <button
+                key={city.id}
+                onClick={() => handleCitySelect(city)}
+                style={{
+                  position: 'relative', height: '168px', borderRadius: '18px', overflow: 'hidden',
+                  border: '2px solid rgba(255,255,255,0.12)', cursor: 'pointer', padding: 0,
+                  backgroundImage: `url(${city.image})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                  transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(14,165,233,0.35)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)';    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.05) 55%)' }} />
+                <div style={{ position: 'absolute', bottom: '14px', left: 0, right: 0, color: 'white', fontWeight: 700, fontSize: '13px', textAlign: 'center', textShadow: '0 1px 6px rgba(0,0,0,0.8)', letterSpacing: '0.04em', fontFamily: 'monospace' }}>
+                  {city.label}
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em' }}>
-                  {selectedCity?.label ?? ''}
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              marginBottom: '14px',
-            }}>
-              <button
-                onClick={handleDownload}
-                style={{
-                  background: 'linear-gradient(135deg, #0f766e, #0ea5e9)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '13px 26px',
-                  borderRadius: '999px',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  fontSize: '15px',
-                  boxShadow: '0 4px 20px rgba(14,165,233,0.35)',
-                  fontFamily: 'inherit',
-                }}
-              >
-                ⬇️ {t('spaceSelfie.download')}
               </button>
-
-              <button
-                onClick={handleShareInstagram}
-                style={{
-                  background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '13px 26px',
-                  borderRadius: '999px',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  fontSize: '15px',
-                  fontFamily: 'inherit',
-                }}
-              >
-                📸 Transmit to Instagram
-              </button>
-
-              <button
-                onClick={handleShareX}
-                style={{
-                  background: '#000',
-                  color: 'white',
-                  border: '2px solid rgba(255,255,255,0.18)',
-                  padding: '12px 26px',
-                  borderRadius: '999px',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  fontSize: '15px',
-                  fontFamily: 'inherit',
-                }}
-              >
-                𝕏 Transmit to X
-              </button>
-
-              <button
-                onClick={handleShareWhatsApp}
-                style={{
-                  background: '#25D366',
-                  color: 'white',
-                  border: 'none',
-                  padding: '13px 26px',
-                  borderRadius: '999px',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  fontSize: '15px',
-                  fontFamily: 'inherit',
-                }}
-              >
-                💬 Send Signal
-              </button>
-            </div>
-
-            {/* Tagline */}
-            <p style={{
-              color: 'rgba(255,255,255,0.28)',
-              fontSize: '11px',
-              fontFamily: 'monospace',
-              letterSpacing: '0.04em',
-              margin: '0 0 20px',
-            }}>
-              My cosmic travel identity was generated by XOTIJI — xotiji.app
-            </p>
-
-            <button
-              onClick={handleTryAgain}
-              style={{
-                background: 'transparent',
-                color: 'rgba(255,255,255,0.38)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                padding: '10px 22px',
-                borderRadius: '999px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontFamily: 'inherit',
-              }}
-            >
-              🔄 {t('spaceSelfie.tryAgain')}
-            </button>
+            ))}
           </div>
-        )}
-      </div>
 
-      {/* Hidden canvas used for compositing */}
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
+          {/* Unified Timeline */}
+          <div style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(45,212,191,0.2)', borderRadius: '20px', padding: '24px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
+              <span style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>⏳ TIME &amp; SPACE TELEPORT</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
+            </div>
 
-      {/* ── Teleportation overlay ── */}
-      {teleportPhase > 0 && teleportStop && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 9999,
-          background: teleportPhase === 4 ? '#ffffff' : '#000000',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: teleportPhase === 1 ? 0.98 : 1,
-          transition: teleportPhase === 1 ? 'opacity 0.8s ease' : teleportPhase === 4 ? 'background 0.1s' : 'none',
-        }}>
-          {/* Phase 2 — text */}
-          {teleportPhase === 2 && (
-            <div style={{
-              textAlign: 'center',
-              animation: 'fadeInUp 0.4s ease forwards',
-            }}>
-              <style>{`
-                @keyframes fadeInUp {
-                  from { opacity: 0; transform: translateY(16px); }
-                  to   { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-              `}</style>
-              <div style={{
-                color: 'rgba(45,212,191,0.6)',
-                fontFamily: 'monospace',
-                fontSize: '11px',
-                letterSpacing: '0.2em',
-                marginBottom: '28px',
-              }}>
-                INITIATING TEMPORAL SEQUENCE...
-              </div>
-              <div style={{
-                color: 'white',
-                fontFamily: 'monospace',
-                fontSize: '28px',
-                fontWeight: 800,
-                letterSpacing: '0.1em',
-                marginBottom: '16px',
-                textShadow: teleportStop.cosmic
-                  ? '0 0 30px rgba(139,92,246,0.8)'
-                  : '0 0 30px rgba(45,212,191,0.8)',
-              }}>
-                {teleportStop.era.toUpperCase()}
-              </div>
-              <div style={{
-                color: teleportStop.cosmic ? '#a78bfa' : '#2dd4bf',
-                fontFamily: 'monospace',
-                fontSize: '14px',
-                letterSpacing: '0.15em',
-              }}>
-                YEAR: {teleportStop.year}
+            {/* Dot timeline */}
+            <div style={{ position: 'relative', marginBottom: '4px' }}>
+              <div style={{ position: 'absolute', top: '6px', left: 0, right: 0, height: '2px', background: 'linear-gradient(to right, rgba(45,212,191,0.3) 0%, rgba(45,212,191,0.3) 53%, rgba(139,92,246,0.3) 53%, rgba(139,92,246,0.3) 100%)', zIndex: 0 }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+                {TIME_STOPS.map((stop, i) => {
+                  const isSelected = i === timeStopIndex;
+                  const color = stop.cosmic ? '#a78bfa' : '#2dd4bf';
+                  const glow  = stop.cosmic ? 'rgba(139,92,246,0.7)' : 'rgba(45,212,191,0.7)';
+                  return (
+                    <button
+                      key={stop.id}
+                      onClick={() => setTimeStopIndex(i)}
+                      title={stop.era}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', padding: 0, flex: 1, minWidth: 0 }}
+                    >
+                      <div style={{ width: isSelected ? '14px' : '10px', height: isSelected ? '14px' : '10px', borderRadius: '50%', background: isSelected ? color : 'rgba(255,255,255,0.15)', border: `2px solid ${isSelected ? color : 'rgba(255,255,255,0.2)'}`, boxShadow: isSelected ? `0 0 12px ${glow}` : 'none', transition: 'all 0.2s', flexShrink: 0 }} />
+                      <span style={{ color: isSelected ? color : 'rgba(255,255,255,0.28)', fontFamily: 'monospace', fontSize: '8px', fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: '100%', transition: 'color 0.2s' }}>
+                        {stop.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          )}
 
-          {/* Phase 3 — countdown */}
-          {teleportPhase === 3 && (
-            <div style={{
-              color: 'white',
-              fontFamily: 'monospace',
-              fontSize: '120px',
-              fontWeight: 900,
-              lineHeight: 1,
-              textShadow: teleportStop.cosmic
-                ? '0 0 60px rgba(139,92,246,0.9), 0 0 120px rgba(139,92,246,0.5)'
-                : '0 0 60px rgba(45,212,191,0.9), 0 0 120px rgba(45,212,191,0.5)',
-              animation: 'fadeInUp 0.2s ease forwards',
-            }}>
-              {countdownNum}
+            {/* Slider */}
+            <input
+              type="range" min={0} max={TIME_STOPS.length - 1} value={timeStopIndex}
+              onChange={e => setTimeStopIndex(Number(e.target.value))}
+              style={{ width: '100%', accentColor: TIME_STOPS[timeStopIndex].cosmic ? '#a78bfa' : '#2dd4bf', cursor: 'pointer', margin: '14px 0 20px' }}
+            />
+
+            {/* Selected era display */}
+            {(() => {
+              const stop = TIME_STOPS[timeStopIndex];
+              const color      = stop.cosmic ? '#a78bfa' : '#2dd4bf';
+              const glowBg     = stop.cosmic ? 'rgba(139,92,246,0.1)' : 'rgba(45,212,191,0.08)';
+              const borderC    = stop.cosmic ? 'rgba(139,92,246,0.3)' : 'rgba(45,212,191,0.25)';
+              return (
+                <div style={{ textAlign: 'center', marginBottom: '20px', background: glowBg, border: `1px solid ${borderC}`, borderRadius: '12px', padding: '14px' }}>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '10px', letterSpacing: '0.12em', marginBottom: '6px' }}>DESTINATION</div>
+                  <div style={{ color: 'white', fontFamily: 'monospace', fontSize: '20px', fontWeight: 800, letterSpacing: '0.06em', marginBottom: '4px' }}>{stop.era.toUpperCase()}</div>
+                  <div style={{ color, fontFamily: 'monospace', fontSize: '12px', opacity: 0.85 }}>{stop.year} · {stop.cosmic ? '✦ COSMIC' : '◈ HISTORICAL'}</div>
+                </div>
+              );
+            })()}
+
+            {/* Teleport button */}
+            <div style={{ textAlign: 'center' }}>
+              {(() => {
+                const isCosmic  = TIME_STOPS[timeStopIndex].cosmic;
+                const btnColor  = isCosmic ? '#a78bfa' : '#2dd4bf';
+                const btnBg     = isCosmic ? 'rgba(139,92,246,0.18)' : 'rgba(45,212,191,0.18)';
+                const btnBorder = isCosmic ? 'rgba(139,92,246,0.5)' : 'rgba(45,212,191,0.5)';
+                const btnGlow   = isCosmic ? 'rgba(139,92,246,0.25)' : 'rgba(45,212,191,0.25)';
+                return (
+                  <button
+                    onClick={handleTimeSelect}
+                    style={{ background: btnBg, border: `1px solid ${btnBorder}`, color: btnColor, padding: '13px 48px', borderRadius: '999px', cursor: 'pointer', fontWeight: 800, fontSize: '15px', fontFamily: 'monospace', letterSpacing: '0.1em', boxShadow: `0 0 24px ${btnGlow}`, transition: 'all 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 0 40px ${btnGlow.replace('0.25', '0.5')}`; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = `0 0 24px ${btnGlow}`; }}
+                  >
+                    ⏳ TELEPORT
+                  </button>
+                );
+              })()}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>
