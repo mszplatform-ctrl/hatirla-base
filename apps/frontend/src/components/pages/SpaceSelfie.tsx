@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { t, getLang } from '../../i18n';
 
 const AI_BASE = `${import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com'}/api/ai`;
@@ -22,7 +22,7 @@ const TIME_STOPS = [
   { id: 'medieval',       label: '1200',      year: '1200',   era: 'Medieval',            cosmic: false },
   { id: 'renaissance',    label: '1500',      year: '1500',   era: 'Renaissance',         cosmic: false },
   { id: 'industrial',     label: '1800',      year: '1800',   era: 'Industrial Age',      cosmic: false },
-  { id: 'present',        label: '2025',      year: '2025',   era: 'Present Day',         cosmic: false },
+  { id: 'present',        label: '2026',      year: '2026',   era: 'Present Day',         cosmic: false },
   { id: 'future2200',     label: '2200',      year: '2200',   era: 'Future City',         cosmic: true  },
   { id: 'mars',           label: '2400',      year: '2400',   era: 'Mars Colony',         cosmic: true  },
   { id: 'orbit',          label: '2600',      year: '2600',   era: 'Earth Orbit',         cosmic: true  },
@@ -34,10 +34,7 @@ const TIME_STOPS = [
 
 type Scene = { id: string; image: string; label: string };
 
-const NEXT_DESTINATIONS = ['MARS ORBIT', 'TOKYO 2050', 'LUNAR BASE', 'SATURN RINGS'];
-
 const EXPLORER_ID = String(Math.floor(1000 + Math.random() * 9000));
-const NEXT_DEST = NEXT_DESTINATIONS[Math.floor(Math.random() * NEXT_DESTINATIONS.length)];
 
 function SceneCard({ scene, onClick, accentColor = '#0ea5e9' }: { scene: Scene; onClick: (s: Scene) => void; accentColor?: string }) {
   return (
@@ -103,6 +100,9 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [teleportPhase, setTeleportPhase] = useState<0 | 1 | 2 | 3 | 4>(0); // 0=off 1=fade 2=text 3=countdown 4=flash
+  const [teleportStop, setTeleportStop] = useState<typeof TIME_STOPS[0] | null>(null);
+  const [countdownNum, setCountdownNum] = useState(3);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -112,8 +112,31 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setStep(2);
   }
 
-  function handleTimeSelect() {
+  async function handleTimeSelect() {
     const stop = TIME_STOPS[timeStopIndex];
+    setTeleportStop(stop);
+
+    // Phase 1 — fade to black (0–1s)
+    setTeleportPhase(1);
+    await new Promise(r => setTimeout(r, 1000));
+
+    // Phase 2 — show text (1–2s)
+    setTeleportPhase(2);
+    await new Promise(r => setTimeout(r, 1000));
+
+    // Phase 3 — countdown 3…2…1 (2–4s, ~600ms each)
+    setTeleportPhase(3);
+    for (const n of [3, 2, 1]) {
+      setCountdownNum(n);
+      await new Promise(r => setTimeout(r, 650));
+    }
+
+    // Phase 4 — white flash (brief)
+    setTeleportPhase(4);
+    await new Promise(r => setTimeout(r, 300));
+
+    // Done — go to photo step
+    setTeleportPhase(0);
     setSelectedCity({ id: stop.id, image: '', label: stop.era.toUpperCase() });
     setStep(2);
   }
@@ -777,17 +800,16 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
               {/* HUD — top left */}
               <div style={{
                 position: 'absolute',
-                top: '14px',
-                left: '16px',
+                top: '12px',
+                left: '14px',
                 fontFamily: 'monospace',
-                fontSize: '11px',
-                lineHeight: 1.6,
-                color: 'rgba(45,212,191,0.9)',
-                textShadow: '0 0 8px rgba(45,212,191,0.6)',
+                fontSize: '9px',
+                lineHeight: 1.7,
+                color: 'rgba(45,212,191,0.5)',
                 pointerEvents: 'none',
               }}>
-                <div style={{ fontWeight: 700, letterSpacing: '0.1em' }}>XOTIJI TRANSMISSION</div>
-                <div style={{ opacity: 0.75 }}>EXPLORER ID: {EXPLORER_ID}</div>
+                <div style={{ letterSpacing: '0.1em' }}>XOTIJI TRANSMISSION</div>
+                <div style={{ opacity: 0.7 }}>EXPLORER ID: {EXPLORER_ID}</div>
               </div>
 
               {/* HUD — bottom bar */}
@@ -801,17 +823,11 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                 fontFamily: 'monospace',
                 pointerEvents: 'none',
               }}>
-                <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', letterSpacing: '0.12em', marginBottom: '2px' }}>
+                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '9px', letterSpacing: '0.14em', marginBottom: '3px' }}>
                   CURRENT LOCATION
                 </div>
-                <div style={{ color: 'white', fontSize: '14px', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '8px' }}>
+                <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em' }}>
                   {selectedCity?.label ?? ''}
-                </div>
-                <div style={{ color: 'rgba(45,212,191,0.7)', fontSize: '10px', letterSpacing: '0.12em', marginBottom: '2px' }}>
-                  NEXT DESTINATION
-                </div>
-                <div style={{ color: '#2dd4bf', fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em' }}>
-                  ► {NEXT_DEST}
                 </div>
               </div>
             </div>
@@ -926,6 +942,85 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
       {/* Hidden canvas used for compositing */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+      {/* ── Teleportation overlay ── */}
+      {teleportPhase > 0 && teleportStop && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: teleportPhase === 4 ? '#ffffff' : '#000000',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: teleportPhase === 1 ? 0.98 : 1,
+          transition: teleportPhase === 1 ? 'opacity 0.8s ease' : teleportPhase === 4 ? 'background 0.1s' : 'none',
+        }}>
+          {/* Phase 2 — text */}
+          {teleportPhase === 2 && (
+            <div style={{
+              textAlign: 'center',
+              animation: 'fadeInUp 0.4s ease forwards',
+            }}>
+              <style>{`
+                @keyframes fadeInUp {
+                  from { opacity: 0; transform: translateY(16px); }
+                  to   { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+              `}</style>
+              <div style={{
+                color: 'rgba(45,212,191,0.6)',
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                letterSpacing: '0.2em',
+                marginBottom: '28px',
+              }}>
+                INITIATING TEMPORAL SEQUENCE...
+              </div>
+              <div style={{
+                color: 'white',
+                fontFamily: 'monospace',
+                fontSize: '28px',
+                fontWeight: 800,
+                letterSpacing: '0.1em',
+                marginBottom: '16px',
+                textShadow: teleportStop.cosmic
+                  ? '0 0 30px rgba(139,92,246,0.8)'
+                  : '0 0 30px rgba(45,212,191,0.8)',
+              }}>
+                {teleportStop.era.toUpperCase()}
+              </div>
+              <div style={{
+                color: teleportStop.cosmic ? '#a78bfa' : '#2dd4bf',
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                letterSpacing: '0.15em',
+              }}>
+                YEAR: {teleportStop.year}
+              </div>
+            </div>
+          )}
+
+          {/* Phase 3 — countdown */}
+          {teleportPhase === 3 && (
+            <div style={{
+              color: 'white',
+              fontFamily: 'monospace',
+              fontSize: '120px',
+              fontWeight: 900,
+              lineHeight: 1,
+              textShadow: teleportStop.cosmic
+                ? '0 0 60px rgba(139,92,246,0.9), 0 0 120px rgba(139,92,246,0.5)'
+                : '0 0 60px rgba(45,212,191,0.9), 0 0 120px rgba(45,212,191,0.5)',
+              animation: 'fadeInUp 0.2s ease forwards',
+            }}>
+              {countdownNum}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

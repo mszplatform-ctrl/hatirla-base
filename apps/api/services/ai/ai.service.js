@@ -295,9 +295,9 @@ const SCENE_PROMPTS = {
     'A cinematic scene of this exact person witnessing the birth of the first stars from the Big Bang, swirling cosmic clouds of energy, full body visible, ultra realistic, dramatic space lighting',
   ],
   present: [
-    'A realistic travel photograph of this exact person in a modern city street 2025, full body visible, wide angle 35mm lens, natural lighting, candid moment, preserve exact gender appearance and clothing',
-    'A realistic travel photograph of this exact person in a busy modern urban plaza 2025, glass buildings, electric vehicles, full body visible, wide angle 35mm lens, natural daylight, preserve exact appearance',
-    'A realistic travel photograph of this exact person at a modern waterfront promenade 2025, full body visible, wide angle 35mm lens, golden hour light, candid moment, preserve exact gender appearance',
+    'A realistic travel photograph of this exact person in a modern city street 2026, full body visible, wide angle 35mm lens, natural lighting, candid moment, preserve exact gender appearance and clothing',
+    'A realistic travel photograph of this exact person in a busy modern urban plaza 2026, glass buildings, electric vehicles, full body visible, wide angle 35mm lens, natural daylight, preserve exact appearance',
+    'A realistic travel photograph of this exact person at a modern waterfront promenade 2026, full body visible, wide angle 35mm lens, golden hour light, candid moment, preserve exact gender appearance',
   ],
   deep_space: [
     'A cinematic sci-fi scene of this exact person in deep space year 5000, surrounded by distant galaxies and nebulae, advanced space suit, full body visible, ultra realistic, dramatic space lighting',
