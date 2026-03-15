@@ -2,6 +2,9 @@
  * AI Service
  * Business logic layer for AI-related operations
  */
+const { fal } = require('@fal-ai/client');
+fal.config({ credentials: process.env.FAL_API_KEY });
+
 const packageRepository = require('../../data/package.repository');
 const { composeSchema } = require('../../src/validation/compose.schema');
 // ✅ AI BRIDGE (Stage 4.5)
@@ -330,88 +333,36 @@ function pickPrompt(sceneId) {
 }
 
 /**
- * POST /api/ai/face-swap  (Phase 1)
- * Starts a flux-kontext-pro prediction and returns the prediction ID immediately.
- * Does NOT wait for the result — the frontend polls /face-swap/status/:id.
+ * POST /api/ai/face-swap
+ * Places the user in a scene via fal.ai flux-pro/kontext.
+ * fal.subscribe waits internally — no polling needed.
  *
  * @param {string} userPhotoDataUri  — data:image/jpeg;base64,...
  * @param {string} cityId            — e.g. "istanbul", "mars", "ancient_egypt"
- * @returns {Promise<string>}        — Replicate prediction ID
+ * @returns {Promise<string>}        — result image as a base64 data URI
  */
-async function startFaceSwap(userPhotoDataUri, cityId) {
-  const token = process.env.REPLICATE_API_TOKEN;
-  if (!token) throw new Error('REPLICATE_API_TOKEN not configured');
+async function faceSwap(userPhotoDataUri, cityId) {
+  if (!process.env.FAL_API_KEY) throw new Error('FAL_API_KEY not configured');
 
   const prompt = pickPrompt(cityId);
+  console.log(`[FaceSwap] Starting fal.ai job for scene: ${cityId}`);
 
-  const startRes = await fetch(
-    'https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Token ${token}`,
-        'Content-Type': 'application/json',
-        // No Prefer:wait header — return immediately with a prediction ID
-      },
-      body: JSON.stringify({
-        input: { input_image: userPhotoDataUri, prompt },
-      }),
-    }
-  );
+  const result = await fal.subscribe('fal-ai/flux-pro/kontext', {
+    input: {
+      prompt,
+      image_url: userPhotoDataUri,
+    },
+    logs: true,
+  });
 
-  if (!startRes.ok) {
-    const txt = await startRes.text();
-    throw new Error(`Replicate API error ${startRes.status}: ${txt}`);
-  }
-
-  const prediction = await startRes.json();
-  console.log(`[FaceSwap] Started prediction ${prediction.id} for scene: ${cityId}`);
-  return prediction.id;
-}
-
-/**
- * GET /api/ai/face-swap/status/:id  (Phase 2)
- * Fetches the current status of a Replicate prediction.
- * Returns { status, image? } where image is a base64 data URI once succeeded.
- *
- * @param {string} predictionId
- * @returns {Promise<{ status: string, image?: string, error?: string }>}
- */
-async function getFaceSwapStatus(predictionId) {
-  const token = process.env.REPLICATE_API_TOKEN;
-  if (!token) throw new Error('REPLICATE_API_TOKEN not configured');
-
-  const pollRes = await fetch(
-    `https://api.replicate.com/v1/predictions/${predictionId}`,
-    { headers: { Authorization: `Token ${token}` } }
-  );
-
-  if (!pollRes.ok) {
-    const txt = await pollRes.text();
-    throw new Error(`Replicate status error ${pollRes.status}: ${txt}`);
-  }
-
-  const prediction = await pollRes.json();
-  console.log(`[FaceSwap] Status ${predictionId}: ${prediction.status}`);
-
-  if (prediction.status === 'failed' || prediction.status === 'canceled') {
-    return { status: prediction.status, error: prediction.error || prediction.status };
-  }
-
-  if (prediction.status !== 'succeeded' || !prediction.output) {
-    return { status: prediction.status };
-  }
-
-  // Download output and convert to base64 data URI
-  const outputUrl = Array.isArray(prediction.output)
-    ? prediction.output[0]
-    : prediction.output;
+  const outputUrl = result.data.images[0].url;
+  console.log(`[FaceSwap] Got output URL: ${outputUrl}`);
 
   const imgRes = await fetch(outputUrl);
   const buffer = await imgRes.arrayBuffer();
   const contentType = imgRes.headers.get('content-type') || 'image/png';
   const base64 = Buffer.from(buffer).toString('base64');
-  return { status: 'succeeded', image: `data:${contentType};base64,${base64}` };
+  return `data:${contentType};base64,${base64}`;
 }
 
 module.exports = {
@@ -419,7 +370,6 @@ module.exports = {
   composePackage,
   getSuggestions,
   generateSuggestions,
-  startFaceSwap,
-  getFaceSwapStatus,
+  faceSwap,
 };
 

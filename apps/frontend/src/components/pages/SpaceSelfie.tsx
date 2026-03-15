@@ -129,8 +129,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setStep(3);
     setErrorMsg(null);
 
-    // ── Phase 1: Start prediction ──
-    let predictionId: string | null = null;
+    // ── Try AI via fal.ai (waits synchronously on the backend) ──
     try {
       const res = await fetch(`${AI_BASE}/face-swap`, {
         method: 'POST',
@@ -139,46 +138,17 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
-        const msg = data.error || `Server error ${res.status}`;
-        setErrorMsg(`Transmission failed: ${msg}`);
+        setErrorMsg(`Transmission failed: ${data.error || `Server error ${res.status}`}`);
         setStep(2);
         return;
       }
-      predictionId = data.predictionId ?? null;
+      if (data.success === true && data.image) {
+        setResultImage(data.image);
+        setStep(4);
+        return;
+      }
     } catch (err) {
       setErrorMsg('Transmission failed: Could not reach server. Please try again.');
-      setStep(2);
-      return;
-    }
-
-    // ── Phase 2: Poll for result ──
-    if (predictionId) {
-      const MAX_POLLS = 40; // 40 × 3 s = 120 s ceiling
-      for (let i = 0; i < MAX_POLLS; i++) {
-        await new Promise((r) => setTimeout(r, 3000));
-        try {
-          const statusRes = await fetch(`${AI_BASE}/face-swap/status/${predictionId}`);
-          const statusData = await statusRes.json();
-
-          if (!statusRes.ok || statusData.status === 'failed' || statusData.status === 'canceled') {
-            setErrorMsg(`Transmission failed: ${statusData.error || statusData.status || 'Unknown error'}`);
-            setStep(2);
-            return;
-          }
-          if (statusData.status === 'succeeded' && statusData.image) {
-            setResultImage(statusData.image);
-            setStep(4);
-            return;
-          }
-          // still processing — keep polling
-        } catch (pollErr) {
-          setErrorMsg('Transmission failed: Lost connection while processing. Please try again.');
-          setStep(2);
-          return;
-        }
-      }
-      // Timed out
-      setErrorMsg('Transmission timed out. The server is busy — please try again.');
       setStep(2);
       return;
     }
