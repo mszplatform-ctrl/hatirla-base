@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { t, getLang } from '../../i18n';
 import { CinematicSequence } from './CinematicSequence';
 import type { SelectedScene } from './CinematicSequence';
@@ -55,15 +55,24 @@ interface SpaceSelfieProps {
 }
 
 export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
-  const [flowStep, setFlowStep] = useState<'select' | 'photo-modal' | 'cinematic' | 'result'>('select');
+  const [flowStep, setFlowStep] = useState<'select' | 'photo-modal' | 'cinematic' | 'teleport-video' | 'result'>('select');
   const [selectedScene, setSelectedScene] = useState<SelectedScene | null>(null);
   const [timeStopIndex, setTimeStopIndex] = useState(7); // default: Present Day
   const [userPhoto, setUserPhoto]   = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [errorMsg, setErrorMsg]     = useState<string | null>(null);
-  const apiPromiseRef = useRef<Promise<string> | null>(null);
-  const fileInputRef  = useRef<HTMLInputElement>(null);
+  const [fromTimeTeleport, setFromTimeTeleport] = useState(false);
+  const [apiReady, setApiReady]     = useState(false);
+  const [teleportVideoEnded, setTeleportVideoEnded] = useState(false);
+  const apiPromiseRef  = useRef<Promise<string> | null>(null);
+  const fileInputRef   = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (flowStep === 'teleport-video' && apiReady && teleportVideoEnded) {
+      setFlowStep('result');
+    }
+  }, [flowStep, apiReady, teleportVideoEnded]);
 
   function openPhotoModal(scene: SelectedScene) {
     setSelectedScene(scene);
@@ -73,11 +82,13 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   }
 
   function handleCitySelect(city: SelectedScene) {
+    setFromTimeTeleport(false);
     openPhotoModal(city);
   }
 
   function handleTimeSelect() {
     const stop = TIME_STOPS[timeStopIndex];
+    setFromTimeTeleport(true);
     openPhotoModal({
       id: stop.id, image: '', label: stop.era.toUpperCase(),
       year: stop.year, era: stop.era, cosmic: stop.cosmic,
@@ -94,8 +105,25 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   function handleLaunch() {
     if (!selectedScene || !userPhoto) return;
-    apiPromiseRef.current = callFaceSwap(userPhoto, selectedScene.id);
-    setFlowStep('cinematic');
+    const promise = callFaceSwap(userPhoto, selectedScene.id);
+    apiPromiseRef.current = promise;
+
+    if (fromTimeTeleport) {
+      setApiReady(false);
+      setTeleportVideoEnded(false);
+      setFlowStep('teleport-video');
+      promise
+        .then(image => {
+          setResultImage(image);
+          setApiReady(true);
+        })
+        .catch(err => {
+          setErrorMsg((err as Error).message || 'Transmission failed');
+          setFlowStep('photo-modal');
+        });
+    } else {
+      setFlowStep('cinematic');
+    }
   }
 
   function handleCinematicComplete(image: string) {
@@ -114,6 +142,9 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setUserPhoto(null);
     setResultImage(null);
     setErrorMsg(null);
+    setApiReady(false);
+    setTeleportVideoEnded(false);
+    setFromTimeTeleport(false);
     apiPromiseRef.current = null;
   }
 
@@ -142,6 +173,30 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   function handleShareInstagram() {
     navigator.clipboard?.writeText(tagline).catch(() => {});
     window.open('https://www.instagram.com/', '_blank');
+  }
+
+  // ── Teleport video: full-screen ──
+  if (flowStep === 'teleport-video') {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
+        {!teleportVideoEnded ? (
+          <video
+            src="/teleport.mp4"
+            autoPlay
+            playsInline
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            onEnded={() => setTeleportVideoEnded(true)}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+            <style>{`@keyframes sslock { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }`}</style>
+            <div style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '18px', fontWeight: 700, letterSpacing: '0.22em', animation: 'sslock 1.4s ease-in-out infinite' }}>
+              SIGNAL LOCK...
+            </div>
+          </div>
+        )}
+      </div>
+    );
   }
 
   // ── Cinematic: full-screen, replaces everything ──

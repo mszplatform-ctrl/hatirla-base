@@ -28,7 +28,10 @@
       "Bash(npx sharp-cli:*)",
       "Bash(mkdir:*)",
       "Bash(ls:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Read(//c/Users/AAA//**)",
+      "Read(//mnt/c/Users/AAA/**)",
+      "Bash(cmd.exe /c \"dir C:\\\\Users\\\\AAA\\\\Desktop\\\\*.mp4 2>&1\")"
     ]
   }
 }
