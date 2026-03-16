@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { t, getLang } from '../../i18n';
-import { CinematicSequence } from './CinematicSequence';
 import type { SelectedScene } from './CinematicSequence';
 
 const AI_BASE = `${import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com'}/api/ai`;
@@ -55,7 +54,7 @@ interface SpaceSelfieProps {
 }
 
 export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
-  const [flowStep, setFlowStep] = useState<'select' | 'photo-modal' | 'cinematic' | 'teleport-video' | 'result'>('select');
+  const [flowStep, setFlowStep] = useState<'select' | 'photo-modal' | 'loading' | 'teleport-video' | 'result'>('select');
   const [selectedScene, setSelectedScene] = useState<SelectedScene | null>(null);
   const [timeStopIndex, setTimeStopIndex] = useState(7); // default: Present Day
   const [userPhoto, setUserPhoto]   = useState<string | null>(null);
@@ -122,18 +121,17 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
           setFlowStep('photo-modal');
         });
     } else {
-      setFlowStep('cinematic');
+      setFlowStep('loading');
+      promise
+        .then(image => {
+          setResultImage(image);
+          setFlowStep('result');
+        })
+        .catch(err => {
+          setErrorMsg((err as Error).message || 'Transmission failed');
+          setFlowStep('photo-modal');
+        });
     }
-  }
-
-  function handleCinematicComplete(image: string) {
-    setResultImage(image);
-    setFlowStep('result');
-  }
-
-  function handleCinematicError(msg: string) {
-    setErrorMsg(msg);
-    setFlowStep('photo-modal');
   }
 
   function handleTryAgain() {
@@ -199,15 +197,14 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     );
   }
 
-  // ── Cinematic: full-screen, replaces everything ──
-  if (flowStep === 'cinematic' && selectedScene && apiPromiseRef.current) {
+  // ── Loading: full-screen ──
+  if (flowStep === 'loading') {
     return (
-      <CinematicSequence
-        scene={selectedScene}
-        apiPromise={apiPromiseRef.current}
-        onComplete={handleCinematicComplete}
-        onError={handleCinematicError}
-      />
+      <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(14,165,233,0.2)', borderTop: '3px solid #0ea5e9', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.15em' }}>PROCESSING...</div>
+      </div>
     );
   }
 
