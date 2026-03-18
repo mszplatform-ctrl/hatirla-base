@@ -54,8 +54,6 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [errorMsg, setErrorMsg]     = useState<string | null>(null);
   const [fromTimeTeleport, setFromTimeTeleport] = useState(false);
-  const [apiReady, setApiReady]         = useState(false);
-  const [teleportVideoEnded, setTeleportVideoEnded] = useState(false);
   const [videoBuffering, setVideoBuffering] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const apiPromiseRef    = useRef<Promise<string> | null>(null);
@@ -63,12 +61,6 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const toastTimeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef     = useRef<HTMLInputElement>(null);
   const cameraInputRef   = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (flowStep === 'teleport-video' && apiReady && teleportVideoEnded) {
-      setFlowStep('result');
-    }
-  }, [flowStep, apiReady, teleportVideoEnded]);
 
   // Buffer timeout: on mobile show spinner immediately; on desktop after 3s without onPlaying
   useEffect(() => {
@@ -119,31 +111,19 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     const promise = callFaceSwap(userPhoto, selectedScene.id);
     apiPromiseRef.current = promise;
 
-    if (fromTimeTeleport) {
-      setApiReady(false);
-      setTeleportVideoEnded(false);
-      setFlowStep('teleport-video');
-      promise
-        .then(image => {
-          setResultImage(image);
-          setApiReady(true);
-        })
-        .catch(err => {
-          setErrorMsg((err as Error).message || 'Transmission failed');
-          setFlowStep('photo-modal');
-        });
-    } else {
-      setFlowStep('loading');
-      promise
-        .then(image => {
-          setResultImage(image);
-          setFlowStep('result');
-        })
-        .catch(err => {
-          setErrorMsg((err as Error).message || 'Transmission failed');
-          setFlowStep('photo-modal');
-        });
-    }
+    // Both paths: show loading first, then transition
+    setFlowStep('loading');
+    promise
+      .then(image => {
+        setResultImage(image);
+        // Time teleport: play video after API resolves, then result immediately on end
+        // City: go straight to result (no video)
+        setFlowStep(fromTimeTeleport ? 'teleport-video' : 'result');
+      })
+      .catch(err => {
+        setErrorMsg((err as Error).message || 'Transmission failed');
+        setFlowStep('photo-modal');
+      });
   }
 
   function showToast(msg: string) {
@@ -158,8 +138,6 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setUserPhoto(null);
     setResultImage(null);
     setErrorMsg(null);
-    setApiReady(false);
-    setTeleportVideoEnded(false);
     setFromTimeTeleport(false);
     setVideoBuffering(false);
     setToastMsg(null);
@@ -201,45 +179,27 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   }
 
   // ── Teleport video: full-screen ──
+  // API result is already in state when we enter this step — result appears immediately on video end
   if (flowStep === 'teleport-video') {
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
-        {!teleportVideoEnded ? (
-          <>
-            <video
-              src="/teleport.mp4"
-              autoPlay
-              preload="auto"
-              playsInline
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: videoBuffering ? 0 : 1, transition: 'opacity 0.4s ease' }}
-              onPlaying={() => {
-                setVideoBuffering(false);
-                if (bufferTimeoutRef.current) clearTimeout(bufferTimeoutRef.current);
-              }}
-              onEnded={() => setTeleportVideoEnded(true)}
-            />
-            {videoBuffering && (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                <style>{`@keyframes tpspin { to { transform: rotate(360deg); } }`}</style>
-                <div style={{ width: '36px', height: '36px', border: '3px solid rgba(45,212,191,0.2)', borderTop: '3px solid #2dd4bf', borderRadius: '50%', animation: 'tpspin 0.9s linear infinite' }} />
-                <div style={{ color: 'rgba(45,212,191,0.7)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.18em' }}>PREPARING TELEPORT...</div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-            {userPhoto && (
-              <img
-                src={userPhoto}
-                alt=""
-                style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(22px) brightness(0.25)', transform: 'scale(1.12)' }}
-              />
-            )}
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-              <style>{`@keyframes sspin { to { transform: rotate(360deg); } }`}</style>
-              <div style={{ width: '40px', height: '40px', border: '3px solid rgba(45,212,191,0.2)', borderTop: '3px solid #2dd4bf', borderRadius: '50%', animation: 'sspin 0.9s linear infinite' }} />
-              <div style={{ color: 'rgba(45,212,191,0.7)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.18em' }}>PROCESSING...</div>
-            </div>
+        <video
+          src="/teleport.mp4"
+          autoPlay
+          preload="auto"
+          playsInline
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: videoBuffering ? 0 : 1, transition: 'opacity 0.4s ease' }}
+          onPlaying={() => {
+            setVideoBuffering(false);
+            if (bufferTimeoutRef.current) clearTimeout(bufferTimeoutRef.current);
+          }}
+          onEnded={() => setFlowStep('result')}
+        />
+        {videoBuffering && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+            <style>{`@keyframes tpspin { to { transform: rotate(360deg); } }`}</style>
+            <div style={{ width: '36px', height: '36px', border: '3px solid rgba(45,212,191,0.2)', borderTop: '3px solid #2dd4bf', borderRadius: '50%', animation: 'tpspin 0.9s linear infinite' }} />
+            <div style={{ color: 'rgba(45,212,191,0.7)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.18em' }}>PREPARING TELEPORT...</div>
           </div>
         )}
       </div>
@@ -248,11 +208,27 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   // ── Loading: full-screen ──
   if (flowStep === 'loading') {
+    const loadingLabel = fromTimeTeleport
+      ? (getLang() === 'tr' ? 'IŞINLANIYOR...' : 'TELEPORTING...')
+      : 'PROCESSING...';
     return (
-      <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(14,165,233,0.2)', borderTop: '3px solid #0ea5e9', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.15em' }}>PROCESSING...</div>
+      <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
+        {/* Blurred user photo background */}
+        {userPhoto && (
+          <img
+            src={userPhoto}
+            alt=""
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(24px) brightness(0.22)', transform: 'scale(1.12)' }}
+          />
+        )}
+        {/* Spinner + label */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <div style={{ width: '40px', height: '40px', border: '3px solid rgba(45,212,191,0.2)', borderTop: '3px solid #2dd4bf', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
+          <div style={{ color: 'rgba(45,212,191,0.75)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.18em' }}>{loadingLabel}</div>
+        </div>
+        {/* Preload teleport video in background while API call is in-flight */}
+        {fromTimeTeleport && <video src="/teleport.mp4" preload="auto" style={{ display: 'none' }} />}
       </div>
     );
   }
@@ -492,7 +468,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                       fontFamily: 'inherit', letterSpacing: '0.05em',
                     }}
                   >
-                    ✦ INITIATE
+                    ✦ TRANSFER
                   </button>
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
