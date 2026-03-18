@@ -57,8 +57,10 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [apiReady, setApiReady]         = useState(false);
   const [teleportVideoEnded, setTeleportVideoEnded] = useState(false);
   const [videoBuffering, setVideoBuffering] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
   const apiPromiseRef    = useRef<Promise<string> | null>(null);
   const bufferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef     = useRef<HTMLInputElement>(null);
   const cameraInputRef   = useRef<HTMLInputElement>(null);
 
@@ -144,6 +146,12 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     }
   }
 
+  function showToast(msg: string) {
+    setToastMsg(msg);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setToastMsg(null), 2500);
+  }
+
   function handleTryAgain() {
     setFlowStep('select');
     setSelectedScene(null);
@@ -154,7 +162,9 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setTeleportVideoEnded(false);
     setFromTimeTeleport(false);
     setVideoBuffering(false);
+    setToastMsg(null);
     if (bufferTimeoutRef.current) clearTimeout(bufferTimeoutRef.current);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     apiPromiseRef.current = null;
   }
 
@@ -182,7 +192,12 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   function handleShareInstagram() {
     navigator.clipboard?.writeText(tagline).catch(() => {});
-    window.open('https://www.instagram.com/', '_blank');
+    showToast('Copied! Share on Instagram');
+  }
+
+  function handleShareTikTok() {
+    navigator.clipboard?.writeText(tagline).catch(() => {});
+    showToast('Copied! Share on TikTok');
   }
 
   // ── Teleport video: full-screen ──
@@ -212,10 +227,18 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
             )}
           </>
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-            <style>{`@keyframes sslock { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }`}</style>
-            <div style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '18px', fontWeight: 700, letterSpacing: '0.22em', animation: 'sslock 1.4s ease-in-out infinite' }}>
-              SIGNAL LOCK...
+          <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+            {userPhoto && (
+              <img
+                src={userPhoto}
+                alt=""
+                style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(22px) brightness(0.25)', transform: 'scale(1.12)' }}
+              />
+            )}
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+              <style>{`@keyframes sspin { to { transform: rotate(360deg); } }`}</style>
+              <div style={{ width: '40px', height: '40px', border: '3px solid rgba(45,212,191,0.2)', borderTop: '3px solid #2dd4bf', borderRadius: '50%', animation: 'sspin 0.9s linear infinite' }} />
+              <div style={{ color: 'rgba(45,212,191,0.7)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.18em' }}>PROCESSING...</div>
             </div>
           </div>
         )}
@@ -262,36 +285,43 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
             </div>
           </div>
 
-          {/* Share buttons (bottom right) — icon-only 44px circles */}
-          <div style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', gap: '10px' }}>
-            {[
-              { label: '⬇', title: 'Download',  action: handleDownload        },
-              { label: '📸', title: 'Instagram', action: handleShareInstagram  },
-              { label: '𝕏',  title: 'X',         action: handleShareX          },
-              { label: '💬', title: 'WhatsApp',  action: handleShareWhatsApp   },
-            ].map(btn => (
-              <button
-                key={btn.title}
-                onClick={btn.action}
-                title={btn.title}
-                style={{
-                  width: '44px', height: '44px', borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.92)', border: 'none',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: '18px', lineHeight: 1,
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
-                  fontFamily: 'system-ui',
-                }}
-              >
-                {btn.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Below image */}
-        <div style={{ padding: '22px 24px 40px', textAlign: 'center', background: '#000' }}>
-          <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.04em', margin: '0 0 20px' }}>
+        <div style={{ padding: '24px 24px 40px', textAlign: 'center', background: '#000' }}>
+          {/* Share buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            {[
+              { icon: '⬇',  label: 'SAVE',      action: handleDownload,       bg: 'rgba(255,255,255,0.92)', color: '#0f172a' },
+              { icon: '📸', label: 'INSTAGRAM', action: handleShareInstagram, bg: '#e1306c',               color: '#fff'    },
+              { icon: '🎵', label: 'TIKTOK',    action: handleShareTikTok,    bg: '#010101',               color: '#fff', border: '1px solid rgba(255,255,255,0.18)' },
+              { icon: '𝕏',  label: 'X',         action: handleShareX,         bg: '#000',                  color: '#fff', border: '1px solid rgba(255,255,255,0.18)' },
+              { icon: '💬', label: 'WHATSAPP',  action: handleShareWhatsApp,  bg: '#25d366',               color: '#fff'    },
+            ].map(btn => (
+              <div key={btn.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <button
+                  onClick={btn.action}
+                  title={btn.label}
+                  style={{
+                    width: '54px', height: '54px', borderRadius: '50%',
+                    background: btn.bg,
+                    border: ('border' in btn ? btn.border : 'none') as string,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', fontSize: '22px', lineHeight: 1,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    fontFamily: 'system-ui', color: btn.color,
+                  }}
+                >
+                  {btn.icon}
+                </button>
+                <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '9px', fontFamily: 'monospace', letterSpacing: '0.06em' }}>
+                  {btn.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ color: 'rgba(255,255,255,0.22)', fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.04em', margin: '0 0 20px' }}>
             {tagline}
           </p>
           <button
@@ -301,6 +331,21 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
             🔄 {t('spaceSelfie.tryAgain')}
           </button>
         </div>
+
+        {/* Toast */}
+        {toastMsg && (
+          <div style={{
+            position: 'fixed', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
+            background: 'rgba(45,212,191,0.92)', color: '#0f172a',
+            fontFamily: 'monospace', fontSize: '13px', fontWeight: 700,
+            padding: '10px 22px', borderRadius: '999px',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+            whiteSpace: 'nowrap', zIndex: 200,
+            pointerEvents: 'none',
+          }}>
+            ✓ {toastMsg}
+          </div>
+        )}
       </div>
     );
   }
