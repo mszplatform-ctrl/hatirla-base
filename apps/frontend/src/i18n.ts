@@ -141,6 +141,12 @@ const translations: Record<Lang, any> = {
         london: "Londra",
       },
     },
+    esim: {
+      navButton: "eSIM",
+      ctaTitle: "Bu şehre seyahat edecek misin? Bağlantıda kal.",
+      ctaButton: "eSIM Al",
+      poweredBy: "Powered by Breeze eSIM",
+    },
   },
   en: {
     common: {
@@ -256,6 +262,12 @@ const translations: Record<Lang, any> = {
         dubai: "Dubai",
         london: "London",
       },
+    },
+    esim: {
+      navButton: "eSIM",
+      ctaTitle: "Traveling to this city? Stay connected.",
+      ctaButton: "Get eSIM",
+      poweredBy: "Powered by Breeze eSIM",
     },
   },
 };

@@ -148,8 +148,32 @@ export default function App() {
 
   return (
     <>
-    {/* LANGUAGE SWITCHER — outside app container so position:fixed is always relative to viewport */}
-    <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 9999 }}>
+    {/* LANGUAGE SWITCHER + ESIM NAV — outside app container so position:fixed is always relative to viewport */}
+    <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 9999, display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <a
+        href="https://breezesim.com?sca_ref=10856377.PkjRGu7WRR"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+          background: 'rgba(15,23,42,0.72)',
+          backdropFilter: 'blur(8px)',
+          color: '#e0f2fe',
+          border: '1px solid rgba(14,165,233,0.35)',
+          padding: '6px 13px',
+          borderRadius: '999px',
+          fontSize: '13px',
+          fontWeight: 600,
+          letterSpacing: '0.01em',
+          textDecoration: 'none',
+          whiteSpace: 'nowrap',
+          cursor: 'pointer',
+        }}
+      >
+        📶 {t('esim.navButton')}
+      </a>
       <LanguageSwitcher />
     </div>
 
@@ -288,6 +312,48 @@ export default function App() {
                     >
                       {composeLoading ? t('home.aiCreatingPackage') : `📦 ${t('home.createWithAI')}`}
                     </button>
+                  </div>
+
+                  {/* ESIM CTA */}
+                  <div style={{
+                    marginTop: "20px",
+                    borderRadius: "14px",
+                    background: "linear-gradient(135deg, #0f172a 0%, #0c2340 60%, #0e3354 100%)",
+                    border: "1px solid rgba(14,165,233,0.25)",
+                    padding: "20px 24px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "16px",
+                    flexWrap: "wrap",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ fontSize: "26px", lineHeight: 1 }}>📶</span>
+                      <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: "#e0f2fe", lineHeight: 1.4 }}>
+                        {t('esim.ctaTitle')}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", flexShrink: 0 }}>
+                      <a
+                        href="https://breezesim.com?sca_ref=10856377.PkjRGu7WRR"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: "linear-gradient(90deg, #0ea5e9, #0f766e)",
+                          color: "white",
+                          textDecoration: "none",
+                          padding: "9px 20px",
+                          borderRadius: "999px",
+                          fontSize: "14px",
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                          display: "inline-block",
+                        }}
+                      >
+                        {t('esim.ctaButton')}
+                      </a>
+                      <span style={{ fontSize: "11px", color: "#64748b" }}>{t('esim.poweredBy')}</span>
+                    </div>
                   </div>
                 </>
               )}
