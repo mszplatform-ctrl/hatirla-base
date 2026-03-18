@@ -16,21 +16,13 @@ const CITIES: SelectedScene[] = [
 ];
 
 const TIME_STOPS = [
-  { id: 'big_bang',       label: 'Big Bang',  year: '-13.8B', era: 'Origin of Universe', cosmic: true  },
-  { id: 'ancient_egypt',  label: '2000 BC',   year: '-2000',  era: 'Ancient Egypt',       cosmic: false },
-  { id: 'ancient_greece', label: '500 BC',    year: '-500',   era: 'Ancient Greece',      cosmic: false },
-  { id: 'roman_era',      label: '0',         year: '0',      era: 'Roman Era',           cosmic: false },
-  { id: 'medieval',       label: '1200',      year: '1200',   era: 'Medieval',            cosmic: false },
-  { id: 'renaissance',    label: '1500',      year: '1500',   era: 'Renaissance',         cosmic: false },
-  { id: 'industrial',     label: '1800',      year: '1800',   era: 'Industrial Age',      cosmic: false },
-  { id: 'present',        label: '2026',      year: '2026',   era: 'Present Day',         cosmic: false },
-  { id: 'future2200',     label: '2200',      year: '2200',   era: 'Future City',         cosmic: true  },
-  { id: 'mars',           label: '2400',      year: '2400',   era: 'Mars Colony',         cosmic: true  },
-  { id: 'orbit',          label: '2600',      year: '2600',   era: 'Earth Orbit',         cosmic: true  },
-  { id: 'saturn',         label: '3000',      year: '3000',   era: 'Saturn Rings',        cosmic: true  },
-  { id: 'deep_space',     label: '5000',      year: '5000',   era: 'Deep Space',          cosmic: true  },
-  { id: 'alien_planet',   label: '10000',     year: '10000',  era: 'Alien World',         cosmic: true  },
-  { id: 'end_of_time',    label: '∞',         year: '∞',      era: 'End of Time',         cosmic: true  },
+  { id: 'stone_age', label: 'STONE AGE',    year: '~10,000 BC', era: 'Stone Age',            cosmic: false },
+  { id: 'ancient',   label: 'ANCIENT WORLD', year: '0 AD',      era: 'Ancient Civilization', cosmic: false },
+  { id: 'medieval',  label: 'MEDIEVAL',      year: '1200',      era: 'Medieval Era',         cosmic: false },
+  { id: 'year1920',  label: '1920s',         year: '1920',      era: 'Modern Dawn',          cosmic: false },
+  { id: 'present',   label: 'PRESENT',       year: '2026',      era: 'Present Day',          cosmic: false },
+  { id: 'future',    label: 'FUTURE',        year: '2200',      era: 'Future City',          cosmic: true  },
+  { id: 'end',       label: 'END OF TIME',   year: '∞',         era: 'End of Time',          cosmic: true  },
 ];
 
 const EXPLORER_ID = String(Math.floor(1000 + Math.random() * 9000));
@@ -56,7 +48,7 @@ interface SpaceSelfieProps {
 export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [flowStep, setFlowStep] = useState<'select' | 'photo-modal' | 'loading' | 'teleport-video' | 'result'>('select');
   const [selectedScene, setSelectedScene] = useState<SelectedScene | null>(null);
-  const [timeStopIndex, setTimeStopIndex] = useState(7); // default: Present Day
+  const [timeStopIndex, setTimeStopIndex] = useState(4); // default: Present Day
   const [userPhoto, setUserPhoto]   = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [errorMsg, setErrorMsg]     = useState<string | null>(null);
@@ -474,7 +466,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
             {/* Dot timeline */}
             <div style={{ position: 'relative', marginBottom: '4px' }}>
-              <div style={{ position: 'absolute', top: '6px', left: 0, right: 0, height: '2px', background: 'linear-gradient(to right, rgba(45,212,191,0.3) 0%, rgba(45,212,191,0.3) 53%, rgba(139,92,246,0.3) 53%, rgba(139,92,246,0.3) 100%)', zIndex: 0 }} />
+              <div style={{ position: 'absolute', top: '6px', left: 0, right: 0, height: '2px', background: 'linear-gradient(to right, rgba(45,212,191,0.3) 0%, rgba(45,212,191,0.3) 75%, rgba(139,92,246,0.3) 75%, rgba(139,92,246,0.3) 100%)', zIndex: 0 }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
                 {TIME_STOPS.map((stop, i) => {
                   const isSelected = i === timeStopIndex;
