@@ -5,14 +5,14 @@ import type { SelectedScene } from './CinematicSequence';
 const AI_BASE = `${import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com'}/api/ai`;
 
 const CITIES: SelectedScene[] = [
-  { id: 'istanbul',  image: '/cities/istanbul.webp',  label: 'ISTANBUL, TURKEY', year: '2026', era: 'Istanbul',  cosmic: false },
-  { id: 'paris',     image: '/cities/paris.webp',     label: 'PARIS, FRANCE',    year: '2026', era: 'Paris',     cosmic: false },
-  { id: 'rome',      image: '/cities/rome.webp',      label: 'ROME, ITALY',      year: '2026', era: 'Rome',      cosmic: false },
-  { id: 'tokyo',     image: '/cities/tokyo.webp',     label: 'TOKYO, JAPAN',     year: '2026', era: 'Tokyo',     cosmic: false },
-  { id: 'barcelona', image: '/cities/barcelona.webp', label: 'BARCELONA, SPAIN', year: '2026', era: 'Barcelona', cosmic: false },
-  { id: 'dubai',     image: '/cities/dubai.webp',     label: 'DUBAI, UAE',       year: '2026', era: 'Dubai',     cosmic: false },
-  { id: 'london',    image: '/cities/london.webp',    label: 'LONDON, ENGLAND',  year: '2026', era: 'London',    cosmic: false },
-  { id: 'berlin',    image: '/cities/berlin.webp',    label: 'BERLIN, GERMANY',  year: '2026', era: 'Berlin',    cosmic: false },
+  { id: 'istanbul',  image: '/cities/istanbul.jpg',  label: 'ISTANBUL, TURKEY', year: '2026', era: 'Istanbul',  cosmic: false },
+  { id: 'paris',     image: '/cities/paris.jpg',     label: 'PARIS, FRANCE',    year: '2026', era: 'Paris',     cosmic: false },
+  { id: 'rome',      image: '/cities/rome.jpg',      label: 'ROME, ITALY',      year: '2026', era: 'Rome',      cosmic: false },
+  { id: 'tokyo',     image: '/cities/tokyo.jpg',     label: 'TOKYO, JAPAN',     year: '2026', era: 'Tokyo',     cosmic: false },
+  { id: 'barcelona', image: '/cities/barcelona.jpg', label: 'BARCELONA, SPAIN', year: '2026', era: 'Barcelona', cosmic: false },
+  { id: 'dubai',     image: '/cities/dubai.jpg',     label: 'DUBAI, UAE',       year: '2026', era: 'Dubai',     cosmic: false },
+  { id: 'london',    image: '/cities/london.jpg',    label: 'LONDON, ENGLAND',  year: '2026', era: 'London',    cosmic: false },
+  { id: 'berlin',    image: '/cities/berlin.jpg',    label: 'BERLIN, GERMANY',  year: '2026', era: 'Berlin',    cosmic: false },
 ];
 
 const TIME_STOPS = [
