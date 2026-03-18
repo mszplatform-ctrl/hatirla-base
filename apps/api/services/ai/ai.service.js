@@ -336,7 +336,7 @@ async function faceSwap(userPhotoDataUri, cityId) {
 
   const prompt = pickPrompt(cityId);
 
-  const result = await fal.subscribe('fal-ai/flux-kontext-pro', {
+  const result = await fal.subscribe('fal-ai/flux-pro/kontext', {
     input: {
       prompt,
       image_url: userPhotoDataUri,
