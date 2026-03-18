@@ -101,16 +101,17 @@ router.get('/health', (req, res) => {
   });
 });
 
-// BETA: AI routes temporarily disabled (no package.repository yet)
 router.use('/ai', require('../src/routes/ai'));
 
 router.use('/data', require('../src/routes/data'));
-router.use('/auth', require('../routes/auth'));
-router.use('/referral', require('../routes/referral'));
-router.use('/reel', require('../routes/reel'));
-router.use('/share', require('../routes/share'));
 router.use('/user', require('../src/routes/user'));
-router.use('/users', require('../routes/users'));
+
+// Legacy mock routes disabled
+// router.use('/auth', require('../routes/auth'));
+// router.use('/referral', require('../routes/referral'));
+// router.use('/reel', require('../routes/reel'));
+// router.use('/share', require('../routes/share'));
+// router.use('/users', require('../routes/users'));
 // ============================================
 // 6. ERROR HANDLING
 // ============================================

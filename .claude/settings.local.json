@@ -34,7 +34,10 @@
       "Bash(cmd.exe /c \"dir C:\\\\Users\\\\AAA\\\\Desktop\\\\*.mp4 2>&1\")",
       "Bash(which cwebp:*)",
       "Bash(cd:*)",
-      "Bash(du:*)"
+      "Bash(du:*)",
+      "Bash(for f:*)",
+      "Read(//c/Users/AAA/Desktop/hatirla-base/**)",
+      "Bash(done)"
     ]
   }
 }
