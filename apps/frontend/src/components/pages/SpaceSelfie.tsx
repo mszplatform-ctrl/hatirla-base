@@ -16,13 +16,14 @@ const CITIES: SelectedScene[] = [
 ];
 
 const TIME_STOPS = [
-  { id: 'stone_age', label: 'STONE AGE',    year: '~10,000 BC', era: 'Stone Age',            cosmic: false },
-  { id: 'ancient',   label: 'ANCIENT WORLD', year: '0 AD',      era: 'Ancient Civilization', cosmic: false },
-  { id: 'medieval',  label: 'MEDIEVAL',      year: '1200',      era: 'Medieval Era',         cosmic: false },
-  { id: 'year1920',  label: '1920s',         year: '1920',      era: 'Modern Dawn',          cosmic: false },
-  { id: 'present',   label: 'PRESENT',       year: '2026',      era: 'Present Day',          cosmic: false },
-  { id: 'future',    label: 'FUTURE',        year: '2200',      era: 'Future City',          cosmic: true  },
-  { id: 'end',       label: 'END OF TIME',   year: '∞',         era: 'End of Time',          cosmic: true  },
+  { id: 'stone_age',   label: 'STONE AGE',    year: '~10,000 BC', era: 'Stone Age',            cosmic: false },
+  { id: 'ancient',     label: 'ANCIENT WORLD', year: '0 AD',      era: 'Ancient Civilization', cosmic: false },
+  { id: 'medieval',    label: 'MEDIEVAL',      year: '1200',      era: 'Medieval Era',         cosmic: false },
+  { id: 'year1920',    label: '1920s',         year: '1920',      era: 'Modern Dawn',          cosmic: false },
+  { id: 'present',     label: 'PRESENT',       year: '2026',      era: 'Present Day',          cosmic: false },
+  { id: 'future',      label: 'FUTURE',        year: '2200',      era: 'Future City',          cosmic: true  },
+  { id: 'alien_world', label: 'ALIEN WORLD',   year: '∞',         era: 'Alien World',          cosmic: true  },
+  { id: 'end',         label: 'END OF TIME',   year: '∞',         era: 'End of Time',          cosmic: true  },
 ];
 
 const EXPLORER_ID = String(Math.floor(1000 + Math.random() * 9000));
@@ -466,7 +467,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
             {/* Dot timeline */}
             <div style={{ position: 'relative', marginBottom: '4px' }}>
-              <div style={{ position: 'absolute', top: '6px', left: 0, right: 0, height: '2px', background: 'linear-gradient(to right, rgba(45,212,191,0.3) 0%, rgba(45,212,191,0.3) 75%, rgba(139,92,246,0.3) 75%, rgba(139,92,246,0.3) 100%)', zIndex: 0 }} />
+              <div style={{ position: 'absolute', top: '6px', left: 0, right: 0, height: '2px', background: 'linear-gradient(to right, rgba(45,212,191,0.3) 0%, rgba(45,212,191,0.3) 64%, rgba(139,92,246,0.3) 64%, rgba(139,92,246,0.3) 100%)', zIndex: 0 }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
                 {TIME_STOPS.map((stop, i) => {
                   const isSelected = i === timeStopIndex;
