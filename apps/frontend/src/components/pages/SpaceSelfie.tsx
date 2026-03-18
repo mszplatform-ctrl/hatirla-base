@@ -57,7 +57,6 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [apiReady, setApiReady]         = useState(false);
   const [teleportVideoEnded, setTeleportVideoEnded] = useState(false);
   const [videoBuffering, setVideoBuffering] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const apiPromiseRef    = useRef<Promise<string> | null>(null);
   const bufferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef     = useRef<HTMLInputElement>(null);
@@ -484,16 +483,13 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(14,165,233,0.35)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)';    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
-                {/* Skeleton shown until image loads */}
-                {!loadedImages.has(city.id) && (
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(15,23,42,0.6) 100%)', animation: 'cityskel 1.6s ease-in-out infinite' }} />
-                )}
+                {/* Skeleton — visible behind the image until it loads */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(15,23,42,0.6) 100%)', animation: 'cityskel 1.6s ease-in-out infinite' }} />
                 <img
                   src={city.image}
                   alt={city.label}
                   loading="lazy"
-                  onLoad={() => setLoadedImages(prev => { const s = new Set(prev); s.add(city.id); return s; })}
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: loadedImages.has(city.id) ? 1 : 0, transition: 'opacity 0.35s ease' }}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                 />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.05) 55%)' }} />
                 <div style={{ position: 'absolute', bottom: '14px', left: 0, right: 0, color: 'white', fontWeight: 700, fontSize: '13px', textAlign: 'center', textShadow: '0 1px 6px rgba(0,0,0,0.8)', letterSpacing: '0.04em', fontFamily: 'monospace' }}>
