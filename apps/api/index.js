@@ -6,7 +6,7 @@ const { PrismaClient } = require('@prisma/client');
 const gateway = require('./gateway');
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: process.env.FRONTEND_URL || 'https://xotiji.app' }));
 app.use(express.json());
 
 // API Gateway - Tüm /api/* istekleri gateway'den geçer

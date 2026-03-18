@@ -53,6 +53,8 @@ export function useCityDetails() {
         fetch(`${API_BASE}/experiences?city=${encodeURIComponent(city.name)}&lang=${lang}`),
       ]);
 
+      if (!hotelsRes.ok) throw new Error(`HTTP error ${hotelsRes.status}`);
+      if (!expRes.ok) throw new Error(`HTTP error ${expRes.status}`);
       const hotelsJson = await hotelsRes.json();
       const expJson = await expRes.json();
 

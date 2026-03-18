@@ -42,6 +42,7 @@ export function useAI() {
       setAiSuggestions([]);
       const lang = getLang();
       const res = await fetch(`${AI_BASE}/suggestions?lang=${lang}`);
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       const data = await res.json();
       const suggestions = Array.isArray(data) ? data : [];
       setAiSuggestions(suggestions);
@@ -93,7 +94,7 @@ export function useAI() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ selections, language }),
       });
-      
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       const data = await res.json();
       return data.itinerary;
     } catch (err) {

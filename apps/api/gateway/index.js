@@ -48,6 +48,15 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 router.use(limiter);
+
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isProd ? 10 : 100,
+  message: { error: 'Too many AI requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+router.use('/ai', aiLimiter);
 // ============================================
 // 3. REQUEST LOGGING WITH REQUEST ID
 // ============================================

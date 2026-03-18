@@ -19,6 +19,7 @@ export function useCities() {
     async function fetchCities() {
       try {
         const res = await fetch(`${API_BASE}/cities`);
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
         const json = await res.json();
         
         // Backend returns { success, data: [{ name, hotel_count, experience_count }] }

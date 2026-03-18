@@ -335,7 +335,6 @@ async function faceSwap(userPhotoDataUri, cityId) {
   if (!process.env.FAL_API_KEY) throw new Error('FAL_API_KEY not configured');
 
   const prompt = pickPrompt(cityId);
-  console.log(`[FaceSwap] Starting fal.ai job for scene: ${cityId}`);
 
   const result = await fal.subscribe('fal-ai/flux-pro/kontext', {
     input: {
@@ -346,7 +345,6 @@ async function faceSwap(userPhotoDataUri, cityId) {
   });
 
   const outputUrl = result.data.images[0].url;
-  console.log(`[FaceSwap] Got output URL: ${outputUrl}`);
 
   const imgRes = await fetch(outputUrl);
   const buffer = await imgRes.arrayBuffer();
