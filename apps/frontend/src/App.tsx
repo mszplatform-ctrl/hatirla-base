@@ -20,6 +20,41 @@ import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
 import { t, getLang, type Lang } from './i18n';
 
+type ModalHotelData = {
+  id: number;
+  name: string;
+  name_tr: string | null;
+  description: string | null;
+  minPrice: number | null;
+  currency: string | null;
+};
+
+type ModalExperienceData = {
+  id: number;
+  title: string;
+  title_tr: string | null;
+  description: string | null;
+  price: number | null;
+  currency: string | null;
+  category: string | null;
+};
+
+type ModalItineraryData = {
+  totalPrice: number;
+  currency: string;
+  items: Array<{
+    type: string;
+    name?: string;
+    title?: string;
+    price?: number | null;
+    minPrice?: number | null;
+    currency?: string | null;
+  }>;
+  aiComment?: string;
+};
+
+type ModalData = ModalHotelData | ModalExperienceData | ModalItineraryData | null;
+
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
 
@@ -58,7 +93,7 @@ export default function App() {
   } = useAI();
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalData, setModalData] = useState<any>(null);
+  const [modalData, setModalData] = useState<ModalData>(null);
   const [modalType, setModalType] = useState<"hotel" | "experience" | "ai" | "itinerary" | null>(null);
   const [mszComment, setMszComment] = useState<string | null>(null);
   const [lang] = useState<Lang>(getLang);
@@ -95,13 +130,13 @@ export default function App() {
     MSZ.remember("lastSelections", items);
   }, [selectedHotelIds, selectedExperienceIds, hotels, experiences]);
 
-  function openHotelModal(hotel: any) {
+  function openHotelModal(hotel: ModalHotelData) {
     setModalType("hotel");
     setModalData(hotel);
     setModalVisible(true);
   }
 
-  function openExperienceModal(exp: any) {
+  function openExperienceModal(exp: ModalExperienceData) {
     setModalType("experience");
     setModalData(exp);
     setModalVisible(true);

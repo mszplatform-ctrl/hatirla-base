@@ -5,14 +5,14 @@ import type { SelectedScene } from './CinematicSequence';
 const AI_BASE = `${import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com'}/api/ai`;
 
 const CITIES: SelectedScene[] = [
-  { id: 'istanbul',  image: '/cities/istanbul.jpg',  label: 'ISTANBUL, TURKEY', year: '2026', era: 'Istanbul',  cosmic: false },
-  { id: 'paris',     image: '/cities/paris.jpg',     label: 'PARIS, FRANCE',    year: '2026', era: 'Paris',     cosmic: false },
-  { id: 'rome',      image: '/cities/rome.jpg',      label: 'ROME, ITALY',      year: '2026', era: 'Rome',      cosmic: false },
-  { id: 'tokyo',     image: '/cities/tokyo.jpg',     label: 'TOKYO, JAPAN',     year: '2026', era: 'Tokyo',     cosmic: false },
-  { id: 'barcelona', image: '/cities/barcelona.jpg', label: 'BARCELONA, SPAIN', year: '2026', era: 'Barcelona', cosmic: false },
-  { id: 'dubai',     image: '/cities/dubai.jpg',     label: 'DUBAI, UAE',       year: '2026', era: 'Dubai',     cosmic: false },
-  { id: 'london',    image: '/cities/london.jpg',    label: 'LONDON, ENGLAND',  year: '2026', era: 'London',    cosmic: false },
-  { id: 'berlin',    image: '/cities/berlin.jpg',    label: 'BERLIN, GERMANY',  year: '2026', era: 'Berlin',    cosmic: false },
+  { id: 'istanbul',  image: '/cities/istanbul.webp',  label: 'ISTANBUL, TURKEY', year: '2026', era: 'Istanbul',  cosmic: false },
+  { id: 'paris',     image: '/cities/paris.webp',     label: 'PARIS, FRANCE',    year: '2026', era: 'Paris',     cosmic: false },
+  { id: 'rome',      image: '/cities/rome.webp',      label: 'ROME, ITALY',      year: '2026', era: 'Rome',      cosmic: false },
+  { id: 'tokyo',     image: '/cities/tokyo.webp',     label: 'TOKYO, JAPAN',     year: '2026', era: 'Tokyo',     cosmic: false },
+  { id: 'barcelona', image: '/cities/barcelona.webp', label: 'BARCELONA, SPAIN', year: '2026', era: 'Barcelona', cosmic: false },
+  { id: 'dubai',     image: '/cities/dubai.webp',     label: 'DUBAI, UAE',       year: '2026', era: 'Dubai',     cosmic: false },
+  { id: 'london',    image: '/cities/london.webp',    label: 'LONDON, ENGLAND',  year: '2026', era: 'London',    cosmic: false },
+  { id: 'berlin',    image: '/cities/berlin.webp',    label: 'BERLIN, GERMANY',  year: '2026', era: 'Berlin',    cosmic: false },
 ];
 
 const TIME_STOPS = [
@@ -54,17 +54,35 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [errorMsg, setErrorMsg]     = useState<string | null>(null);
   const [fromTimeTeleport, setFromTimeTeleport] = useState(false);
-  const [apiReady, setApiReady]     = useState(false);
+  const [apiReady, setApiReady]         = useState(false);
   const [teleportVideoEnded, setTeleportVideoEnded] = useState(false);
-  const apiPromiseRef  = useRef<Promise<string> | null>(null);
-  const fileInputRef   = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [videoBuffering, setVideoBuffering] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const apiPromiseRef    = useRef<Promise<string> | null>(null);
+  const bufferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef     = useRef<HTMLInputElement>(null);
+  const cameraInputRef   = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (flowStep === 'teleport-video' && apiReady && teleportVideoEnded) {
       setFlowStep('result');
     }
   }, [flowStep, apiReady, teleportVideoEnded]);
+
+  // Buffer timeout: on mobile show spinner immediately; on desktop after 3s without onPlaying
+  useEffect(() => {
+    if (flowStep !== 'teleport-video') return;
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setVideoBuffering(true);
+      return;
+    }
+    setVideoBuffering(false);
+    bufferTimeoutRef.current = setTimeout(() => setVideoBuffering(true), 3000);
+    return () => {
+      if (bufferTimeoutRef.current) clearTimeout(bufferTimeoutRef.current);
+    };
+  }, [flowStep]);
 
   function openPhotoModal(scene: SelectedScene) {
     setSelectedScene(scene);
@@ -136,6 +154,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setApiReady(false);
     setTeleportVideoEnded(false);
     setFromTimeTeleport(false);
+    setVideoBuffering(false);
+    if (bufferTimeoutRef.current) clearTimeout(bufferTimeoutRef.current);
     apiPromiseRef.current = null;
   }
 
@@ -171,13 +191,27 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
         {!teleportVideoEnded ? (
-          <video
-            src="/teleport.mp4"
-            autoPlay
-            playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            onEnded={() => setTeleportVideoEnded(true)}
-          />
+          <>
+            <video
+              src="/teleport.mp4"
+              autoPlay
+              preload="auto"
+              playsInline
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: videoBuffering ? 0 : 1, transition: 'opacity 0.4s ease' }}
+              onPlaying={() => {
+                setVideoBuffering(false);
+                if (bufferTimeoutRef.current) clearTimeout(bufferTimeoutRef.current);
+              }}
+              onEnded={() => setTeleportVideoEnded(true)}
+            />
+            {videoBuffering && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                <style>{`@keyframes tpspin { to { transform: rotate(360deg); } }`}</style>
+                <div style={{ width: '36px', height: '36px', border: '3px solid rgba(45,212,191,0.2)', borderTop: '3px solid #2dd4bf', borderRadius: '50%', animation: 'tpspin 0.9s linear infinite' }} />
+                <div style={{ color: 'rgba(45,212,191,0.7)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.18em' }}>PREPARING TELEPORT...</div>
+              </div>
+            )}
+          </>
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
             <style>{`@keyframes sslock { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }`}</style>
@@ -435,6 +469,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
           </p>
 
           {/* City grid */}
+          <style>{`@keyframes cityskel { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }`}</style>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))', gap: '16px', marginBottom: '36px' }}>
             {CITIES.map(city => (
               <button
@@ -443,12 +478,23 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                 style={{
                   position: 'relative', height: '168px', borderRadius: '18px', overflow: 'hidden',
                   border: '2px solid rgba(255,255,255,0.12)', cursor: 'pointer', padding: 0,
-                  backgroundImage: `url(${city.image})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                  background: '#0c1929',
                   transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(14,165,233,0.35)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)';    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
+                {/* Skeleton shown until image loads */}
+                {!loadedImages.has(city.id) && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(15,23,42,0.6) 100%)', animation: 'cityskel 1.6s ease-in-out infinite' }} />
+                )}
+                <img
+                  src={city.image}
+                  alt={city.label}
+                  loading="lazy"
+                  onLoad={() => setLoadedImages(prev => { const s = new Set(prev); s.add(city.id); return s; })}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: loadedImages.has(city.id) ? 1 : 0, transition: 'opacity 0.35s ease' }}
+                />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.05) 55%)' }} />
                 <div style={{ position: 'absolute', bottom: '14px', left: 0, right: 0, color: 'white', fontWeight: 700, fontSize: '13px', textAlign: 'center', textShadow: '0 1px 6px rgba(0,0,0,0.8)', letterSpacing: '0.04em', fontFamily: 'monospace' }}>
                   {city.label}

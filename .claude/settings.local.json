@@ -31,7 +31,10 @@
       "Bash(npx tsc:*)",
       "Read(//c/Users/AAA//**)",
       "Read(//mnt/c/Users/AAA/**)",
-      "Bash(cmd.exe /c \"dir C:\\\\Users\\\\AAA\\\\Desktop\\\\*.mp4 2>&1\")"
+      "Bash(cmd.exe /c \"dir C:\\\\Users\\\\AAA\\\\Desktop\\\\*.mp4 2>&1\")",
+      "Bash(which cwebp:*)",
+      "Bash(cd:*)",
+      "Bash(du:*)"
     ]
   }
 }
