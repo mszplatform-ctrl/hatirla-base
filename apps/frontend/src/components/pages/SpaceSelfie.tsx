@@ -61,6 +61,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const toastTimeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef     = useRef<HTMLInputElement>(null);
   const cameraInputRef   = useRef<HTMLInputElement>(null);
+  const videoRef         = useRef<HTMLVideoElement>(null);
+  const [videoMuted, setVideoMuted] = useState(true);
 
   // Buffer timeout: on mobile show spinner immediately; on desktop after 3s without onPlaying
   useEffect(() => {
@@ -200,6 +202,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
         <video
+          ref={videoRef}
           src="/teleport.mp4"
           autoPlay
           muted
@@ -209,6 +212,10 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
           onPlaying={() => {
             setVideoBuffering(false);
             if (bufferTimeoutRef.current) clearTimeout(bufferTimeoutRef.current);
+            if (videoRef.current) {
+              videoRef.current.muted = false;
+              setVideoMuted(videoRef.current.muted);
+            }
           }}
           onEnded={() => setFlowStep('result')}
         />
@@ -218,6 +225,26 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
             <div style={{ width: '36px', height: '36px', border: '3px solid rgba(45,212,191,0.2)', borderTop: '3px solid #2dd4bf', borderRadius: '50%', animation: 'tpspin 0.9s linear infinite' }} />
             <div style={{ color: 'rgba(45,212,191,0.7)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.18em' }}>PREPARING TELEPORT...</div>
           </div>
+        )}
+        {!videoBuffering && videoMuted && (
+          <button
+            onClick={() => {
+              if (videoRef.current) {
+                videoRef.current.muted = false;
+                setVideoMuted(false);
+              }
+            }}
+            style={{
+              position: 'absolute', top: '16px', right: '16px',
+              background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: '999px', color: 'white', fontSize: '18px',
+              width: '40px', height: '40px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            title="Unmute"
+          >
+            🔊
+          </button>
         )}
       </div>
     );
