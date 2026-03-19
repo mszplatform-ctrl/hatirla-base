@@ -101,9 +101,25 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => setUserPhoto(ev.target?.result as string);
-    reader.readAsDataURL(file);
+    const isHeic = file.type === 'image/heic' || file.type === 'image/heif'
+      || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+    if (isHeic) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d')!.drawImage(img, 0, 0);
+        setUserPhoto(canvas.toDataURL('image/jpeg', 0.92));
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    } else {
+      const reader = new FileReader();
+      reader.onload = ev => setUserPhoto(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
   }
 
   function handleLaunch() {
@@ -427,8 +443,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                     </button>
                   </div>
                 </div>
-                <input ref={fileInputRef}  type="file" accept="image/*"                style={{ display: 'none' }} onChange={handlePhotoChange} />
-                <input ref={cameraInputRef} type="file" accept="image/*" capture="user" style={{ display: 'none' }} onChange={handlePhotoChange} />
+                <input ref={fileInputRef}  type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"                style={{ display: 'none' }} onChange={handlePhotoChange} />
+                <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="user" style={{ display: 'none' }} onChange={handlePhotoChange} />
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', width: '100%', maxWidth: '440px' }}>
@@ -471,7 +487,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                     ✦ TRANSFER
                   </button>
                 </div>
-                <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" style={{ display: 'none' }} onChange={handlePhotoChange} />
               </div>
             )}
           </div>
