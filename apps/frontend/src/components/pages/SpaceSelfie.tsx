@@ -202,6 +202,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
         <video
           src="/teleport.mp4"
           autoPlay
+          muted
           preload="auto"
           playsInline
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: videoBuffering ? 0 : 1, transition: 'opacity 0.4s ease' }}
