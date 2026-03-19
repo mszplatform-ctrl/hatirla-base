@@ -13,7 +13,8 @@ app.use(cors({
     process.env.FRONTEND_URL
   ].filter(Boolean)
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // API Gateway - Tüm /api/* istekleri gateway'den geçer
 app.use('/api', gateway);
