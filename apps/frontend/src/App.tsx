@@ -15,6 +15,7 @@ import { TermsOfService } from './components/pages/TermsOfService';
 import { Contact } from './components/pages/Contact';
 import { SpaceSelfie } from './components/pages/SpaceSelfie';
 import { CinematicIntro } from './components/pages/CinematicIntro';
+import { PWAInstallBanner } from './components/common/PWAInstallBanner';
 import { useCities } from './hooks/useCities';
 import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
@@ -422,6 +423,9 @@ export default function App() {
       {/* CINEMATIC INTRO — overlays everything for first-time visitors */}
       {showIntro && <CinematicIntro onComplete={handleIntroComplete} />}
     </div>
+
+    {/* PWA install banner — mobile only, hides if already installed */}
+    <PWAInstallBanner />
     </>
   );
 }
