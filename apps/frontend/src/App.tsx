@@ -96,7 +96,7 @@ export default function App() {
   const [modalData, setModalData] = useState<ModalData>(null);
   const [modalType, setModalType] = useState<"hotel" | "experience" | "ai" | "itinerary" | null>(null);
   const [mszComment, setMszComment] = useState<string | null>(null);
-  const [lang] = useState<Lang>(getLang);
+  const [lang, setLangState] = useState<Lang>(getLang);
   const citiesSectionRef = useRef<HTMLDivElement>(null);
 
   function scrollToCities() {
@@ -209,7 +209,7 @@ export default function App() {
       >
         📶 {t('esim.navButton')}
       </a>
-      <LanguageSwitcher />
+      <LanguageSwitcher onChange={() => setLangState(getLang())} />
     </div>
 
 {/* PAGE-TOP DARK VIGNETTE — smooths the dark-intro → light-page transition */}

@@ -1,12 +1,16 @@
 import { getLang, setLang } from '../i18n';
 
-export function LanguageSwitcher() {
+interface Props {
+  onChange?: () => void;
+}
+
+export function LanguageSwitcher({ onChange }: Props = {}) {
   const current = getLang();
   const next = current === 'tr' ? 'en' : 'tr';
 
   function handleToggle() {
     setLang(next);
-    window.location.reload();
+    onChange?.();
   }
 
   return (
