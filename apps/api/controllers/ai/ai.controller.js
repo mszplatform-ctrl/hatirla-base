@@ -4,6 +4,7 @@
  */
 
 const aiService = require('../../services/ai/ai.service');
+const r2Service = require('../../services/r2.service');
 
 // ✅ DOĞRU PATH’LER (SRC ALTINDAN)
 const { composeSchema } = require('../../src/validation/compose.schema');
@@ -83,7 +84,16 @@ class AIController {
         return res.status(400).json({ success: false, error: 'photo and cityId are required' });
       }
       const image = await aiService.faceSwap(photo, cityId);
-      res.json({ success: true, image });
+
+      let shareUrl = null;
+      try {
+        const shareId = crypto.randomUUID();
+        shareUrl = await r2Service.uploadImage(image, shareId);
+      } catch (uploadErr) {
+        console.error('[AI Controller] R2 upload failed (non-fatal):', uploadErr.message);
+      }
+
+      res.json({ success: true, image, shareUrl });
     } catch (error) {
       console.error('[AI Controller] Face swap error:', error.message);
       res.status(500).json({ success: false, error: error.message });

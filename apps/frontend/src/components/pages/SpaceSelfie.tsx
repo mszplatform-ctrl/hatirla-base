@@ -28,16 +28,21 @@ const TIME_STOPS = [
 
 const EXPLORER_ID = String(Math.floor(1000 + Math.random() * 9000));
 
-function callFaceSwap(photo: string, sceneId: string): Promise<string> {
+interface FaceSwapResult {
+  image: string;
+  shareUrl: string | null;
+}
+
+function callFaceSwap(photo: string, sceneId: string): Promise<FaceSwapResult> {
   return fetch(`${AI_BASE}/face-swap`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ photo, cityId: sceneId }),
   }).then(res =>
-    res.json().then((data: { success: boolean; image?: string; error?: string }) => {
+    res.json().then((data: { success: boolean; image?: string; shareUrl?: string | null; error?: string }) => {
       if (!res.ok || data.success === false) throw new Error(`Transmission failed: ${data.error || `Server error ${res.status}`}`);
       if (!data.image) throw new Error('No image in response');
-      return data.image;
+      return { image: data.image, shareUrl: data.shareUrl ?? null };
     })
   );
 }
@@ -52,11 +57,12 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [timeStopIndex, setTimeStopIndex] = useState(4); // default: Present Day
   const [userPhoto, setUserPhoto]   = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg]     = useState<string | null>(null);
   const [fromTimeTeleport, setFromTimeTeleport] = useState(false);
   const [videoBuffering, setVideoBuffering] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const apiPromiseRef    = useRef<Promise<string> | null>(null);
+  const apiPromiseRef    = useRef<Promise<FaceSwapResult> | null>(null);
   const bufferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef     = useRef<HTMLInputElement>(null);
@@ -132,8 +138,9 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     // Both paths: show loading first, then transition
     setFlowStep('loading');
     promise
-      .then(image => {
+      .then(({ image, shareUrl: url }) => {
         setResultImage(image);
+        setShareUrl(url);
         // Time teleport: play video after API resolves, then result immediately on end
         // City: go straight to result (no video)
         setFlowStep(fromTimeTeleport ? 'teleport-video' : 'result');
@@ -155,6 +162,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setSelectedScene(null);
     setUserPhoto(null);
     setResultImage(null);
+    setShareUrl(null);
     setErrorMsg(null);
     setFromTimeTeleport(false);
     setVideoBuffering(false);
@@ -185,27 +193,27 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   function handleShareInstagram() {
     downloadImage();
     window.open('https://www.instagram.com/', '_blank');
-    showToast(getLang() === 'tr' ? 'Görsel indirildi! Galeriden seç' : 'Image saved! Select from gallery');
+    const urlPart = shareUrl ? ` — ${shareUrl}` : '';
+    showToast(getLang() === 'tr' ? `Görsel indirildi! Galeriden seç${urlPart}` : `Image saved! Select from gallery${urlPart}`);
   }
 
   function handleShareTikTok() {
     downloadImage();
     window.open('https://www.tiktok.com/', '_blank');
-    showToast(getLang() === 'tr' ? 'Görsel indirildi! Galeriden seç' : 'Image saved! Select from gallery');
+    const urlPart = shareUrl ? ` — ${shareUrl}` : '';
+    showToast(getLang() === 'tr' ? `Görsel indirildi! Galeriden seç${urlPart}` : `Image saved! Select from gallery${urlPart}`);
   }
 
   function handleShareX() {
-    downloadImage();
+    const link = shareUrl ?? 'https://xotiji.app';
     const text = `🚀 COSMIC IDENTITY GENERATED — ${selectedScene?.label ?? ''} ✨ ${tagline} #XOTIJI #SpaceSelfie`;
-    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://xotiji.app')}`, '_blank');
-    showToast(getLang() === 'tr' ? 'Görsel indirildi! Galeriden seç' : 'Image saved! Select from gallery');
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(link)}`, '_blank');
   }
 
   function handleShareWhatsApp() {
-    downloadImage();
-    const text = `🚀 ${selectedScene?.label ?? ''} — Cosmic identity generated! ${tagline}`;
+    const link = shareUrl ?? 'https://xotiji.app';
+    const text = `🚀 ${selectedScene?.label ?? ''} — Cosmic identity generated! ${tagline} ${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    showToast(getLang() === 'tr' ? 'Görsel indirildi! Galeriden seç' : 'Image saved! Select from gallery');
   }
 
   // ── Teleport video: full-screen ──
