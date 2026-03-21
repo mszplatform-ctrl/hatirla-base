@@ -11,8 +11,8 @@ export type Lang = typeof SUPPORTED[number];
  * Get current language from localStorage or default to 'tr'
  */
 export function getLang(): Lang {
-  const saved = (localStorage.getItem("lang") || "tr").slice(0, 2).toLowerCase();
-  return (SUPPORTED as readonly string[]).includes(saved) ? (saved as Lang) : "tr";
+  const saved = (localStorage.getItem("lang") || "en").slice(0, 2).toLowerCase();
+  return (SUPPORTED as readonly string[]).includes(saved) ? (saved as Lang) : "en";
 }
 
 /**
