@@ -98,6 +98,14 @@ export default function App() {
   const [mszComment, setMszComment] = useState<string | null>(null);
   const [lang, setLangState] = useState<Lang>(getLang);
   const citiesSectionRef = useRef<HTMLDivElement>(null);
+  const cityDetailRef = useRef<HTMLDivElement>(null);
+
+  function handleCityClick(city: Parameters<typeof loadCityDetails>[0]) {
+    loadCityDetails(city);
+    setTimeout(() => {
+      cityDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  }
 
   function scrollToCities() {
     const el = citiesSectionRef.current;
@@ -277,14 +285,14 @@ export default function App() {
           <CityList
             cities={cities}
             selectedCityId={selectedCity?.id || null}
-            onCityClick={loadCityDetails}
+            onCityClick={handleCityClick}
             loading={loadingCities}
           />
           </div>
 
           {/* CITY DETAILS */}
           {selectedCity && (
-            <div style={{
+            <div ref={cityDetailRef} style={{
               marginTop: "32px",
               padding: "24px",
               borderRadius: "18px",
