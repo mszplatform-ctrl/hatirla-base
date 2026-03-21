@@ -16,45 +16,7 @@ const LINE_PAUSE     = 460;  // pause between completed lines
 const TAGLINE_DELAY  = 900;  // pause after last line before tagline
 const BUTTON_DELAY   = 1100; // pause after tagline before button appears
 
-const CITY_IMAGES = [
-  "/cities/istanbul.jpg",
-  "/cities/paris.jpg",
-  "/cities/rome.jpg",
-  "/cities/tokyo.jpg",
-  "/cities/berlin.jpg",
-  "/cities/barcelona.jpg",
-  "/cities/dubai.jpg",
-  "/cities/london.jpg",
-];
-
-const SLIDE_HOLD   = 380; // ms each image is visible
-const SLIDE_FLASH  = 80;  // ms of the opacity-dip between images
-
 export function CinematicIntro({ onComplete }: Props) {
-
-  // Slideshow
-  const [slideIdx, setSlideIdx] = useState(0);
-  const [slideVisible, setSlideVisible] = useState(true);
-
-  // Preload all city images so the cycling is instant
-  useEffect(() => {
-    CITY_IMAGES.forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, []);
-
-  // Fast-cycle: dip opacity → swap image → restore opacity
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSlideVisible(false);
-      setTimeout(() => {
-        setSlideIdx(prev => (prev + 1) % CITY_IMAGES.length);
-        setSlideVisible(true);
-      }, SLIDE_FLASH);
-    }, SLIDE_HOLD + SLIDE_FLASH);
-    return () => clearInterval(timer);
-  }, []);
 
   // Resolved once on mount — language won't change mid-intro
   const TERMINAL_LINES = useMemo(() => getTerminalLines(), []);
@@ -146,17 +108,25 @@ export function CinematicIntro({ onComplete }: Props) {
         <LanguageSwitcher />
       </div>
 
-      {/* City background slideshow — fast-cycling, low opacity, below aurora */}
-      <div style={{
-        position: "absolute",
-        inset: 0,
-        backgroundImage: `url(${CITY_IMAGES[slideIdx]})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        opacity: slideVisible ? 0.20 : 0,
-        transition: `opacity ${SLIDE_FLASH}ms ease`,
-        pointerEvents: "none",
-      }} />
+      {/* Fullscreen video background */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: 0.45,
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+      >
+        <source src="/intro.mp4" type="video/mp4" />
+      </video>
 
       {/* Aurora / nebula blobs — pure CSS animation, no JS */}
       <div style={{
