@@ -3,10 +3,14 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/s/:id",
-      "destination": "https://hatirla-base.onrender.com/api/share/:id"
+      "src": "/s/(.*)",
+      "dest": "https://hatirla-base.onrender.com/api/share/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
