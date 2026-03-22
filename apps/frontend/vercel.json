@@ -1,12 +1,15 @@
 {
-  "framework": "vite",
-  "installCommand": "npm install",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "installCommand": "npm install",
   "rewrites": [
     {
       "source": "/s/:id",
-      "destination": "https://hatirla-base.onrender.com/api/share/:id"
+      "destination": "/api/s/:id"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }
