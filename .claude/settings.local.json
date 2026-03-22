@@ -37,7 +37,10 @@
       "Bash(du:*)",
       "Bash(for f:*)",
       "Read(//c/Users/AAA/Desktop/hatirla-base/**)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(nslookup xotiji.app)",
+      "Bash(nslookup -type=NS xotiji.app)",
+      "Bash(npm run:*)"
     ]
   }
 }
