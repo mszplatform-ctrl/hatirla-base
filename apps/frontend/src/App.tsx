@@ -58,15 +58,17 @@ type ModalData = ModalHotelData | ModalExperienceData | ModalItineraryData | nul
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
+  const pendingSpaceSelfie = useRef(new URLSearchParams(window.location.search).get('ref') === 'spaceselfie');
 
   function handleIntroComplete() {
     setShowIntro(false);
+    if (pendingSpaceSelfie.current) {
+      pendingSpaceSelfie.current = false;
+      setPage('spaceSelfie');
+    }
   }
 
-  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie">(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('ref') === 'spaceselfie' ? 'spaceSelfie' : 'home';
-  });
+  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie">("home");
 
   function handleNavigate(to: string) {
     if (to === "privacy" || to === "terms" || to === "contact") {
