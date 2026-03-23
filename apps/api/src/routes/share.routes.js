@@ -33,7 +33,7 @@ router.get('/:id', (req, res) => {
 </head>
 <body>
   <img src="${imageUrl}" alt="XOTIJI Space Selfie" />
-  <a href="${appUrl}">✨ Create your own at xotiji.app</a>
+  <a href="${appUrl}/?ref=spaceselfie">✨ Create your own at xotiji.app</a>
 </body>
 </html>`;
 

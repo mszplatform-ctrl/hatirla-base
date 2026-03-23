@@ -63,7 +63,10 @@ export default function App() {
     setShowIntro(false);
   }
 
-  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie">("home");
+  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie">(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('ref') === 'spaceselfie' ? 'spaceSelfie' : 'home';
+  });
 
   function handleNavigate(to: string) {
     if (to === "privacy" || to === "terms" || to === "contact") {
