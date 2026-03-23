@@ -40,7 +40,14 @@
       "Bash(done)",
       "Bash(nslookup xotiji.app)",
       "Bash(nslookup -type=NS xotiji.app)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(find apps/api/src/routes -type f -name *.js)",
+      "Bash(find apps/api/routes -type f -name *.js)",
+      "Bash(find apps/api -name *.example -o -name .env.example)",
+      "Bash(grep -r \"^[[:space:]]*//\" apps/api --include=\"*.js\")",
+      "Bash(find apps/api -type f -name *.sql)",
+      "Bash(grep -n \"$\" apps/api/src/routes/data.js)",
+      "Bash(grep -r \"xotiji\\\\.app\\\\|hatirla-base\\\\.onrender\\\\.com\" apps --include=\"*.{ts,tsx,js}\")"
     ]
   }
 }
