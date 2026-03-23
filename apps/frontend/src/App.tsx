@@ -16,6 +16,7 @@ import { Contact } from './components/pages/Contact';
 import { SpaceSelfie } from './components/pages/SpaceSelfie';
 import { CinematicIntro } from './components/pages/CinematicIntro';
 import { PWAInstallBanner } from './components/common/PWAInstallBanner';
+import { CookieConsent } from './components/CookieConsent';
 import { useCities } from './hooks/useCities';
 import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
@@ -425,8 +426,11 @@ export default function App() {
       {/* FOOTER */}
       <Footer onNavigate={handleNavigate} />
 
+      {/* COOKIE CONSENT — home page only */}
+      {page === "home" && <CookieConsent onNavigate={handleNavigate} />}
+
       {/* CINEMATIC INTRO — overlays everything for first-time visitors */}
-      {showIntro && <CinematicIntro onComplete={handleIntroComplete} />}
+      {showIntro && <CinematicIntro onComplete={handleIntroComplete} fastComplete={pendingSpaceSelfie.current} />}
     </div>
 
     {/* PWA install banner — mobile only, hides if already installed */}

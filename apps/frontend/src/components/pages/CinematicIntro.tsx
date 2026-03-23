@@ -3,6 +3,7 @@ import { t } from "../../i18n";
 
 interface Props {
   onComplete: () => void;
+  fastComplete?: boolean;
 }
 
 // Resolved at render time so language is always respected
@@ -15,7 +16,7 @@ const LINE_PAUSE     = 460;  // pause between completed lines
 const TAGLINE_DELAY  = 900;  // pause after last line before tagline
 const BUTTON_DELAY   = 1100; // pause after tagline before button appears
 
-export function CinematicIntro({ onComplete }: Props) {
+export function CinematicIntro({ onComplete, fastComplete }: Props) {
 
   // Resolved once on mount — language won't change mid-intro
   const TERMINAL_LINES = useMemo(() => getTerminalLines(), []);
@@ -80,10 +81,15 @@ export function CinematicIntro({ onComplete }: Props) {
 
   function handleInitiate() {
     setInitiated(true);
-    setTimeout(() => {
+    if (fastComplete) {
       setFadeOut(true);
       setTimeout(onComplete, 850);
-    }, 1700);
+    } else {
+      setTimeout(() => {
+        setFadeOut(true);
+        setTimeout(onComplete, 850);
+      }, 1700);
+    }
   }
 
   return (

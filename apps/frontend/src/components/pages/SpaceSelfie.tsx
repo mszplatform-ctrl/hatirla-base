@@ -492,6 +492,11 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                 </div>
                 <input ref={fileInputRef}  type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"                style={{ display: 'none' }} onChange={handlePhotoChange} />
                 <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="user" style={{ display: 'none' }} onChange={handlePhotoChange} />
+                <p style={{ marginTop: '20px', color: 'rgba(255,255,255,0.28)', fontSize: '12px', fontFamily: 'monospace', lineHeight: 1.6 }}>
+                  {getLang() === 'tr'
+                    ? '📷 Fotoğrafınız yalnızca işlem için kullanılır ve 24 saat içinde otomatik silinir.'
+                    : '📷 Your photo is used only for processing and is automatically deleted within 24 hours.'}
+                </p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', width: '100%', maxWidth: '440px' }}>
