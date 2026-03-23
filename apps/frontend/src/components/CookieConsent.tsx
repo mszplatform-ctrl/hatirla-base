@@ -4,9 +4,25 @@ const STORAGE_KEY = 'cookie_consent';
 
 interface CookieConsentProps {
   onNavigate: (to: string) => void;
+  lang: string;
 }
 
-export function CookieConsent({ onNavigate }: CookieConsentProps) {
+const copy = {
+  tr: {
+    before: 'Bu siteyi kullanarak ',
+    link: 'çerez politikamızı',
+    after: ' kabul etmiş olursunuz.',
+    button: 'Tamam',
+  },
+  en: {
+    before: 'By using this site, you agree to our ',
+    link: 'cookie policy',
+    after: '.',
+    button: 'OK',
+  },
+};
+
+export function CookieConsent({ onNavigate, lang }: CookieConsentProps) {
   const [accepted, setAccepted] = useState(() => !!localStorage.getItem(STORAGE_KEY));
 
   if (accepted) return null;
@@ -15,6 +31,8 @@ export function CookieConsent({ onNavigate }: CookieConsentProps) {
     localStorage.setItem(STORAGE_KEY, '1');
     setAccepted(true);
   }
+
+  const c = lang === 'en' ? copy.en : copy.tr;
 
   return (
     <div style={{
@@ -28,14 +46,14 @@ export function CookieConsent({ onNavigate }: CookieConsentProps) {
       fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
     }}>
       <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', lineHeight: 1.5 }}>
-        Bu siteyi kullanarak{' '}
+        {c.before}
         <button
           onClick={() => onNavigate('privacy')}
           style={{ background: 'none', border: 'none', padding: 0, color: '#2dd4bf', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}
         >
-          çerez politikamızı
+          {c.link}
         </button>
-        {' '}kabul etmiş olursunuz.
+        {c.after}
       </span>
       <button
         onClick={handleAccept}
@@ -46,7 +64,7 @@ export function CookieConsent({ onNavigate }: CookieConsentProps) {
           fontFamily: 'inherit', flexShrink: 0,
         }}
       >
-        Tamam
+        {c.button}
       </button>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { t, getLang } from '../../i18n';
 import type { SelectedScene } from './CinematicSequence';
 
@@ -69,6 +69,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const cameraInputRef   = useRef<HTMLInputElement>(null);
   const videoRef         = useRef<HTMLVideoElement>(null);
   const [videoMuted, setVideoMuted] = useState(true);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(() => new Set());
+  const markLoaded = useCallback((id: string) => setLoadedImages(prev => { const s = new Set(prev); s.add(id); return s; }), []);
 
   // Buffer timeout: on mobile show spinner immediately; on desktop after 3s without onPlaying
   useEffect(() => {
@@ -572,13 +574,14 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(14,165,233,0.35)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)';    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
-                {/* Skeleton — visible behind the image until it loads */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(15,23,42,0.6) 100%)', animation: 'cityskel 1.6s ease-in-out infinite' }} />
+                {/* Skeleton — fades out once the image loads */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(15,23,42,0.6) 100%)', animation: loadedImages.has(city.id) ? 'none' : 'cityskel 1.6s ease-in-out infinite', opacity: loadedImages.has(city.id) ? 0 : 1, transition: 'opacity 0.3s ease' }} />
                 <img
                   src={city.image}
                   alt={city.label}
                   loading="lazy"
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                  onLoad={() => markLoaded(city.id)}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: loadedImages.has(city.id) ? 1 : 0, transition: 'opacity 0.3s ease' }}
                 />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.05) 55%)' }} />
                 <div style={{ position: 'absolute', bottom: '14px', left: 0, right: 0, color: 'white', fontWeight: 700, fontSize: '13px', textAlign: 'center', textShadow: '0 1px 6px rgba(0,0,0,0.8)', letterSpacing: '0.04em', fontFamily: 'monospace' }}>

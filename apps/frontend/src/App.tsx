@@ -427,7 +427,7 @@ export default function App() {
       <Footer onNavigate={handleNavigate} />
 
       {/* COOKIE CONSENT — home page only */}
-      {page === "home" && <CookieConsent onNavigate={handleNavigate} />}
+      {page === "home" && <CookieConsent onNavigate={handleNavigate} lang={lang} />}
 
       {/* CINEMATIC INTRO — overlays everything for first-time visitors */}
       {showIntro && <CinematicIntro onComplete={handleIntroComplete} fastComplete={pendingSpaceSelfie.current} />}
