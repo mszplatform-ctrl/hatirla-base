@@ -88,7 +88,8 @@ class AIController {
       let shareUrl = null;
       try {
         const shareId = crypto.randomUUID();
-        shareUrl = await r2Service.uploadImage(image, shareId);
+        await r2Service.uploadImage(image, shareId);
+        shareUrl = `https://xotiji.app/s/${shareId}`;
       } catch (uploadErr) {
         console.error('[AI Controller] R2 upload failed (non-fatal):', uploadErr.message);
       }
