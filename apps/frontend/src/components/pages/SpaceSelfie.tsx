@@ -508,8 +508,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
         >
           ← {t('spaceSelfie.back')}
         </button>
-        <div style={{ flex: 1, textAlign: 'center', color: 'white', fontWeight: 800, fontSize: '17px', letterSpacing: '-0.01em' }}>
-          🚀 {t('spaceSelfie.title')}
+        <div style={{ flex: 1, textAlign: 'center', color: '#2dd4bf', fontWeight: 700, fontSize: '12px', fontFamily: 'monospace', letterSpacing: '0.12em' }}>
+          🚀 SPACE SELFIE
         </div>
         <div style={{ width: '80px' }} />
       </div>
