@@ -234,21 +234,60 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setFlowStep('photo-modal'); // keep photo + scene so user can retry without re-uploading
   }
 
+  /**
+   * Fetch resultImage, draw on canvas, composite "xotiji.app" watermark
+   * bottom-left, and return the result as a JPEG Blob.
+   * Uses a blob URL as the image source to avoid tainted-canvas CORS errors.
+   */
+  async function getWatermarkedBlob(): Promise<Blob> {
+    const res = await fetch(resultImage!);
+    const imgBlob = await res.blob();
+    const blobUrl = URL.createObjectURL(imgBlob);
+
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = blobUrl;
+    });
+    URL.revokeObjectURL(blobUrl);
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
+
+    // Watermark: "xotiji.app" bottom-left, proportional to image width
+    const fontSize = Math.max(18, Math.round(canvas.width * 0.018));
+    const padding  = Math.round(canvas.width * 0.02);
+    ctx.font         = `${fontSize}px monospace`;
+    ctx.fillStyle    = 'rgba(255,255,255,0.55)';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('xotiji.app', padding, canvas.height - padding);
+
+    return new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        b => b ? resolve(b) : reject(new Error('Canvas toBlob failed')),
+        'image/jpeg', 0.92
+      )
+    );
+  }
+
   async function handleDownload() {
     if (!resultImage || !selectedScene) return;
     try {
-      const res = await fetch(resultImage);
-      const blob = await res.blob();
+      const blob = await getWatermarkedBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `xotiji-space-selfie-${selectedScene.id}.png`;
+      a.download = `xotiji-space-selfie-${selectedScene.id}.jpg`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
       const a = document.createElement('a');
       a.href = resultImage;
-      a.download = `xotiji-space-selfie-${selectedScene.id}.png`;
+      a.download = `xotiji-space-selfie-${selectedScene.id}.jpg`;
       a.click();
     }
   }
@@ -258,8 +297,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   async function downloadImage() {
     if (!resultImage) return;
     try {
-      const res = await fetch(resultImage);
-      const blob = await res.blob();
+      const blob = await getWatermarkedBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -278,9 +316,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     if (!resultImage) return;
     const link = shareUrl ?? 'https://xotiji.app';
     try {
-      const res = await fetch(resultImage);
-      const blob = await res.blob();
-      const file = new File([blob], 'xotiji-space-selfie.jpg', { type: blob.type || 'image/jpeg' });
+      const blob = await getWatermarkedBlob();
+      const file = new File([blob], 'xotiji-space-selfie.jpg', { type: 'image/jpeg' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
@@ -291,8 +328,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
         return;
       }
     } catch (err) {
-      if ((err as Error).name === 'AbortError') return; // user cancelled share sheet
-      // fetch or share failed — fall through to download fallback
+      if ((err as Error).name === 'AbortError') return;
+      // watermark or share failed — fall through to download fallback
     }
     downloadImage();
     window.open('https://www.instagram.com/', '_blank');
@@ -304,9 +341,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     if (!resultImage) return;
     const link = shareUrl ?? 'https://xotiji.app';
     try {
-      const res = await fetch(resultImage);
-      const blob = await res.blob();
-      const file = new File([blob], 'xotiji-space-selfie.jpg', { type: blob.type || 'image/jpeg' });
+      const blob = await getWatermarkedBlob();
+      const file = new File([blob], 'xotiji-space-selfie.jpg', { type: 'image/jpeg' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
@@ -317,8 +353,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
         return;
       }
     } catch (err) {
-      if ((err as Error).name === 'AbortError') return; // user cancelled share sheet
-      // fetch or share failed — fall through to download fallback
+      if ((err as Error).name === 'AbortError') return;
+      // watermark or share failed — fall through to download fallback
     }
     downloadImage();
     window.open('https://www.tiktok.com/', '_blank');
