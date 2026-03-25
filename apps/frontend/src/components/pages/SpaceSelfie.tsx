@@ -457,8 +457,11 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
             <div style={{ color: 'white', fontFamily: 'monospace', fontSize: '14px', fontWeight: 700, letterSpacing: '0.06em', marginBottom: '3px' }}>
               {selectedScene.label}
             </div>
-            <div style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'monospace', fontSize: '10px' }}>
+            <div style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'monospace', fontSize: '10px', marginBottom: '3px' }}>
               EXPLORER ID: {EXPLORER_ID}
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'monospace', fontSize: '10px' }}>
+              xotiji.app
             </div>
           </div>
 
