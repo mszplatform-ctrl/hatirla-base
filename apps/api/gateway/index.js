@@ -56,6 +56,17 @@ const aiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Status polling needs a higher limit: 1 poll/3s for the full 15-min window = 300 requests.
+// Registered before aiLimiter so polling requests don't consume the generative quota.
+const statusLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isProd ? 300 : 3000,
+  message: { error: 'Too many status requests, please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+router.use('/ai/face-swap/status', statusLimiter);
 router.use('/ai', aiLimiter);
 // ============================================
 // 3. REQUEST LOGGING WITH REQUEST ID
