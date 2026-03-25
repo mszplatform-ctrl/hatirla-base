@@ -28,11 +28,6 @@ const TIME_STOPS = [
 
 const EXPLORER_ID = String(Math.floor(1000 + Math.random() * 9000));
 
-interface FaceSwapResult {
-  imageUrl: string;
-  shareUrl: string | null;
-}
-
 interface FaceSwapStatusResponse {
   success: boolean;
   status: 'processing' | 'done' | 'error';
