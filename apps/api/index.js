@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const gateway = require('./gateway');
+const faceSwapJobRepo = require('./data/faceSwapJob.repository');
 
 const app = express();
 app.use(cors({
@@ -41,6 +42,9 @@ const PORT =
 
 app.listen(PORT, () => {
   console.log(`API running on port ${PORT}`);
+  faceSwapJobRepo.initTable().catch(err =>
+    console.error('[Startup] face_swap_jobs table init failed:', err.message)
+  );
 });
 
 // Render kapanırken Prisma bağlantısını düzgün kapat

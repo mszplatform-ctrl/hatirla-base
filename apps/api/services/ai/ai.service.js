@@ -7,18 +7,13 @@ fal.config({ credentials: process.env.FAL_API_KEY });
 
 const { randomUUID } = require('crypto');
 const r2Service = require('../r2.service');
+const faceSwapJobRepo = require('../../data/faceSwapJob.repository');
 
-// ============================================================
-// Job store: jobId → { falRequestId, status, imageUrl, shareUrl, error, createdAt }
-// ============================================================
-const jobStore = new Map();
-
-// Purge entries older than 1 hour, checked every 10 minutes
+// Purge DB rows older than 1 hour, checked every 10 minutes
 setInterval(() => {
-  const cutoff = Date.now() - 60 * 60 * 1000;
-  for (const [jobId, job] of jobStore) {
-    if (job.createdAt < cutoff) jobStore.delete(jobId);
-  }
+  faceSwapJobRepo.deleteExpiredJobs().catch(err =>
+    console.error('[AI Service] TTL cleanup error:', err.message)
+  );
 }, 10 * 60 * 1000).unref();
 
 const packageRepository = require('../../data/package.repository');
@@ -369,7 +364,7 @@ async function submitFaceSwap(userPhotoDataUri, cityId) {
   });
 
   const jobId = randomUUID();
-  jobStore.set(jobId, { falRequestId, status: 'processing', createdAt: Date.now() });
+  await faceSwapJobRepo.createJob(jobId, falRequestId);
   return jobId;
 }
 
@@ -383,10 +378,10 @@ async function submitFaceSwap(userPhotoDataUri, cityId) {
  * @returns {Promise<{status, imageUrl?, shareUrl?, error?}|null>} — null if jobId unknown
  */
 async function getFaceSwapStatus(jobId) {
-  const job = jobStore.get(jobId);
+  const job = await faceSwapJobRepo.getJob(jobId);
   if (!job) return null;
 
-  // Return cached result for terminal states
+  // Return persisted result for terminal states — no fal call needed
   if (job.status === 'done' || job.status === 'error') {
     return {
       status: job.status,
@@ -421,16 +416,12 @@ async function getFaceSwapStatus(jobId) {
       console.error('[AI Service] R2 upload failed (non-fatal):', uploadErr.message);
     }
 
-    job.status = 'done';
-    job.imageUrl = imageUrl;
-    job.shareUrl = shareUrl;
-
+    await faceSwapJobRepo.updateJob(jobId, { status: 'done', imageUrl, shareUrl });
     return { status: 'done', imageUrl, shareUrl };
   }
 
   if (falStatus.status === 'FAILED') {
-    job.status = 'error';
-    job.error = 'Image generation failed';
+    await faceSwapJobRepo.updateJob(jobId, { status: 'error', error: 'Image generation failed' });
     return { status: 'error', error: 'Image generation failed' };
   }
 
