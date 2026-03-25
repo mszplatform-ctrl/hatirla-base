@@ -29,22 +29,38 @@ const TIME_STOPS = [
 const EXPLORER_ID = String(Math.floor(1000 + Math.random() * 9000));
 
 interface FaceSwapResult {
-  image: string;
+  imageUrl: string;
   shareUrl: string | null;
 }
 
-function callFaceSwap(photo: string, sceneId: string): Promise<FaceSwapResult> {
-  return fetch(`${AI_BASE}/face-swap`, {
+interface FaceSwapStatusResponse {
+  success: boolean;
+  status: 'processing' | 'done' | 'error';
+  imageUrl?: string;
+  shareUrl?: string | null;
+  error?: string;
+}
+
+async function submitFaceSwap(photo: string, sceneId: string): Promise<string> {
+  const res = await fetch(`${AI_BASE}/face-swap`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ photo, cityId: sceneId }),
-  }).then(res =>
-    res.json().then((data: { success: boolean; image?: string; shareUrl?: string | null; error?: string }) => {
-      if (!res.ok || data.success === false) throw new Error(`Transmission failed: ${data.error || `Server error ${res.status}`}`);
-      if (!data.image) throw new Error('No image in response');
-      return { image: data.image, shareUrl: data.shareUrl ?? null };
-    })
-  );
+  });
+  const data = await res.json() as { success: boolean; jobId?: string; error?: string };
+  if (!res.ok || !data.success || !data.jobId) {
+    throw new Error(`Submission failed: ${data.error || `Server error ${res.status}`}`);
+  }
+  return data.jobId;
+}
+
+async function pollFaceSwapStatus(jobId: string): Promise<FaceSwapStatusResponse> {
+  const res = await fetch(`${AI_BASE}/face-swap/status/${jobId}`);
+  const data = await res.json() as FaceSwapStatusResponse;
+  if (!res.ok || !data.success) {
+    throw new Error(`Status check failed: ${(data as { error?: string }).error || `Server error ${res.status}`}`);
+  }
+  return data;
 }
 
 interface SpaceSelfieProps {
@@ -62,7 +78,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [fromTimeTeleport, setFromTimeTeleport] = useState(false);
   const [videoBuffering, setVideoBuffering] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const apiPromiseRef    = useRef<Promise<FaceSwapResult> | null>(null);
+  const pollIntervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const bufferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef     = useRef<HTMLInputElement>(null);
@@ -71,6 +87,13 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [videoMuted, setVideoMuted] = useState(true);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(() => new Set());
   const markLoaded = useCallback((id: string) => setLoadedImages(prev => { const s = new Set(prev); s.add(id); return s; }), []);
+
+  // Clear poll interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, []);
 
   // Buffer timeout: on mobile show spinner immediately; on desktop after 3s without onPlaying
   useEffect(() => {
@@ -132,25 +155,47 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     }
   }
 
-  function handleLaunch() {
+  async function handleLaunch() {
     if (!selectedScene || !userPhoto) return;
-    const promise = callFaceSwap(userPhoto, selectedScene.id);
-    apiPromiseRef.current = promise;
-
-    // Both paths: show loading first, then transition
     setFlowStep('loading');
-    promise
-      .then(({ image, shareUrl: url }) => {
-        setResultImage(image);
-        setShareUrl(url);
-        // Time teleport: play video after API resolves, then result immediately on end
-        // City: go straight to result (no video)
-        setFlowStep(fromTimeTeleport ? 'teleport-video' : 'result');
-      })
-      .catch(err => {
+
+    let jobId: string;
+    try {
+      jobId = await submitFaceSwap(userPhoto, selectedScene.id);
+    } catch (err) {
+      setErrorMsg((err as Error).message || 'Submission failed');
+      setFlowStep('photo-modal');
+      return;
+    }
+
+    // Capture for closure — does not change while polling
+    const teleport = fromTimeTeleport;
+
+    pollIntervalRef.current = setInterval(async () => {
+      try {
+        const result = await pollFaceSwapStatus(jobId);
+        if (result.status === 'done') {
+          clearInterval(pollIntervalRef.current!);
+          pollIntervalRef.current = null;
+          setResultImage(result.imageUrl!);
+          setShareUrl(result.shareUrl ?? null);
+          // Time teleport: play video first, then result on end
+          // City: go straight to result (no video)
+          setFlowStep(teleport ? 'teleport-video' : 'result');
+        } else if (result.status === 'error') {
+          clearInterval(pollIntervalRef.current!);
+          pollIntervalRef.current = null;
+          setErrorMsg(result.error || 'Transmission failed');
+          setFlowStep('photo-modal');
+        }
+        // 'processing' → keep polling
+      } catch (err) {
+        clearInterval(pollIntervalRef.current!);
+        pollIntervalRef.current = null;
         setErrorMsg((err as Error).message || 'Transmission failed');
         setFlowStep('photo-modal');
-      });
+      }
+    }, 3000);
   }
 
   function showToast(msg: string) {
@@ -169,27 +214,49 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setFromTimeTeleport(false);
     setVideoBuffering(false);
     setToastMsg(null);
+    if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
     if (bufferTimeoutRef.current) clearTimeout(bufferTimeoutRef.current);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    apiPromiseRef.current = null;
   }
 
-  function handleDownload() {
+  async function handleDownload() {
     if (!resultImage || !selectedScene) return;
-    const a = document.createElement('a');
-    a.href = resultImage;
-    a.download = `xotiji-space-selfie-${selectedScene.id}.png`;
-    a.click();
+    try {
+      const res = await fetch(resultImage);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `xotiji-space-selfie-${selectedScene.id}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      const a = document.createElement('a');
+      a.href = resultImage;
+      a.download = `xotiji-space-selfie-${selectedScene.id}.png`;
+      a.click();
+    }
   }
 
   const tagline = 'My cosmic travel identity was generated by XOTIJI — xotiji.app';
 
-  function downloadImage() {
+  async function downloadImage() {
     if (!resultImage) return;
-    const link = document.createElement('a');
-    link.href = resultImage;
-    link.download = 'xotiji-transmission.jpg';
-    link.click();
+    try {
+      const res = await fetch(resultImage);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'xotiji-transmission.jpg';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      const link = document.createElement('a');
+      link.href = resultImage;
+      link.download = 'xotiji-transmission.jpg';
+      link.click();
+    }
   }
 
   function handleShareInstagram() {

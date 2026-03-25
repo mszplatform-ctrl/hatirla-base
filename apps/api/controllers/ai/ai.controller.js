@@ -4,7 +4,6 @@
  */
 
 const aiService = require('../../services/ai/ai.service');
-const r2Service = require('../../services/r2.service');
 
 // ✅ DOĞRU PATH’LER (SRC ALTINDAN)
 const { composeSchema } = require('../../src/validation/compose.schema');
@@ -76,27 +75,36 @@ class AIController {
 
   /**
    * POST /api/ai/face-swap
+   * Enqueues a face-swap job and returns jobId immediately.
    */
-  async faceSwap(req, res) {
+  async submitFaceSwap(req, res) {
     try {
       const { photo, cityId } = req.body;
       if (!photo || !cityId) {
         return res.status(400).json({ success: false, error: 'photo and cityId are required' });
       }
-      const image = await aiService.faceSwap(photo, cityId);
-
-      let shareUrl = null;
-      try {
-        const shareId = crypto.randomUUID();
-        await r2Service.uploadImage(image, shareId);
-        shareUrl = `https://xotiji.app/s/${shareId}`;
-      } catch (uploadErr) {
-        console.error('[AI Controller] R2 upload failed (non-fatal):', uploadErr.message);
-      }
-
-      res.json({ success: true, image, shareUrl });
+      const jobId = await aiService.submitFaceSwap(photo, cityId);
+      res.status(202).json({ success: true, jobId });
     } catch (error) {
-      console.error('[AI Controller] Face swap error:', error.message);
+      console.error('[AI Controller] Submit face-swap error:', error.message);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/ai/face-swap/status/:jobId
+   * Returns current job status; imageUrl is a fal CDN URL when done.
+   */
+  async getFaceSwapStatus(req, res) {
+    try {
+      const { jobId } = req.params;
+      const result = await aiService.getFaceSwapStatus(jobId);
+      if (!result) {
+        return res.status(404).json({ success: false, error: 'Job not found' });
+      }
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error('[AI Controller] Face-swap status error:', error.message);
       res.status(500).json({ success: false, error: error.message });
     }
   }

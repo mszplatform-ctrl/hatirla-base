@@ -21,7 +21,8 @@ router.get('/suggestions', aiController.getSuggestions);
 // WRITE PATH → create package
 router.post('/compose', aiController.composePackage);
 
-// AI face swap via fal.ai flux-pro/kontext
-router.post('/face-swap', aiController.faceSwap);
+// AI face swap via fal.ai flux-pro/kontext (async polling)
+router.post('/face-swap', aiController.submitFaceSwap);
+router.get('/face-swap/status/:jobId', aiController.getFaceSwapStatus);
 
 module.exports = router;

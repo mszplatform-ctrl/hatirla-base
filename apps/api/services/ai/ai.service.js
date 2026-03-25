@@ -5,6 +5,22 @@
 const { fal } = require('@fal-ai/client');
 fal.config({ credentials: process.env.FAL_API_KEY });
 
+const { randomUUID } = require('crypto');
+const r2Service = require('../r2.service');
+
+// ============================================================
+// Job store: jobId → { falRequestId, status, imageUrl, shareUrl, error, createdAt }
+// ============================================================
+const jobStore = new Map();
+
+// Purge entries older than 1 hour, checked every 10 minutes
+setInterval(() => {
+  const cutoff = Date.now() - 60 * 60 * 1000;
+  for (const [jobId, job] of jobStore) {
+    if (job.createdAt < cutoff) jobStore.delete(jobId);
+  }
+}, 10 * 60 * 1000).unref();
+
 const packageRepository = require('../../data/package.repository');
 const { composeSchema } = require('../../src/validation/compose.schema');
 // ✅ AI BRIDGE (Stage 4.5)
@@ -331,26 +347,95 @@ function pickPrompt(sceneId) {
  * @param {string} cityId            — e.g. "istanbul", "mars", "ancient_egypt"
  * @returns {Promise<string>}        — result image as a base64 data URI
  */
-async function faceSwap(userPhotoDataUri, cityId) {
+/**
+ * POST /api/ai/face-swap
+ * Submits image generation job to fal.ai queue.
+ * Returns jobId immediately; client polls /status/:jobId.
+ *
+ * @param {string} userPhotoDataUri  — data:image/jpeg;base64,...
+ * @param {string} cityId            — e.g. "istanbul", "future"
+ * @returns {Promise<string>}        — jobId (our UUID)
+ */
+async function submitFaceSwap(userPhotoDataUri, cityId) {
   if (!process.env.FAL_API_KEY) throw new Error('FAL_API_KEY not configured');
 
   const prompt = pickPrompt(cityId);
 
-  const result = await fal.subscribe('fal-ai/flux-pro/kontext', {
+  const { request_id: falRequestId } = await fal.queue.submit('fal-ai/flux-pro/kontext', {
     input: {
       prompt,
       image_url: userPhotoDataUri,
     },
-    logs: true,
   });
 
-  const outputUrl = result.data.images[0].url;
+  const jobId = randomUUID();
+  jobStore.set(jobId, { falRequestId, status: 'processing', createdAt: Date.now() });
+  return jobId;
+}
 
-  const imgRes = await fetch(outputUrl);
-  const buffer = await imgRes.arrayBuffer();
-  const contentType = imgRes.headers.get('content-type') || 'image/png';
-  const base64 = Buffer.from(buffer).toString('base64');
-  return `data:${contentType};base64,${base64}`;
+/**
+ * GET /api/ai/face-swap/status/:jobId
+ * Polls fal.ai queue for job completion.
+ * On first COMPLETED poll: fetches result URL, uploads to R2 (non-fatal), caches in jobStore.
+ * Subsequent polls for done/error jobs return the cached entry without calling fal.
+ *
+ * @param {string} jobId
+ * @returns {Promise<{status, imageUrl?, shareUrl?, error?}|null>} — null if jobId unknown
+ */
+async function getFaceSwapStatus(jobId) {
+  const job = jobStore.get(jobId);
+  if (!job) return null;
+
+  // Return cached result for terminal states
+  if (job.status === 'done' || job.status === 'error') {
+    return {
+      status: job.status,
+      imageUrl: job.imageUrl,
+      shareUrl: job.shareUrl,
+      error: job.error,
+    };
+  }
+
+  const falStatus = await fal.queue.status('fal-ai/flux-pro/kontext', {
+    requestId: job.falRequestId,
+  });
+
+  if (falStatus.status === 'COMPLETED') {
+    const result = await fal.queue.result('fal-ai/flux-pro/kontext', {
+      requestId: job.falRequestId,
+    });
+
+    const imageUrl = result.data.images[0].url; // fal CDN URL returned directly
+
+    // Non-fatal R2 upload: fetch CDN URL to get bytes for uploadImage
+    let shareUrl = null;
+    try {
+      const shareId = randomUUID();
+      const imgRes = await fetch(imageUrl);
+      const buffer = await imgRes.arrayBuffer();
+      const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+      const base64 = Buffer.from(buffer).toString('base64');
+      await r2Service.uploadImage(`data:${contentType};base64,${base64}`, shareId);
+      shareUrl = `https://xotiji.app/s/${shareId}`;
+    } catch (uploadErr) {
+      console.error('[AI Service] R2 upload failed (non-fatal):', uploadErr.message);
+    }
+
+    job.status = 'done';
+    job.imageUrl = imageUrl;
+    job.shareUrl = shareUrl;
+
+    return { status: 'done', imageUrl, shareUrl };
+  }
+
+  if (falStatus.status === 'FAILED') {
+    job.status = 'error';
+    job.error = 'Image generation failed';
+    return { status: 'error', error: 'Image generation failed' };
+  }
+
+  // IN_QUEUE or IN_PROGRESS
+  return { status: 'processing' };
 }
 
 module.exports = {
@@ -358,6 +443,7 @@ module.exports = {
   composePackage,
   getSuggestions,
   generateSuggestions,
-  faceSwap,
+  submitFaceSwap,
+  getFaceSwapStatus,
 };
 
