@@ -7,6 +7,7 @@ const gateway = require('./gateway');
 const faceSwapJobRepo = require('./data/faceSwapJob.repository');
 
 const app = express();
+app.set('trust proxy', 1); // Render sits behind a reverse proxy; required for correct req.ip in rate limiting
 app.use(cors({
   origin: [
     'https://xotiji.app',

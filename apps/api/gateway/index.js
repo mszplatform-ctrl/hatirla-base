@@ -51,7 +51,7 @@ router.use(limiter);
 
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isProd ? 10 : 100,
+  max: isProd ? 50 : 500,
   message: { error: 'Too many AI requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
