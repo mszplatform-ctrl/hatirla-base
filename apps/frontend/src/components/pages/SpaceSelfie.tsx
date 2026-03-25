@@ -648,20 +648,18 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
       {/* Select screen content */}
       {flowStep === 'select' && (
         <div style={{ padding: '28px 24px 60px', maxWidth: '860px', margin: '0 auto' }}>
-          <h2 style={{ color: 'white', textAlign: 'center', margin: '0 0 8px', fontSize: '22px', fontWeight: 700 }}>
-            {t('spaceSelfie.step1Title')}
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 28px', fontSize: '14px' }}>
+          {/* Time & Space Teleport section label */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
+            <span style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>⏱ TIME &amp; SPACE TELEPORT</span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', margin: '0 0 16px', fontSize: '13px' }}>
             {t('spaceSelfie.selectEraPrompt')}
           </p>
 
           {/* Unified Timeline */}
           <div style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(45,212,191,0.2)', borderRadius: '20px', padding: '24px 20px', marginBottom: '36px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
-              <span style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>⏳ TIME &amp; SPACE TELEPORT</span>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
-            </div>
 
             {/* Dot timeline */}
             <div style={{ position: 'relative', marginBottom: '4px' }}>
