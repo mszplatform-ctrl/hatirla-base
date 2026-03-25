@@ -73,7 +73,9 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [fromTimeTeleport, setFromTimeTeleport] = useState(false);
   const [videoBuffering, setVideoBuffering] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
   const pollIntervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const elapsedTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const bufferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef     = useRef<HTMLInputElement>(null);
@@ -83,10 +85,11 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   const [loadedImages, setLoadedImages] = useState<Set<string>>(() => new Set());
   const markLoaded = useCallback((id: string) => setLoadedImages(prev => { const s = new Set(prev); s.add(id); return s; }), []);
 
-  // Clear poll interval on unmount
+  // Clear poll interval and elapsed timer on unmount
   useEffect(() => {
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current);
     };
   }, []);
 
@@ -166,27 +169,35 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     // Capture for closure — does not change while polling
     const teleport = fromTimeTeleport;
 
+    // Elapsed seconds counter — ticks every second while polling
+    setElapsed(0);
+    elapsedTimerRef.current = setInterval(() => {
+      setElapsed(prev => prev + 1);
+    }, 1000);
+
+    const stopTimers = () => {
+      clearInterval(pollIntervalRef.current!); pollIntervalRef.current = null;
+      clearInterval(elapsedTimerRef.current!); elapsedTimerRef.current = null;
+    };
+
     pollIntervalRef.current = setInterval(async () => {
       try {
         const result = await pollFaceSwapStatus(jobId);
         if (result.status === 'done') {
-          clearInterval(pollIntervalRef.current!);
-          pollIntervalRef.current = null;
+          stopTimers();
           setResultImage(result.imageUrl!);
           setShareUrl(result.shareUrl ?? null);
           // Time teleport: play video first, then result on end
           // City: go straight to result (no video)
           setFlowStep(teleport ? 'teleport-video' : 'result');
         } else if (result.status === 'error') {
-          clearInterval(pollIntervalRef.current!);
-          pollIntervalRef.current = null;
+          stopTimers();
           setErrorMsg(result.error || 'Transmission failed');
           setFlowStep('photo-modal');
         }
         // 'processing' → keep polling
       } catch (err) {
-        clearInterval(pollIntervalRef.current!);
-        pollIntervalRef.current = null;
+        stopTimers();
         setErrorMsg((err as Error).message || 'Transmission failed');
         setFlowStep('photo-modal');
       }
@@ -210,8 +221,17 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
     setVideoBuffering(false);
     setToastMsg(null);
     if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
+    if (elapsedTimerRef.current) { clearInterval(elapsedTimerRef.current); elapsedTimerRef.current = null; }
+    setElapsed(0);
     if (bufferTimeoutRef.current) clearTimeout(bufferTimeoutRef.current);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+  }
+
+  function handleCancel() {
+    if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
+    if (elapsedTimerRef.current) { clearInterval(elapsedTimerRef.current); elapsedTimerRef.current = null; }
+    setElapsed(0);
+    setFlowStep('photo-modal'); // keep photo + scene so user can retry without re-uploading
   }
 
   async function handleDownload() {
@@ -336,9 +356,10 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   // ── Loading: full-screen ──
   if (flowStep === 'loading') {
-    const loadingLabel = fromTimeTeleport
-      ? (getLang() === 'tr' ? 'IŞINLANIYOR...' : 'TELEPORTING...')
-      : 'PROCESSING...';
+    const phaseLabel = elapsed < 15 ? t('spaceSelfie.loadingPhase1')
+                     : elapsed < 45 ? t('spaceSelfie.loadingPhase2')
+                     : elapsed < 90 ? t('spaceSelfie.loadingPhase3')
+                     :                t('spaceSelfie.loadingPhase4');
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
         {/* Blurred user photo background */}
@@ -349,13 +370,27 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(24px) brightness(0.22)', transform: 'scale(1.12)' }}
           />
         )}
-        {/* Spinner + label */}
+        {/* Spinner + phase label + elapsed counter */}
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           <div style={{ width: '40px', height: '40px', border: '3px solid rgba(45,212,191,0.2)', borderTop: '3px solid #2dd4bf', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
-          <div style={{ color: 'rgba(45,212,191,0.75)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.18em' }}>{loadingLabel}</div>
+          <div style={{ color: 'rgba(45,212,191,0.75)', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.18em' }}>{phaseLabel}</div>
+          <div style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.12em' }}>{elapsed}s</div>
+          <button
+            onClick={handleCancel}
+            style={{
+              marginTop: '8px',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              color: 'rgba(255,255,255,0.45)',
+              fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.1em',
+              padding: '8px 20px', borderRadius: '999px', cursor: 'pointer',
+            }}
+          >
+            ✕ {t('spaceSelfie.cancel')}
+          </button>
         </div>
-        {/* Preload teleport video in background while API call is in-flight */}
+        {/* Preload teleport video in background while polling */}
         {fromTimeTeleport && <video src="/teleport.mp4" preload="auto" style={{ display: 'none' }} />}
       </div>
     );
