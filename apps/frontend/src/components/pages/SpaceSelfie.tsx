@@ -652,7 +652,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
             {t('spaceSelfie.step1Title')}
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 28px', fontSize: '14px' }}>
-            {t('spaceSelfie.selectCityPrompt')}
+            {t('spaceSelfie.selectEraPrompt')}
           </p>
 
           {/* Unified Timeline */}
@@ -733,11 +733,14 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
           </div>
 
           {/* City Selfie section label */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
             <div style={{ flex: 1, height: '1px', background: 'rgba(14,165,233,0.15)' }} />
             <span style={{ color: '#0ea5e9', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>🌍 CITY SELFIE</span>
             <div style={{ flex: 1, height: '1px', background: 'rgba(14,165,233,0.15)' }} />
           </div>
+          <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', margin: '0 0 16px', fontSize: '13px' }}>
+            {t('spaceSelfie.selectCityPrompt')}
+          </p>
 
           {/* City grid */}
           <style>{`@keyframes cityskel { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }`}</style>
