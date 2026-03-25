@@ -214,7 +214,7 @@ export function CinematicIntro({ onComplete, fastComplete }: Props) {
               >
                 ›
               </span>
-              {line}
+              <span>{line}</span>
             </div>
           ))}
 
@@ -230,7 +230,7 @@ export function CinematicIntro({ onComplete, fastComplete }: Props) {
               >
                 ›
               </span>
-              {currentLine}
+              <span>{currentLine}</span>
               <span
                 style={{
                   display: "inline-block",
@@ -263,7 +263,7 @@ export function CinematicIntro({ onComplete, fastComplete }: Props) {
               backgroundClip: "text",
             }}
           >
-            {t("intro.tagline")}
+            <span>{t("intro.tagline")}</span>
           </div>
         )}
 
@@ -290,7 +290,7 @@ export function CinematicIntro({ onComplete, fastComplete }: Props) {
               transition: "background 0.2s ease",
             }}
           >
-            {t("intro.button")}
+            <span>{t("intro.button")}</span>
           </button>
         )}
 
@@ -307,7 +307,7 @@ export function CinematicIntro({ onComplete, fastComplete }: Props) {
             }}
           >
             <span style={{ color: "#2dd4bf", marginRight: "10px" }}>›</span>
-            {t("intro.initiated")}
+            <span>{t("intro.initiated")}</span>
           </div>
         )}
       </div>
