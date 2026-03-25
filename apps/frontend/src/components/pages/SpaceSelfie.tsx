@@ -655,41 +655,8 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
             {t('spaceSelfie.selectCityPrompt')}
           </p>
 
-          {/* City grid */}
-          <style>{`@keyframes cityskel { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }`}</style>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))', gap: '16px', marginBottom: '36px' }}>
-            {CITIES.map(city => (
-              <button
-                key={city.id}
-                onClick={() => handleCitySelect(city)}
-                style={{
-                  position: 'relative', height: '168px', borderRadius: '18px', overflow: 'hidden',
-                  border: '2px solid rgba(255,255,255,0.12)', cursor: 'pointer', padding: 0,
-                  background: '#0c1929',
-                  transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(14,165,233,0.35)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)';    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
-              >
-                {/* Skeleton — fades out once the image loads */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(15,23,42,0.6) 100%)', animation: loadedImages.has(city.id) ? 'none' : 'cityskel 1.6s ease-in-out infinite', opacity: loadedImages.has(city.id) ? 0 : 1, transition: 'opacity 0.3s ease' }} />
-                <img
-                  src={city.image}
-                  alt={city.label}
-                  loading="lazy"
-                  onLoad={() => markLoaded(city.id)}
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: loadedImages.has(city.id) ? 1 : 0, transition: 'opacity 0.3s ease' }}
-                />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.05) 55%)' }} />
-                <div style={{ position: 'absolute', bottom: '14px', left: 0, right: 0, color: 'white', fontWeight: 700, fontSize: '13px', textAlign: 'center', textShadow: '0 1px 6px rgba(0,0,0,0.8)', letterSpacing: '0.04em', fontFamily: 'monospace' }}>
-                  {city.label}
-                </div>
-              </button>
-            ))}
-          </div>
-
           {/* Unified Timeline */}
-          <div style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(45,212,191,0.2)', borderRadius: '20px', padding: '24px 20px' }}>
+          <div style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(45,212,191,0.2)', borderRadius: '20px', padding: '24px 20px', marginBottom: '36px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
               <div style={{ flex: 1, height: '1px', background: 'rgba(45,212,191,0.15)' }} />
               <span style={{ color: '#2dd4bf', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>⏳ TIME &amp; SPACE TELEPORT</span>
@@ -763,6 +730,46 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
                 );
               })()}
             </div>
+          </div>
+
+          {/* City Selfie section label */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(14,165,233,0.15)' }} />
+            <span style={{ color: '#0ea5e9', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>🌍 CITY SELFIE</span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(14,165,233,0.15)' }} />
+          </div>
+
+          {/* City grid */}
+          <style>{`@keyframes cityskel { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }`}</style>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))', gap: '16px' }}>
+            {CITIES.map(city => (
+              <button
+                key={city.id}
+                onClick={() => handleCitySelect(city)}
+                style={{
+                  position: 'relative', height: '168px', borderRadius: '18px', overflow: 'hidden',
+                  border: '2px solid rgba(255,255,255,0.12)', cursor: 'pointer', padding: 0,
+                  background: '#0c1929',
+                  transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(14,165,233,0.35)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)';    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                {/* Skeleton — fades out once the image loads */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(15,23,42,0.6) 100%)', animation: loadedImages.has(city.id) ? 'none' : 'cityskel 1.6s ease-in-out infinite', opacity: loadedImages.has(city.id) ? 0 : 1, transition: 'opacity 0.3s ease' }} />
+                <img
+                  src={city.image}
+                  alt={city.label}
+                  loading="lazy"
+                  onLoad={() => markLoaded(city.id)}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: loadedImages.has(city.id) ? 1 : 0, transition: 'opacity 0.3s ease' }}
+                />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.05) 55%)' }} />
+                <div style={{ position: 'absolute', bottom: '14px', left: 0, right: 0, color: 'white', fontWeight: 700, fontSize: '13px', textAlign: 'center', textShadow: '0 1px 6px rgba(0,0,0,0.8)', letterSpacing: '0.04em', fontFamily: 'monospace' }}>
+                  {city.label}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       )}
