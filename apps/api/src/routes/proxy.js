@@ -1,13 +1,18 @@
 const express = require('express');
 const router = express.Router();
 
-// Allowlist: only proxy images from trusted CDN domains
-const ALLOWED_HOSTS = [
-  'cdn.fal.ai',
-  'fal.media',
+// Allowlist: any subdomain of these trusted domains is permitted
+const ALLOWED_SUFFIXES = [
+  'fal.media',   // covers v3.fal.media, storage.v3.fal.media, cdn.fal.media, etc.
+  'fal.ai',      // covers cdn.fal.ai, etc.
   'storage.googleapis.com',
-  'v3.fal.media',
 ];
+
+function isAllowedHost(hostname) {
+  return ALLOWED_SUFFIXES.some(
+    suffix => hostname === suffix || hostname.endsWith('.' + suffix)
+  );
+}
 
 // GET /api/proxy-image?url=<encodedUrl>
 router.get('/', async (req, res) => {
@@ -24,7 +29,8 @@ router.get('/', async (req, res) => {
     return res.status(400).json({ error: 'Invalid url' });
   }
 
-  if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
+  if (!isAllowedHost(parsed.hostname)) {
+    console.error('[proxy-image] Blocked host:', parsed.hostname, 'url:', url);
     return res.status(403).json({ error: 'Host not allowed' });
   }
 
