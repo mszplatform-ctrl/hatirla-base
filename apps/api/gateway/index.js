@@ -117,6 +117,7 @@ router.use('/ai', require('../src/routes/ai'));
 router.use('/data', require('../src/routes/data'));
 router.use('/user', require('../src/routes/user'));
 router.use('/share', require('../src/routes/share.routes'));
+router.use('/proxy-image', require('../src/routes/proxy'));
 
 // Legacy mock routes disabled
 // router.use('/auth', require('../routes/auth'));
