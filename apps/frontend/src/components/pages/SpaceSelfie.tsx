@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { t, getLang } from '../../i18n';
 import type { SelectedScene } from './CinematicSequence';
 
+declare function gtag(...args: unknown[]): void;
+
 const API_BASE = import.meta.env.VITE_API_URL || 'https://hatirla-base.onrender.com';
 const AI_BASE = `${API_BASE}/api/ai`;
 
@@ -123,6 +125,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   function handleTimeSelect() {
     const stop = TIME_STOPS[timeStopIndex];
+    gtag('event', 'teleport_start', { era: stop.era });
     setFromTimeTeleport(true);
     openPhotoModal({
       id: stop.id, image: '', label: stop.era.toUpperCase(),
@@ -156,6 +159,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   async function handleLaunch() {
     if (!selectedScene || !userPhoto) return;
+    if (!fromTimeTeleport) gtag('event', 'space_selfie_start', { city: selectedScene.id });
     setFlowStep('loading');
 
     let jobId: string;
@@ -190,6 +194,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
           setShareUrl(result.shareUrl ?? null);
           // Time teleport: play video first, then result on end
           // City: go straight to result (no video)
+          if (!teleport) gtag('event', 'space_selfie_complete', { city: selectedScene?.id });
           setFlowStep(teleport ? 'teleport-video' : 'result');
         } else if (result.status === 'error') {
           stopTimers();
@@ -279,6 +284,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   async function handleDownload() {
     if (!resultImage || !selectedScene) return;
+    gtag('event', 'share_click', { platform: 'save' });
     const blob = await getWatermarkedBlob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -303,6 +309,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   async function handleShareInstagram() {
     if (!resultImage) return;
+    gtag('event', 'share_click', { platform: 'instagram' });
     const link = shareUrl ?? 'https://xotiji.app';
     try {
       const blob = await getWatermarkedBlob();
@@ -328,6 +335,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
 
   async function handleShareTikTok() {
     if (!resultImage) return;
+    gtag('event', 'share_click', { platform: 'tiktok' });
     const link = shareUrl ?? 'https://xotiji.app';
     try {
       const blob = await getWatermarkedBlob();
@@ -352,12 +360,14 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
   }
 
   function handleShareX() {
+    gtag('event', 'share_click', { platform: 'twitter' });
     const link = shareUrl ?? 'https://xotiji.app';
     const text = `🚀 COSMIC IDENTITY GENERATED — ${selectedScene?.label ?? ''} ✨ ${tagline} #XOTIJI #SpaceSelfie`;
     window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(link)}`, '_blank');
   }
 
   function handleShareWhatsApp() {
+    gtag('event', 'share_click', { platform: 'whatsapp' });
     const link = shareUrl ?? 'https://xotiji.app';
     const text = `🚀 ${selectedScene?.label ?? ''} — Cosmic identity generated! ${tagline} ${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
@@ -384,7 +394,7 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
               setVideoMuted(videoRef.current.muted);
             }
           }}
-          onEnded={() => setFlowStep('result')}
+          onEnded={() => { gtag('event', 'teleport_complete', { era: selectedScene?.era }); setFlowStep('result'); }}
         />
         {videoBuffering && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
