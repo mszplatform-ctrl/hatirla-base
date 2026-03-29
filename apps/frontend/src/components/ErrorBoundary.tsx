@@ -2,6 +2,8 @@ import { Component, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
+  /** Optional custom fallback UI. If omitted the full-page error screen is shown. */
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -20,6 +22,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback !== undefined) {
+        return this.props.fallback;
+      }
       return (
         <div style={{
           minHeight: '100vh',
