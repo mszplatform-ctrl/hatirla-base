@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { t, getLang } from '../../i18n';
 import type { SelectedScene } from './CinematicSequence';
+import { MagicMirror } from '../MagicMirror';
 
 declare function gtag(...args: unknown[]): void;
 
@@ -805,6 +806,17 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
               })()}
             </div>
           </div>
+
+          {/* Magic Mirror section label */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(167,139,250,0.15)' }} />
+            <span style={{ color: '#a78bfa', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>🪞 MAGIC MIRROR</span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(167,139,250,0.15)' }} />
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', margin: '0 0 16px', fontSize: '13px' }}>
+            Warp your face, break the mirror
+          </p>
+          <MagicMirror />
 
           {/* City Selfie section label */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
