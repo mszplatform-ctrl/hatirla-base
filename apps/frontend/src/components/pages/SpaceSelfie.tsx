@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { t, getLang } from '../../i18n';
 import type { SelectedScene } from './CinematicSequence';
-import { ErrorBoundary } from '../ErrorBoundary';
 
 declare function gtag(...args: unknown[]): void;
 
