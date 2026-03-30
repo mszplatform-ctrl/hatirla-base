@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { t, getLang } from '../../i18n';
 import type { SelectedScene } from './CinematicSequence';
-import { MagicMirror } from '../MagicMirror';
 import { ErrorBoundary } from '../ErrorBoundary';
 
 declare function gtag(...args: unknown[]): void;
@@ -807,28 +806,6 @@ export function SpaceSelfie({ onBack }: SpaceSelfieProps) {
               })()}
             </div>
           </div>
-
-          {/* Magic Mirror section label */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(167,139,250,0.15)' }} />
-            <span style={{ color: '#a78bfa', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em' }}>🪞 MAGIC MIRROR</span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(167,139,250,0.15)' }} />
-          </div>
-          <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', margin: '0 0 16px', fontSize: '13px' }}>
-            Warp your face, break the mirror
-          </p>
-          <ErrorBoundary fallback={
-            <div style={{
-              background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(167,139,250,0.2)',
-              borderRadius: '20px', padding: '28px 20px', marginBottom: '36px',
-              textAlign: 'center', color: 'rgba(167,139,250,0.45)',
-              fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.1em',
-            }}>
-              ⚠ Face detection unavailable — try a different browser
-            </div>
-          }>
-            <MagicMirror />
-          </ErrorBoundary>
 
           {/* City Selfie section label */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
