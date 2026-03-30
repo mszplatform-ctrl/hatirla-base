@@ -148,6 +148,9 @@ function displaceLandmarks(
 // ─────────────────────────────────────────────────────────────────────────────
 // WebGL distortion engine
 //
+// onDebug receives short key=value tokens that are surfaced in the UI so we
+// can see exactly where the pipeline is succeeding or failing in-browser.
+//
 // Pass 1 — draw the full source image as an unwarped background quad.
 // Pass 2 — draw face-mesh triangles with displaced vertex positions (warped)
 //           and per-vertex alpha blending at the boundary.
@@ -158,16 +161,43 @@ function applyDistortionWebGL(
   img: HTMLImageElement,
   landmarks: Landmark[],
   mode: MirrorMode,
+  onDebug: (msg: string) => void,
 ): HTMLCanvasElement {
   const w = img.naturalWidth;
   const h = img.naturalHeight;
 
+  // Cap at 2048 — some mobile browsers reject WebGL textures larger than this
+  const capW = Math.min(w, 2048);
+  const capH = Math.min(h, 2048);
+  onDebug(`src=${w}×${h} cap=${capW}×${capH}`);
+
+  // Draw to an intermediate 2D canvas first:
+  //   • avoids SecurityError on any CORS-tainted HTMLImageElement
+  //   • scales the image down to the capped size in one step
+  const srcCanvas = document.createElement('canvas');
+  srcCanvas.width  = capW;
+  srcCanvas.height = capH;
+  srcCanvas.getContext('2d')!.drawImage(img, 0, 0, capW, capH);
+
+  // Log FACEMESH_TRIANGLES availability before touching WebGL
+  const win = window as unknown as Record<string, unknown>;
+  const rawTris = win['FACEMESH_TRIANGLES'];
+  const trisDesc =
+    rawTris === undefined                ? 'undefined' :
+    rawTris === null                     ? 'null' :
+    rawTris instanceof Uint32Array       ? `Uint32Array(${rawTris.length})` :
+    Array.isArray(rawTris)               ? `Array(${(rawTris as unknown[]).length})` :
+                                           typeof rawTris;
+  onDebug(`FACEMESH_TRIANGLES=${trisDesc}`);
+
   const canvas = document.createElement('canvas');
-  canvas.width  = w;
-  canvas.height = h;
+  canvas.width  = capW;
+  canvas.height = capH;
 
   // ── WebGL context ────────────────────────────────────────────────────
   const gl = canvas.getContext('webgl') as WebGLRenderingContext | null;
+  onDebug(`webgl=${gl ? 'OK' : 'FAILED'}`);
+
   if (!gl) {
     console.warn('[MagicMirror] WebGL unavailable — using 2D canvas fallback');
     const ctx = canvas.getContext('2d')!;
@@ -177,14 +207,15 @@ function applyDistortionWebGL(
 
   try {
     const triangles = getFaceMeshTriangles();
-    const displaced = displaceLandmarks(landmarks, mode, w, h);
+    onDebug(`tris=${triangles.length}`);
+    const displaced = displaceLandmarks(landmarks, mode, capW, capH);
 
     // ── Shaders ──────────────────────────────────────────────────────
     // Convention (UNPACK_FLIP_Y_WEBGL = true):
     //   srcU = lm.x (0=left … 1=right, direct)
     //   srcV = 1 − lm.y (0=image-bottom, 1=image-top after Y-flip)
-    //   dstX = (nx/w)*2 − 1  (clip space)
-    //   dstY = 1 − (ny/h)*2  (clip space, Y points up in WebGL)
+    //   dstX = (nx/capW)*2 − 1  (clip space)
+    //   dstY = 1 − (ny/capH)*2  (clip space, Y points up in WebGL)
     const vsSource = `
       attribute vec2 a_srcUV;
       attribute vec2 a_dstPos;
@@ -210,41 +241,50 @@ function applyDistortionWebGL(
 
     const compileShader = (type: number, src: string): WebGLShader => {
       const s = gl.createShader(type);
-      if (!s) throw new Error('gl.createShader returned null');
+      if (!s) throw new Error('createShader returned null');
       gl.shaderSource(s, src);
       gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
-        throw new Error(gl.getShaderInfoLog(s) ?? 'shader compile error');
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        const log = gl.getShaderInfoLog(s) ?? '';
+        throw new Error(`shader compile: ${log}`);
+      }
       return s;
     };
 
     const vs   = compileShader(gl.VERTEX_SHADER,   vsSource);
     const fs   = compileShader(gl.FRAGMENT_SHADER, fsSource);
+    onDebug('shaders=OK');
+
     const prog = gl.createProgram();
-    if (!prog) throw new Error('gl.createProgram returned null');
+    if (!prog) throw new Error('createProgram returned null');
     gl.attachShader(prog, vs);
     gl.attachShader(prog, fs);
     gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
-      throw new Error(gl.getProgramInfoLog(prog) ?? 'program link error');
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      const log = gl.getProgramInfoLog(prog) ?? '';
+      throw new Error(`program link: ${log}`);
+    }
     gl.useProgram(prog);
+    onDebug('program=OK');
 
-    // ── Upload source image as texture ───────────────────────────────
+    // ── Upload texture from intermediate 2D canvas ───────────────────
     const tex = gl.createTexture();
+    if (!tex) throw new Error('createTexture returned null');
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, srcCanvas);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.uniform1i(gl.getUniformLocation(prog, 'u_texture'), 0);
+    onDebug('texture=OK');
 
     const aSrcUV  = gl.getAttribLocation(prog, 'a_srcUV');
     const aDstPos = gl.getAttribLocation(prog, 'a_dstPos');
     const aAlpha  = gl.getAttribLocation(prog, 'a_alpha');
 
-    gl.viewport(0, 0, w, h);
+    gl.viewport(0, 0, capW, capH);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -253,6 +293,7 @@ function applyDistortionWebGL(
 
     const bindAndSetup = (data: Float32Array) => {
       const buf = gl.createBuffer();
+      if (!buf) throw new Error('createBuffer returned null');
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
       gl.enableVertexAttribArray(aSrcUV);
@@ -290,22 +331,25 @@ function applyDistortionWebGL(
       for (const idx of [ti, tj, tk] as const) {
         const lm = landmarks[idx] ?? landmarks[0];
         const dp = displaced[idx] ?? displaced[0];
-        faceData[off++] = lm.x;                      // srcU
-        faceData[off++] = 1 - lm.y;                  // srcV (Y-flipped)
-        faceData[off++] = (dp.nx / w) * 2 - 1;       // dstX clip
-        faceData[off++] = 1 - (dp.ny / h) * 2;       // dstY clip (Y-flipped)
-        faceData[off++] = dp.alpha;                   // alpha
+        faceData[off++] = lm.x;                          // srcU
+        faceData[off++] = 1 - lm.y;                      // srcV (Y-flipped)
+        faceData[off++] = (dp.nx / capW) * 2 - 1;        // dstX clip
+        faceData[off++] = 1 - (dp.ny / capH) * 2;        // dstY clip (Y-flipped)
+        faceData[off++] = dp.alpha;                       // alpha
       }
     }
 
     bindAndSetup(faceData);
     gl.drawArrays(gl.TRIANGLES, 0, vertCount);
+    onDebug('draw=OK');
 
   } catch (err) {
-    console.warn('[MagicMirror] WebGL render error — using 2D canvas fallback:', err);
+    const msg = (err as Error).message;
+    console.warn('[MagicMirror] WebGL render error:', msg);
+    onDebug(`ERR=${msg}`);
     const fallback = document.createElement('canvas');
-    fallback.width  = w;
-    fallback.height = h;
+    fallback.width  = capW;
+    fallback.height = capH;
     const ctx2 = fallback.getContext('2d')!;
     applyDistortionFallback(ctx2, img, landmarks, mode);
     return fallback;
@@ -420,6 +464,7 @@ export function MagicMirror() {
   const [scriptLoaded, setScriptLoaded]  = useState(false);
   const [errorMsg,     setErrorMsg]      = useState<string | null>(null);
   const [toastMsg,     setToastMsg]      = useState<string | null>(null);
+  const [debugMsg,     setDebugMsg]      = useState<string | null>(null);
 
   const fileInputRef    = useRef<HTMLInputElement>(null);
   const cameraInputRef  = useRef<HTMLInputElement>(null);
@@ -526,9 +571,14 @@ export function MagicMirror() {
       }
 
       // Apply WebGL mesh-warp distortion (falls back to 2D canvas if needed)
-      const resultCanvas = applyDistortionWebGL(img, landmarks, selectedMode);
+      const debugLines: string[] = [];
+      const resultCanvas = applyDistortionWebGL(
+        img, landmarks, selectedMode,
+        msg => { console.log('[MagicMirror]', msg); debugLines.push(msg); },
+      );
       resultCanvasRef.current = resultCanvas;
       setResultDataUrl(resultCanvas.toDataURL('image/jpeg', 0.92));
+      setDebugMsg(debugLines.join(' | '));
       setMmStep('result');
 
     } catch (err) {
@@ -542,6 +592,7 @@ export function MagicMirror() {
     setUserPhoto(null);
     setResultDataUrl(null);
     setErrorMsg(null);
+    setDebugMsg(null);
     imgRef.current         = null;
     resultCanvasRef.current = null;
     if (fileInputRef.current)   fileInputRef.current.value   = '';
@@ -841,6 +892,17 @@ export function MagicMirror() {
           <div style={{ color: 'rgba(167,139,250,0.7)', fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.12em' }}>
             MODE: {selectedMode}
           </div>
+
+          {/* WebGL debug output — visible in browser to diagnose fallback */}
+          {debugMsg && (
+            <div style={{
+              color: 'rgba(255,255,255,0.28)', fontFamily: 'monospace', fontSize: '9px',
+              letterSpacing: '0.03em', wordBreak: 'break-all', maxWidth: '500px',
+              textAlign: 'center', lineHeight: 1.5,
+            }}>
+              {debugMsg}
+            </div>
+          )}
 
           {/* Share buttons — same layout as SpaceSelfie result */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
