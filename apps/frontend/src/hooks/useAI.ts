@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { t, getLang } from '../i18n';
+import { logger } from '../utils/logger';
 
 type AISuggestion = {
   title: string;
@@ -48,7 +49,7 @@ export function useAI() {
       setAiSuggestions(suggestions);
       return suggestions;
     } catch (err) {
-      console.error('AI SUGGEST ERROR:', err);
+      logger.error('AI SUGGEST ERROR:', err);
       alert(t('ai.suggestionsError'));
       return [];
     } finally {
@@ -98,7 +99,7 @@ export function useAI() {
       const data = await res.json();
       return data.itinerary;
     } catch (err) {
-      console.error('AI COMPOSE ERROR:', err);
+      logger.error('AI COMPOSE ERROR:', err);
       alert(t('ai.packageError'));
       return null;
     } finally {

@@ -71,11 +71,11 @@ async function updateJob(jobId, { status, imageUrl = null, shareUrl = null, erro
 }
 
 /**
- * Delete rows older than 1 hour. Called periodically from the service.
+ * Delete rows older than 24 hours. Matches R2 auto-delete TTL.
  */
 async function deleteExpiredJobs() {
   const { rowCount } = await db.query(
-    `DELETE FROM face_swap_jobs WHERE created_at < NOW() - INTERVAL '1 hour'`
+    `DELETE FROM face_swap_jobs WHERE created_at < NOW() - INTERVAL '24 hours'`
   );
   if (rowCount > 0) console.log(`[DB] Purged ${rowCount} expired face_swap_jobs`);
 }

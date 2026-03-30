@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getLang } from '../i18n';
+import { logger } from '../utils/logger';
 
 type Hotel = {
   id: number;
@@ -87,7 +88,7 @@ export function useCityDetails() {
           }))
       );
     } catch (err) {
-      console.error('DETAIL FETCH ERROR:', err);
+      logger.error('DETAIL FETCH ERROR:', err);
     } finally {
       setLoading(false);
     }

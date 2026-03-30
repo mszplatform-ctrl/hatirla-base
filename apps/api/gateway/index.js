@@ -26,11 +26,14 @@ router.use((req, res, next) => {
 // ============================================
 // 1.5. LANGUAGE RESOLVER (i18n)
 // ============================================
+// Supported langs: tr, en, ar, es, de, ru
+// Frontend i18n currently supports tr and en only.
+// Other languages fall back to EN until frontend i18n is expanded.
 router.use((req, res, next) => {
   const header = req.headers['accept-language'];
   const queryLang = req.query.lang;
   const lang = (queryLang || header || 'tr').slice(0, 2).toLowerCase();
-  
+
   // Validate against supported languages
   req.lang = ['tr', 'en', 'ar', 'es', 'de', 'ru'].includes(lang) ? lang : 'tr';
   
@@ -119,12 +122,6 @@ router.use('/data', require('../src/routes/data'));
 router.use('/share', require('../src/routes/share.routes'));
 router.use('/proxy-image', require('../src/routes/proxy'));
 
-// Legacy mock routes disabled
-// router.use('/auth', require('../routes/auth'));
-// router.use('/referral', require('../routes/referral'));
-// router.use('/reel', require('../routes/reel'));
-// router.use('/share', require('../routes/share'));
-// router.use('/users', require('../routes/users'));
 // ============================================
 // 6. ERROR HANDLING
 // ============================================

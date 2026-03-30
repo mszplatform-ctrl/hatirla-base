@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '../utils/logger';
 
 type CitySummary = {
   id: number;
@@ -34,7 +35,7 @@ export function useCities() {
           }))
         );
       } catch (err) {
-        console.error('CITY FETCH ERROR:', err);
+        logger.error('CITY FETCH ERROR:', err);
         setError('Failed to fetch cities');
       } finally {
         setLoading(false);
