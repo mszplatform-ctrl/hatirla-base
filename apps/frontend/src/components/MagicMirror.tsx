@@ -9,7 +9,8 @@ declare function gtag(...args: unknown[]): void;
 type MirrorMode = 'BIG HEAD' | 'SQUISH' | 'STRETCH' | 'WIDE' | 'SLIM' | 'FUNHOUSE';
 type MmStep     = 'upload' | 'mode-select' | 'processing' | 'result';
 
-interface Landmark { x: number; y: number; z: number; }
+interface Landmark      { x: number; y: number; z: number; }
+interface DisplacedPoint { nx: number; ny: number; alpha: number; }
 
 const MODES: MirrorMode[] = ['BIG HEAD', 'SQUISH', 'STRETCH', 'WIDE', 'SLIM', 'FUNHOUSE'];
 
@@ -40,9 +41,284 @@ function canvasToWatermarkedBlob(source: HTMLCanvasElement): Promise<Blob> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Distortion engine — writes to an existing ctx, does NOT create a canvas
+// FACEMESH_TRIANGLES accessor
+// The CDN script (face_mesh.js) exposes this as window.FACEMESH_TRIANGLES.
+// Handles both flat Uint32Array and array-of-triplets formats.
+// Falls back to a simple sequential triangulation if unavailable.
 // ─────────────────────────────────────────────────────────────────────────────
-function applyDistortion(
+function getFaceMeshTriangles(): [number, number, number][] {
+  const win = window as unknown as Record<string, unknown>;
+
+  let raw: unknown = win['FACEMESH_TRIANGLES'];
+  if (!raw) {
+    const fmObj = win['FaceMesh'];
+    if (fmObj && typeof fmObj === 'object') {
+      raw = (fmObj as Record<string, unknown>)['FACEMESH_TRIANGLES'];
+    }
+  }
+
+  if (raw instanceof Uint32Array) {
+    const tris: [number, number, number][] = [];
+    for (let i = 0; i + 2 < raw.length; i += 3)
+      tris.push([raw[i], raw[i + 1], raw[i + 2]]);
+    return tris;
+  }
+
+  if (Array.isArray(raw) && raw.length > 0) {
+    // Flat number array
+    if (typeof raw[0] === 'number') {
+      const tris: [number, number, number][] = [];
+      for (let i = 0; i + 2 < raw.length; i += 3)
+        tris.push([raw[i] as number, raw[i + 1] as number, raw[i + 2] as number]);
+      return tris;
+    }
+    // Array of [i,j,k] triplets
+    if (Array.isArray(raw[0])) return raw as [number, number, number][];
+  }
+
+  // Fallback: sequential triplets over all 468 MediaPipe landmarks
+  console.warn('[MagicMirror] FACEMESH_TRIANGLES not found — using fallback mesh');
+  const tris: [number, number, number][] = [];
+  for (let i = 0; i + 2 < 468; i += 3) tris.push([i, i + 1, i + 2]);
+  return tris;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Per-mode landmark displacement
+// Returns displaced pixel positions + per-vertex alpha (for edge feathering).
+// All inputs/outputs are in pixel space.
+// ─────────────────────────────────────────────────────────────────────────────
+function displaceLandmarks(
+  landmarks: Landmark[],
+  mode: MirrorMode,
+  w: number,
+  h: number,
+): DisplacedPoint[] {
+  const xs = landmarks.map(l => l.x * w);
+  const ys = landmarks.map(l => l.y * h);
+
+  const faceLeft   = xs.reduce((a, b) => Math.min(a, b),  Infinity);
+  const faceRight  = xs.reduce((a, b) => Math.max(a, b), -Infinity);
+  const faceTop    = ys.reduce((a, b) => Math.min(a, b),  Infinity);
+  const faceBottom = ys.reduce((a, b) => Math.max(a, b), -Infinity);
+  const faceCenterX = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const faceCenterY = ys.reduce((a, b) => a + b, 0) / ys.length;
+  const faceWidth  = faceRight  - faceLeft;
+  const faceHeight = faceBottom - faceTop;
+
+  return landmarks.map((_, i) => {
+    const px = xs[i];
+    const py = ys[i];
+    let nx = px, ny = py;
+
+    switch (mode) {
+      case 'BIG HEAD':
+        nx = faceCenterX + (px - faceCenterX) * 1.5;
+        ny = faceCenterY + (py - faceCenterY) * 1.5;
+        break;
+      case 'SQUISH':
+        ny = faceCenterY + (py - faceCenterY) * 0.5;
+        break;
+      case 'STRETCH':
+        ny = faceCenterY + (py - faceCenterY) * 1.7;
+        break;
+      case 'WIDE':
+        nx = faceCenterX + (px - faceCenterX) * 1.7;
+        break;
+      case 'SLIM':
+        nx = faceCenterX + (px - faceCenterX) * 0.55;
+        break;
+      case 'FUNHOUSE':
+        nx = px + Math.sin((py / h) * Math.PI * 4) * faceWidth  * 0.15;
+        ny = py + Math.sin((px / w) * Math.PI * 3) * faceHeight * 0.12;
+        break;
+    }
+
+    // Alpha: fade over 30px at the face bbox boundary so the warped mesh
+    // blends smoothly into the unwarped background.
+    const distFromEdge = Math.min(
+      px - faceLeft, faceRight  - px,
+      py - faceTop,  faceBottom - py,
+    );
+    const alpha = Math.min(1, Math.max(0, distFromEdge / 30));
+    return { nx, ny, alpha };
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WebGL distortion engine
+//
+// Pass 1 — draw the full source image as an unwarped background quad.
+// Pass 2 — draw face-mesh triangles with displaced vertex positions (warped)
+//           and per-vertex alpha blending at the boundary.
+//
+// Falls back to applyDistortionFallback() if WebGL is unavailable or throws.
+// ─────────────────────────────────────────────────────────────────────────────
+function applyDistortionWebGL(
+  img: HTMLImageElement,
+  landmarks: Landmark[],
+  mode: MirrorMode,
+): HTMLCanvasElement {
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = w;
+  canvas.height = h;
+
+  // ── WebGL context ────────────────────────────────────────────────────
+  const gl = canvas.getContext('webgl') as WebGLRenderingContext | null;
+  if (!gl) {
+    console.warn('[MagicMirror] WebGL unavailable — using 2D canvas fallback');
+    const ctx = canvas.getContext('2d')!;
+    applyDistortionFallback(ctx, img, landmarks, mode);
+    return canvas;
+  }
+
+  try {
+    const triangles = getFaceMeshTriangles();
+    const displaced = displaceLandmarks(landmarks, mode, w, h);
+
+    // ── Shaders ──────────────────────────────────────────────────────
+    // Convention (UNPACK_FLIP_Y_WEBGL = true):
+    //   srcU = lm.x (0=left … 1=right, direct)
+    //   srcV = 1 − lm.y (0=image-bottom, 1=image-top after Y-flip)
+    //   dstX = (nx/w)*2 − 1  (clip space)
+    //   dstY = 1 − (ny/h)*2  (clip space, Y points up in WebGL)
+    const vsSource = `
+      attribute vec2 a_srcUV;
+      attribute vec2 a_dstPos;
+      attribute float a_alpha;
+      varying vec2 v_srcUV;
+      varying float v_alpha;
+      void main() {
+        gl_Position = vec4(a_dstPos, 0.0, 1.0);
+        v_srcUV = a_srcUV;
+        v_alpha = a_alpha;
+      }
+    `;
+    const fsSource = `
+      precision mediump float;
+      uniform sampler2D u_texture;
+      varying vec2 v_srcUV;
+      varying float v_alpha;
+      void main() {
+        gl_FragColor = texture2D(u_texture, v_srcUV);
+        gl_FragColor.a *= v_alpha;
+      }
+    `;
+
+    const compileShader = (type: number, src: string): WebGLShader => {
+      const s = gl.createShader(type);
+      if (!s) throw new Error('gl.createShader returned null');
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+        throw new Error(gl.getShaderInfoLog(s) ?? 'shader compile error');
+      return s;
+    };
+
+    const vs   = compileShader(gl.VERTEX_SHADER,   vsSource);
+    const fs   = compileShader(gl.FRAGMENT_SHADER, fsSource);
+    const prog = gl.createProgram();
+    if (!prog) throw new Error('gl.createProgram returned null');
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+      throw new Error(gl.getProgramInfoLog(prog) ?? 'program link error');
+    gl.useProgram(prog);
+
+    // ── Upload source image as texture ───────────────────────────────
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.uniform1i(gl.getUniformLocation(prog, 'u_texture'), 0);
+
+    const aSrcUV  = gl.getAttribLocation(prog, 'a_srcUV');
+    const aDstPos = gl.getAttribLocation(prog, 'a_dstPos');
+    const aAlpha  = gl.getAttribLocation(prog, 'a_alpha');
+
+    gl.viewport(0, 0, w, h);
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // Vertex layout: [srcU, srcV, dstX, dstY, alpha]  — 5 floats × 4 bytes
+    const STRIDE = 5 * 4;
+
+    const bindAndSetup = (data: Float32Array) => {
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(aSrcUV);
+      gl.vertexAttribPointer(aSrcUV,  2, gl.FLOAT, false, STRIDE, 0);
+      gl.enableVertexAttribArray(aDstPos);
+      gl.vertexAttribPointer(aDstPos, 2, gl.FLOAT, false, STRIDE, 2 * 4);
+      gl.enableVertexAttribArray(aAlpha);
+      gl.vertexAttribPointer(aAlpha,  1, gl.FLOAT, false, STRIDE, 4 * 4);
+    };
+
+    // ── Pass 1: full-screen background quad (unwarped) ───────────────
+    // With UNPACK_FLIP_Y: srcV=1 → image top, srcV=0 → image bottom.
+    // clip y=+1 → screen top, clip y=−1 → screen bottom.
+    const bgData = new Float32Array([
+      // srcU  srcV  dstX  dstY  alpha
+        0,    1,   -1,   +1,    1,   // top-left
+        1,    1,   +1,   +1,    1,   // top-right
+        0,    0,   -1,   -1,    1,   // bottom-left
+        1,    1,   +1,   +1,    1,   // top-right  (2nd triangle)
+        1,    0,   +1,   -1,    1,   // bottom-right
+        0,    0,   -1,   -1,    1,   // bottom-left
+    ]);
+    bindAndSetup(bgData);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    // ── Pass 2: face-mesh triangles (warped) with alpha blending ─────
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    const vertCount = triangles.length * 3;
+    const faceData  = new Float32Array(vertCount * 5);
+    let off = 0;
+
+    for (const [ti, tj, tk] of triangles) {
+      for (const idx of [ti, tj, tk] as const) {
+        const lm = landmarks[idx] ?? landmarks[0];
+        const dp = displaced[idx] ?? displaced[0];
+        faceData[off++] = lm.x;                      // srcU
+        faceData[off++] = 1 - lm.y;                  // srcV (Y-flipped)
+        faceData[off++] = (dp.nx / w) * 2 - 1;       // dstX clip
+        faceData[off++] = 1 - (dp.ny / h) * 2;       // dstY clip (Y-flipped)
+        faceData[off++] = dp.alpha;                   // alpha
+      }
+    }
+
+    bindAndSetup(faceData);
+    gl.drawArrays(gl.TRIANGLES, 0, vertCount);
+
+  } catch (err) {
+    console.warn('[MagicMirror] WebGL render error — using 2D canvas fallback:', err);
+    const fallback = document.createElement('canvas');
+    fallback.width  = w;
+    fallback.height = h;
+    const ctx2 = fallback.getContext('2d')!;
+    applyDistortionFallback(ctx2, img, landmarks, mode);
+    return fallback;
+  }
+
+  return canvas;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2D canvas fallback — original drawImage-based approach
+// Used when WebGL context creation fails or a render error occurs.
+// ─────────────────────────────────────────────────────────────────────────────
+function applyDistortionFallback(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
   landmarks: Landmark[],
@@ -51,7 +327,6 @@ function applyDistortion(
   const w = img.naturalWidth;
   const h = img.naturalHeight;
 
-  // Convert normalised landmarks → pixel coords
   const xs = landmarks.map(l => l.x * w);
   const ys = landmarks.map(l => l.y * h);
 
@@ -250,14 +525,10 @@ export function MagicMirror() {
         return;
       }
 
-      // Apply distortion to off-screen canvas
-      const canvas = document.createElement('canvas');
-      canvas.width  = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d')!;
-      applyDistortion(ctx, img, landmarks, selectedMode);
-      resultCanvasRef.current = canvas;
-      setResultDataUrl(canvas.toDataURL('image/jpeg', 0.92));
+      // Apply WebGL mesh-warp distortion (falls back to 2D canvas if needed)
+      const resultCanvas = applyDistortionWebGL(img, landmarks, selectedMode);
+      resultCanvasRef.current = resultCanvas;
+      setResultDataUrl(resultCanvas.toDataURL('image/jpeg', 0.92));
       setMmStep('result');
 
     } catch (err) {
