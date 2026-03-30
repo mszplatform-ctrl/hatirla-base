@@ -1,8 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
+const SAFE_ID = /^[a-zA-Z0-9_-]{1,100}$/;
+
 router.get('/:id', (req, res) => {
   const { id } = req.params;
+
+  if (!SAFE_ID.test(id)) {
+    return res.status(400).json({ error: 'Invalid share id' });
+  }
+
   const imageUrl = `${process.env.R2_PUBLIC_URL}/${id}.jpg`;
   const appUrl = 'https://xotiji.app';
 

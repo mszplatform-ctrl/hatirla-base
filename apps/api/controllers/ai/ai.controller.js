@@ -60,12 +60,7 @@ class AIController {
     } catch (error) {
       // ✅ ZOD ERROR → 422
       if (error.name === 'ZodError') {
-        throw new AppError(
-          'Invalid request data',
-          'VALIDATION_ERROR',
-          422,
-          error.errors
-        );
+        throw new AppError('VALIDATION_ERROR', error.errors);
       }
 
       console.error('[AI Controller] Compose error:', error);

@@ -1,8 +1,7 @@
-// index.js (Express + Prisma + NeonDB)
+// index.js (Express + NeonDB)
 
 const express = require('express');
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
 const gateway = require('./gateway');
 const faceSwapJobRepo = require('./data/faceSwapJob.repository');
 
@@ -20,9 +19,6 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // API Gateway - Tüm /api/* istekleri gateway'den geçer
 app.use('/api', gateway);
-
-// Prisma Client
-const prisma = new PrismaClient();
 
 // ROOT test endpoint
 app.get('/', (req, res) => {
@@ -48,13 +44,5 @@ app.listen(PORT, () => {
   );
 });
 
-// Render kapanırken Prisma bağlantısını düzgün kapat
-process.on('SIGINT', async () => {
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  await prisma.$disconnect();
-  process.exit(0);
-});
+process.on('SIGINT', () => process.exit(0));
+process.on('SIGTERM', () => process.exit(0));

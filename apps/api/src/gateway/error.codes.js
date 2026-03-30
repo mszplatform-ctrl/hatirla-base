@@ -3,7 +3,7 @@
  * Single source of truth for backend error semantics
  */
 
-export const ERROR_CODES = {
+const ERROR_CODES = {
   // 🔐 AUTH
   AUTH_REQUIRED: {
     code: "AUTH_REQUIRED",
@@ -63,3 +63,5 @@ export const ERROR_CODES = {
     message: "Internal server error",
   },
 };
+
+module.exports = { ERROR_CODES };

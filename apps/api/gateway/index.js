@@ -115,7 +115,7 @@ router.get('/health', (req, res) => {
 router.use('/ai', require('../src/routes/ai'));
 
 router.use('/data', require('../src/routes/data'));
-router.use('/user', require('../src/routes/user'));
+// router.use('/user', require('../src/routes/user')); // mock stub — disabled until real auth exists
 router.use('/share', require('../src/routes/share.routes'));
 router.use('/proxy-image', require('../src/routes/proxy'));
 
