@@ -68,7 +68,60 @@ async function composePackage({
     });
     // 🤖 AI BRIDGE (Stage 4.5)
     const summaryByLang = { tr: 'Hazırlanıyor...', en: 'Preparing...', ar: 'جارٍ التحضير...', es: 'Preparando...', de: 'Wird vorbereitet...', ru: 'Подготовка...' };
-    const itinerary = { days: [], summary: summaryByLang[language] || summaryByLang.en };
+    let itinerary = { days: [], summary: summaryByLang[language] || summaryByLang.en };
+    try {
+      if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
+
+      const OpenAI = require('openai');
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const hotels = validSelections.filter(s => s.type === 'hotel');
+      const experiences = validSelections.filter(s => s.type === 'experience');
+      const cities = [...new Set(validSelections.map(s => s.payload?.city || s.city).filter(Boolean))];
+      const hotelNames = hotels.map(s => s.payload?.name || s.name).filter(Boolean);
+      const expTitles = experiences.map(s => s.payload?.title || s.title).filter(Boolean);
+      const numDays = Math.min(Math.max(cities.length || hotels.length || validSelections.length, 1), 5);
+      const langNames = { tr: 'Turkish', en: 'English', ar: 'Arabic', es: 'Spanish', de: 'German', ru: 'Russian' };
+      const langName = langNames[language] || 'Turkish';
+
+      const composePrompt = `Generate a ${numDays}-day travel itinerary in ${langName}.
+Cities: ${cities.length ? cities.join(', ') : 'not specified'}
+Hotels: ${hotelNames.length ? hotelNames.join(', ') : `${hotels.length} hotel(s)`}
+Experiences: ${expTitles.length ? expTitles.join(', ') : `${experiences.length} experience(s)`}
+Total budget: $${totalPrice}
+Return ONLY a valid JSON object. No markdown, no explanation, no code fences, no extra text.
+Exact shape required:
+{"days":[{"day":1,"title":"...","activities":["...","..."],"tip":"..."}],"summary":"..."}
+Rules:
+- Exactly ${numDays} day objects
+- "day": number, "title": short day title in ${langName}, "activities": 2-3 strings in ${langName}, "tip": one practical tip in ${langName}
+- "summary": 1-2 sentences about the full trip in ${langName}`;
+
+      const completion = await openai.chat.completions.create(
+        {
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a travel itinerary AI. Always respond with valid JSON only — no markdown, no code fences, no extra text. Write all content in ${langName}.`,
+            },
+            { role: 'user', content: composePrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 800,
+        },
+        { timeout: 10000 }
+      );
+
+      const raw = completion.choices[0].message.content.trim();
+      const aiResult = JSON.parse(raw);
+      if (!Array.isArray(aiResult.days) || typeof aiResult.summary !== 'string') {
+        throw new Error('AI returned unexpected itinerary format');
+      }
+      itinerary = aiResult;
+    } catch (aiError) {
+      console.error('[AI Service] OpenAI compose failed, using fallback:', aiError.message);
+    }
     // 🔁 Response
     const response = {
       success: true,

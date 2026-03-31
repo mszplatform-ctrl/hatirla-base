@@ -23,8 +23,9 @@ const composeSchema = z.object({
             price: z.number().nonnegative().optional(),
             minPrice: z.number().nonnegative().optional(),
           })
+          .passthrough()
           .optional(),
-      })
+      }).passthrough()
     )
     .min(1, 'At least one selection is required'),
 });
