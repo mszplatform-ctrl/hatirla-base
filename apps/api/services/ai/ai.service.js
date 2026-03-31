@@ -58,14 +58,6 @@ async function composePackage({
         0;
       return sum + (typeof price === 'number' ? price : 0);
     }, 0);
-    // 🧱 DB write
-    const created = await packageRepository.createPackage({
-      userId,
-      items: validSelections,
-      totalPrice,
-      currency: 'USD',
-      status: 'draft',
-    });
     // 🤖 AI BRIDGE (Stage 4.5)
     const summaryByLang = { tr: 'Hazırlanıyor...', en: 'Preparing...', ar: 'جارٍ التحضير...', es: 'Preparando...', de: 'Wird vorbereitet...', ru: 'Подготовка...' };
     let itinerary = { days: [], summary: summaryByLang[language] || summaryByLang.en };
@@ -122,6 +114,16 @@ Rules:
     } catch (aiError) {
       console.error('[AI Service] OpenAI compose failed, using fallback:', aiError.message);
     }
+    // 🧱 DB write (after itinerary so we can persist it)
+    const created = await packageRepository.createPackage({
+      userId,
+      items: validSelections,
+      totalPrice,
+      currency: 'USD',
+      status: 'draft',
+      itinerary,
+      language,
+    });
     // 🔁 Response
     const response = {
       success: true,

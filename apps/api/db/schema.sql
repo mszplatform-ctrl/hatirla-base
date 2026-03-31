@@ -101,6 +101,8 @@ CREATE TABLE packages (
   user_id TEXT,
   currency TEXT DEFAULT 'USD',
   status TEXT DEFAULT 'draft',
+  itinerary TEXT,
+  language TEXT DEFAULT 'tr',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
