@@ -484,8 +484,13 @@ async function getFaceSwapStatus(jobId) {
   return { status: 'processing' };
 }
 
+async function getPackageById(id) {
+  return packageRepository.getPackageById(id);
+}
+
 module.exports = {
   getPackages,
+  getPackageById,
   composePackage,
   getSuggestions,
   generateSuggestions,

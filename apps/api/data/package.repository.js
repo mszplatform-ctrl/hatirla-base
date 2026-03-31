@@ -44,7 +44,16 @@ async function createPackage({ userId, items, totalPrice, currency, status, itin
   return mapRow(rows[0]);
 }
 
+async function getPackageById(id) {
+  const { rows } = await db.query(
+    'SELECT * FROM packages WHERE id = $1',
+    [id]
+  );
+  return rows.length ? mapRow(rows[0]) : null;
+}
+
 module.exports = {
   getAllPackages,
+  getPackageById,
   createPackage,
 };

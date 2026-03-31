@@ -105,6 +105,23 @@ class AIController {
   }
 
   /**
+   * GET /api/ai/packages/:id
+   */
+  async getPackage(req, res) {
+    try {
+      const { id } = req.params;
+      const result = await aiService.getPackageById(id);
+      if (!result) {
+        throw new AppError('NOT_FOUND');
+      }
+      res.json({ success: true, package: result });
+    } catch (error) {
+      console.error('[AI Controller] Get package error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * GET /api/ai/packages
    */
   async getPackages(req, res) {

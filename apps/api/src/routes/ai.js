@@ -13,6 +13,7 @@ router.get('/', (req, res) => {
 });
 
 // READ PATH → packages
+router.get('/packages/:id', aiController.getPackage);
 router.get('/packages', aiController.getPackages);
 
 // ✅ AI suggestions (frontend bunu bekliyor)
