@@ -37,6 +37,13 @@ export function Footer({ onNavigate }: FooterProps) {
         >
           {t('footer.contact')}
         </button>
+        <span style={{ color: "#cbd5e1" }}>|</span>
+        <button
+          onClick={() => onNavigate?.("mytrips")}
+          style={{ background: "none", border: "none", color: "#0ea5e9", cursor: "pointer", fontSize: "14px", padding: 0, fontFamily: "inherit" }}
+        >
+          {t('footer.mytrips')}
+        </button>
       </div>
     </footer>
   );

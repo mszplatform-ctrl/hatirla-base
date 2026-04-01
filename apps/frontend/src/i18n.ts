@@ -83,11 +83,18 @@ const translations: Record<Lang, any> = {
       day: "Gün",
       tip: "İpucu",
     },
+    mytrips: {
+      title: "Seyahatlerim",
+      empty: "Henüz kaydedilmiş seyahatin yok.",
+      open: "Aç",
+      backToHome: "Ana Sayfaya Dön",
+    },
     footer: {
       rights: "All rights reserved.",
       privacy: "Privacy Policy",
       terms: "Terms of Service",
       contact: "Contact",
+      mytrips: "Seyahatlerim",
     },
     privacy: {
       backToHome: "Ana Sayfaya Dön",
@@ -215,11 +222,18 @@ const translations: Record<Lang, any> = {
       day: "Day",
       tip: "Tip",
     },
+    mytrips: {
+      title: "My Trips",
+      empty: "No saved trips yet.",
+      open: "Open",
+      backToHome: "Back to Home",
+    },
     footer: {
       rights: "All rights reserved.",
       privacy: "Privacy Policy",
       terms: "Terms of Service",
       contact: "Contact",
+      mytrips: "My Trips",
     },
     privacy: {
       backToHome: "Back to Home",

@@ -14,6 +14,7 @@ import { PrivacyPolicy } from './components/pages/PrivacyPolicy';
 import { TermsOfService } from './components/pages/TermsOfService';
 import { Contact } from './components/pages/Contact';
 import { SpaceSelfie } from './components/pages/SpaceSelfie';
+import { MyTrips } from './components/pages/MyTrips';
 import { CinematicIntro } from './components/pages/CinematicIntro';
 import { PWAInstallBanner } from './components/common/PWAInstallBanner';
 import { CookieConsent } from './components/CookieConsent';
@@ -77,10 +78,10 @@ export default function App() {
     }
   }
 
-  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie">("home");
+  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie" | "mytrips">("home");
 
   function handleNavigate(to: string) {
-    if (to === "privacy" || to === "terms" || to === "contact") {
+    if (to === "privacy" || to === "terms" || to === "contact" || to === "mytrips") {
       setPage(to);
     }
   }
@@ -105,6 +106,7 @@ export default function App() {
     composeLoading,
     getSuggestions,
     composePackage,
+    getPackageById,
   } = useAI();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -195,7 +197,24 @@ export default function App() {
       setModalType("itinerary");
       setModalData(itinerary);
       setModalVisible(true);
+      if (itinerary.id) {
+        const existing: { id: string; createdAt: string }[] = JSON.parse(localStorage.getItem('xotiji_trips') || '[]');
+        if (!existing.some((t) => t.id === itinerary.id)) {
+          existing.unshift({ id: itinerary.id, createdAt: new Date().toISOString() });
+          localStorage.setItem('xotiji_trips', JSON.stringify(existing));
+        }
+      }
     }
+  }
+
+  async function openSavedPackage(id: string) {
+    const itinerary = await getPackageById(id);
+    if (!itinerary) return;
+    setPage("home");
+    setMszComment(null);
+    setModalType("itinerary");
+    setModalData(itinerary);
+    setModalVisible(true);
   }
 
   const totalSelected = selectedHotelIds.length + selectedExperienceIds.length;
@@ -256,6 +275,7 @@ export default function App() {
       {page === "privacy" && <PrivacyPolicy onBack={() => setPage("home")} />}
       {page === "terms" && <TermsOfService onBack={() => setPage("home")} />}
       {page === "contact" && <Contact onBack={() => setPage("home")} />}
+      {page === "mytrips" && <MyTrips onBack={() => setPage("home")} onOpen={openSavedPackage} lang={lang} />}
 
       {/* HOME PAGE */}
       {page === "home" && (
