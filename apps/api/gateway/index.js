@@ -115,6 +115,8 @@ router.get('/health', (req, res) => {
   });
 });
 
+router.use('/auth', require('../src/routes/auth'));
+
 router.use('/ai', require('../src/routes/ai'));
 
 router.use('/data', require('../src/routes/data'));
