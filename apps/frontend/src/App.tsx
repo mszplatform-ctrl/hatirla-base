@@ -105,6 +105,7 @@ export default function App() {
     composeLoading,
     getSuggestions,
     composePackage,
+    getPackageById,
   } = useAI();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -196,6 +197,15 @@ export default function App() {
       setModalData(itinerary);
       setModalVisible(true);
     }
+  }
+
+  async function openSavedPackage(id: string) {
+    const itinerary = await getPackageById(id);
+    if (!itinerary) return;
+    setMszComment(null);
+    setModalType("itinerary");
+    setModalData(itinerary);
+    setModalVisible(true);
   }
 
   const totalSelected = selectedHotelIds.length + selectedExperienceIds.length;

@@ -107,11 +107,34 @@ export function useAI() {
     }
   }
 
+  async function getPackageById(id: string) {
+    try {
+      const res = await fetch(`${AI_BASE}/packages/${encodeURIComponent(id)}`);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const data = await res.json();
+      const pkg = data.package;
+      return {
+        id: pkg.id,
+        totalPrice: pkg.totalPrice,
+        currency: pkg.currency,
+        items: pkg.items,
+        days: pkg.itinerary?.days,
+        summary: pkg.itinerary?.summary,
+      };
+    } catch (err) {
+      logger.error('AI GET PACKAGE ERROR:', err);
+      alert(t('ai.packageError'));
+      return null;
+    }
+  }
+
   return {
     aiSuggestions,
     aiLoading,
     composeLoading,
     getSuggestions,
     composePackage,
+    getPackageById,
   };
 }
