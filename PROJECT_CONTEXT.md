@@ -9,10 +9,11 @@ Last updated: March 2026 | Base repo: hatirla-base
 
 - **Phase 1 (Compose / Package Flow) — DONE**
 - **Phase 2 (Save / Return Loop) — DONE**
-- Phase 3 (User System) — NEXT
-- Phase 4+ — FUTURE
+- **Phase 3 (User System) — DONE**
+- Phase 4 (Share & Growth) — NEXT
+- Phase 5+ — FUTURE
 
-XOTIJI is now a working stateful AI product. Users can create, save, and reopen trips without auth.
+XOTIJI now has auth, saved trips, user-linked packages, and My Trips working for both anonymous and logged-in users. Phases 1–3 complete.
 
 ---
 
@@ -197,12 +198,13 @@ Stone Age → Ancient World → Medieval → 1920s → Present (2026) → Future
 - My Trips page: lists saved trips, reopens itinerary modal by id
 - getPackageById fetches from DB; graceful on 404
 
-### Phase 3 — User System (NEXT)
-- Auth (users table exists, no routes yet)
-- Profile with saved packages and Space Selfie history
-- Return user experience
+### Phase 3 — User System ✅ DONE
+- JWT auth: register/login endpoints, bcrypt hashing, 7-day tokens
+- useAuth hook + AuthPage UI, token stored in localStorage
+- Packages linked to userId via optionalJWT on compose
+- My Trips: DB panel for logged-in users, localStorage for anonymous
 
-### Phase 4 — Share & Growth
+### Phase 4 — Share & Growth (NEXT)
 - Space Selfie → share card / trip identity
 - Travel Reel Generator
 - Referral system (referrals table exists)
