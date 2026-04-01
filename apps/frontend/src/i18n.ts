@@ -79,6 +79,9 @@ const translations: Record<Lang, any> = {
       analysisRich: "Oldukça zengin bir seçim yaptın. AI bu verilerle son derece güçlü ve tutarlı bir seyahat planı çıkarabilir.",
       analysisFair: "Fena değil. AI bir plan oluşturabilir ancak birkaç seçim daha eklemek sonuçları güçlendirebilir.",
       analysisLow: "AI bir plan çıkarabilir fakat seçim sayısı düşük. Birkaç ekleme yapman sonuçları belirgin şekilde iyileştirir.",
+      itinerarySummary: "Seyahat Özeti",
+      day: "Gün",
+      tip: "İpucu",
     },
     footer: {
       rights: "All rights reserved.",
@@ -208,6 +211,9 @@ const translations: Record<Lang, any> = {
       analysisRich: "Great selection. AI can generate a highly consistent and powerful travel plan with these inputs.",
       analysisFair: "Not bad. AI can build a plan, but a few more selections would strengthen the results.",
       analysisLow: "AI can generate a plan, but the selection count is low. A few additions would noticeably improve results.",
+      itinerarySummary: "Trip Summary",
+      day: "Day",
+      tip: "Tip",
     },
     footer: {
       rights: "All rights reserved.",

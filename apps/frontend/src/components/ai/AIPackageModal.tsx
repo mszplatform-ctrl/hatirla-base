@@ -186,6 +186,70 @@ export function AIPackageModal({
             </div>
           ))}
         </div>
+
+        {modalData.summary && (
+          <div
+            style={{
+              marginTop: "18px",
+              padding: "12px 14px",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "10px",
+              fontSize: "14px",
+              color: "#334155"
+            }}
+          >
+            <strong style={{ fontSize: "13px", color: "#0f172a", display: "block", marginBottom: "4px" }}>
+              {T('ai.itinerarySummary')}
+            </strong>
+            {modalData.summary}
+          </div>
+        )}
+
+        {(modalData.days ?? []).length > 0 && (
+          <div style={{ marginTop: "18px" }}>
+            {(modalData.days as any[]).map((d: any) => (
+              <div
+                key={d.day}
+                style={{
+                  marginTop: "12px",
+                  padding: "14px",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "12px"
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    marginBottom: "4px",
+                    textTransform: "uppercase"
+                  }}
+                >
+                  {T('ai.day')} {d.day}
+                </p>
+
+                <strong style={{ color: "#0f172a", display: "block", marginBottom: "8px" }}>
+                  {d.title}
+                </strong>
+
+                <ul style={{ margin: "0 0 8px 0", paddingLeft: "18px" }}>
+                  {(d.activities ?? []).map((activity: string, i: number) => (
+                    <li key={i} style={{ color: "#334155", fontSize: "14px", marginBottom: "4px" }}>
+                      {activity}
+                    </li>
+                  ))}
+                </ul>
+
+                {d.tip && (
+                  <p style={{ fontSize: "13px", color: "#0ea5e9", margin: "0" }}>
+                    💡 <em>{T('ai.tip')}: {d.tip}</em>
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </>
     );
   }

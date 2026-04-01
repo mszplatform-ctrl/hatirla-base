@@ -55,7 +55,7 @@ class AIController {
 
       res.json({
         success: true,
-        itinerary: result.package
+        itinerary: { ...result.package, ...result.itinerary }
       });
     } catch (error) {
       // ✅ ZOD ERROR → 422
