@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { t, getLang } from '../i18n';
 import { logger } from '../utils/logger';
+import { getToken } from './useAuth';
 
 type AISuggestion = {
   title: string;
@@ -90,9 +91,12 @@ export function useAI() {
 
       // Get user's current language
       const language = getLang();
+      const token = getToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const res = await fetch(`${AI_BASE}/compose`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ selections, language }),
       });
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);

@@ -23,7 +23,7 @@ import { useCities } from './hooks/useCities';
 import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
 import { t, getLang, type Lang } from './i18n';
-import { type AuthUser, getStoredUser, clearAuth } from './hooks/useAuth';
+import { type AuthUser, getStoredUser, clearAuth, getToken } from './hooks/useAuth';
 
 type ModalHotelData = {
   id: number;
@@ -284,7 +284,7 @@ export default function App() {
       {page === "privacy" && <PrivacyPolicy onBack={() => setPage("home")} />}
       {page === "terms" && <TermsOfService onBack={() => setPage("home")} />}
       {page === "contact" && <Contact onBack={() => setPage("home")} />}
-      {page === "mytrips" && <MyTrips onBack={() => setPage("home")} onOpen={openSavedPackage} lang={lang} />}
+      {page === "mytrips" && <MyTrips onBack={() => setPage("home")} onOpen={openSavedPackage} lang={lang} token={getToken()} />}
       {page === "auth" && (
         <AuthPage
           onBack={() => setPage("home")}

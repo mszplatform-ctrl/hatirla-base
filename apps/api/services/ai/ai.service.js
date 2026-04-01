@@ -481,9 +481,14 @@ async function getPackageById(id) {
   return packageRepository.getPackageById(id);
 }
 
+async function getPackagesByUserId(userId) {
+  return packageRepository.getPackagesByUserId(userId);
+}
+
 module.exports = {
   getPackages,
   getPackageById,
+  getPackagesByUserId,
   composePackage,
   getSuggestions,
   generateSuggestions,

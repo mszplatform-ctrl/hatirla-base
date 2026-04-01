@@ -50,7 +50,7 @@ class AIController {
       const result = await aiService.composePackage({
         selections: data.selections,
         language: data.language,
-        userId: null
+        userId: req.userId || null,
       });
 
       res.json({
@@ -117,6 +117,19 @@ class AIController {
       res.json({ success: true, package: result });
     } catch (error) {
       console.error('[AI Controller] Get package error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * GET /api/ai/my-packages
+   */
+  async getMyPackages(req, res) {
+    try {
+      const packages = await aiService.getPackagesByUserId(req.userId);
+      res.json({ success: true, packages });
+    } catch (error) {
+      console.error('[AI Controller] Get my packages error:', error);
       throw error;
     }
   }

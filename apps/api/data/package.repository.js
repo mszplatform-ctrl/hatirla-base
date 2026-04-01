@@ -52,8 +52,17 @@ async function getPackageById(id) {
   return rows.length ? mapRow(rows[0]) : null;
 }
 
+async function getPackagesByUserId(userId) {
+  const { rows } = await db.query(
+    'SELECT * FROM packages WHERE user_id = $1 ORDER BY created_at DESC',
+    [userId]
+  );
+  return rows.map(mapRow);
+}
+
 module.exports = {
   getAllPackages,
   getPackageById,
+  getPackagesByUserId,
   createPackage,
 };
