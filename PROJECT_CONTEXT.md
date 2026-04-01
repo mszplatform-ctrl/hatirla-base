@@ -5,6 +5,17 @@ Last updated: March 2026 | Base repo: hatirla-base
 
 ---
 
+## CURRENT STATUS
+
+- **Phase 1 (Compose / Package Flow) — DONE**
+- **Phase 2 (Save / Return Loop) — DONE**
+- Phase 3 (User System) — NEXT
+- Phase 4+ — FUTURE
+
+XOTIJI is now a working stateful AI product. Users can create, save, and reopen trips without auth.
+
+---
+
 ## 1. IDENTITY
 
 XOTIJI is an AI-native travel platform. The name derives from Zazaca for "Kendi Güneşi" (One's Own Sun). Manifesto: "Toward the Sun / Transfer the Signal / Be Your Own Sun."
@@ -175,38 +186,43 @@ Stone Age → Ancient World → Medieval → 1920s → Present (2026) → Future
 
 ## 10. POST-BETA ROADMAP
 
-### Phase 1 — Compose / Package Flow (NEXT)
-- Make /api/ai/compose real: add OpenAI call, generate actual itinerary (days, activities, tips)
-- Move packages from in-memory to DB (packages table exists)
-- Save / Resume — user can save a package and return to it
-- eSIM contextual trigger — auto-offer when destination is international
+### Phase 1 — Compose / Package Flow ✅ DONE
+- /api/ai/compose calls OpenAI, generates real day-by-day itinerary
+- Packages persisted to PostgreSQL (packages table)
+- GET /api/ai/packages/:id endpoint live
 
-### Phase 2 — User System
+### Phase 2 — Save / Return Loop ✅ DONE
+- Package id exposed to frontend after compose
+- Saved to localStorage (xotiji_trips) with duplicate guard
+- My Trips page: lists saved trips, reopens itinerary modal by id
+- getPackageById fetches from DB; graceful on 404
+
+### Phase 3 — User System (NEXT)
 - Auth (users table exists, no routes yet)
 - Profile with saved packages and Space Selfie history
 - Return user experience
 
-### Phase 3 — Share & Growth
+### Phase 4 — Share & Growth
 - Space Selfie → share card / trip identity
 - Travel Reel Generator
 - Referral system (referrals table exists)
 - Contest / badge system
 
-### Phase 4 — Data & Logging
+### Phase 5 — Data & Logging
 - ai_logs table active — track all AI calls
 - suggestions table active — persist and analyze suggestions
 - Analytics dashboarding
 
-### Phase 5 — Expand Content
+### Phase 6 — Expand Content
 - More cities (currently 8)
 - Flight data (flights table exists)
 - Local guide content
 
-### Phase 6 — MSZ Pro
+### Phase 7 — MSZ Pro
 - Multi-agent orchestration (deferred, infrastructure phase)
 - Hetzner VPS + Ollama + n8n (deferred)
 
-### Phase 7 — Global Scale
+### Phase 8 — Global Scale
 - Additional languages (ar, es, de, ru — gateway supports 6, frontend only TR/EN)
 - Regional pricing
 - Performance optimization
