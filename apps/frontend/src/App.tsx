@@ -42,6 +42,7 @@ type ModalExperienceData = {
 };
 
 type ModalItineraryData = {
+  id?: string;
   totalPrice: number;
   currency: string;
   items: Array<{
