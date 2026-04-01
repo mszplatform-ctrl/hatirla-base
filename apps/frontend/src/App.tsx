@@ -15,6 +15,7 @@ import { TermsOfService } from './components/pages/TermsOfService';
 import { Contact } from './components/pages/Contact';
 import { SpaceSelfie } from './components/pages/SpaceSelfie';
 import { MyTrips } from './components/pages/MyTrips';
+import { AuthPage } from './components/pages/AuthPage';
 import { CinematicIntro } from './components/pages/CinematicIntro';
 import { PWAInstallBanner } from './components/common/PWAInstallBanner';
 import { CookieConsent } from './components/CookieConsent';
@@ -22,6 +23,7 @@ import { useCities } from './hooks/useCities';
 import { useCityDetails } from './hooks/useCityDetails';
 import { useAI } from './hooks/useAI';
 import { t, getLang, type Lang } from './i18n';
+import { type AuthUser, getStoredUser, clearAuth } from './hooks/useAuth';
 
 type ModalHotelData = {
   id: number;
@@ -78,12 +80,19 @@ export default function App() {
     }
   }
 
-  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie" | "mytrips">("home");
+  const [page, setPage] = useState<"home" | "privacy" | "terms" | "contact" | "spaceSelfie" | "mytrips" | "auth">("home");
+  const [user, setUser] = useState<AuthUser | null>(getStoredUser);
 
   function handleNavigate(to: string) {
-    if (to === "privacy" || to === "terms" || to === "contact" || to === "mytrips") {
+    if (to === "privacy" || to === "terms" || to === "contact" || to === "mytrips" || to === "auth") {
       setPage(to);
     }
+  }
+
+  function handleLogout() {
+    clearAuth();
+    setUser(null);
+    setPage("home");
   }
 
   const { cities, loading: loadingCities } = useCities();
@@ -276,6 +285,13 @@ export default function App() {
       {page === "terms" && <TermsOfService onBack={() => setPage("home")} />}
       {page === "contact" && <Contact onBack={() => setPage("home")} />}
       {page === "mytrips" && <MyTrips onBack={() => setPage("home")} onOpen={openSavedPackage} lang={lang} />}
+      {page === "auth" && (
+        <AuthPage
+          onBack={() => setPage("home")}
+          onSuccess={(u) => { setUser(u); setPage("home"); }}
+          lang={lang}
+        />
+      )}
 
       {/* HOME PAGE */}
       {page === "home" && (
@@ -452,7 +468,12 @@ export default function App() {
       )}
 
       {/* FOOTER */}
-      <Footer onNavigate={handleNavigate} />
+      <Footer
+        onNavigate={handleNavigate}
+        user={user}
+        onLogin={() => setPage("auth")}
+        onLogout={handleLogout}
+      />
 
       {/* COOKIE CONSENT — home page only */}
       {page === "home" && <CookieConsent onNavigate={handleNavigate} lang={lang} />}

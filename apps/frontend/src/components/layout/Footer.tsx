@@ -2,9 +2,12 @@ import { t } from '../../i18n';
 
 type FooterProps = {
   onNavigate?: (page: string) => void;
+  user?: { id: string; email: string; name: string | null } | null;
+  onLogin?: () => void;
+  onLogout?: () => void;
 };
 
-export function Footer({ onNavigate }: FooterProps) {
+export function Footer({ onNavigate, user, onLogin, onLogout }: FooterProps) {
   return (
     <footer style={{
       marginTop: "60px",
@@ -44,6 +47,22 @@ export function Footer({ onNavigate }: FooterProps) {
         >
           {t('footer.mytrips')}
         </button>
+        <span style={{ color: "#cbd5e1" }}>|</span>
+        {user ? (
+          <button
+            onClick={onLogout}
+            style={{ background: "none", border: "none", color: "#0ea5e9", cursor: "pointer", fontSize: "14px", padding: 0, fontFamily: "inherit" }}
+          >
+            {t('auth.logout')}
+          </button>
+        ) : (
+          <button
+            onClick={onLogin}
+            style={{ background: "none", border: "none", color: "#0ea5e9", cursor: "pointer", fontSize: "14px", padding: 0, fontFamily: "inherit" }}
+          >
+            {t('auth.login')}
+          </button>
+        )}
       </div>
     </footer>
   );
