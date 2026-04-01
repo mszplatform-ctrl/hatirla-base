@@ -16,12 +16,12 @@ const composeSchema = z.object({
     .array(
       z.object({
         type: z.string().min(1),
-        price: z.number().nonnegative().optional(),
-        minPrice: z.number().nonnegative().optional(),
+        price: z.number().nonnegative().nullable().optional(),
+        minPrice: z.number().nonnegative().nullable().optional(),
         payload: z
           .object({
-            price: z.number().nonnegative().optional(),
-            minPrice: z.number().nonnegative().optional(),
+            price: z.number().nonnegative().nullable().optional(),
+            minPrice: z.number().nonnegative().nullable().optional(),
           })
           .passthrough()
           .optional(),

@@ -52,6 +52,13 @@ type ModalItineraryData = {
     minPrice?: number | null;
     currency?: string | null;
   }>;
+  days?: Array<{
+    day: number;
+    title: string;
+    activities: string[];
+    tip?: string;
+  }>;
+  summary?: string;
   aiComment?: string;
 };
 
