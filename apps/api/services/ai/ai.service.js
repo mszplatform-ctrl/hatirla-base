@@ -17,7 +17,6 @@ setInterval(() => {
 }, 10 * 60 * 1000).unref();
 
 const packageRepository = require('../../data/package.repository');
-const { composeSchema } = require('../../src/validation/compose.schema');
 // ✅ AI BRIDGE (Stage 4.5)
 // DOĞRU KAYNAK: src/routes/ai.js
 // AI bridge removed - stub inline
@@ -42,14 +41,8 @@ async function composePackage({
   userId = null,
 }) {
   try {
-    // 🔒 INPUT VALIDATION (ZOD)
-    const parsed = composeSchema.parse({
-      selections,
-      language,
-    });
-    const { selections: validSelections } = parsed;
     // 💰 totalPrice hesapla
-    const totalPrice = validSelections.reduce((sum, item) => {
+    const totalPrice = selections.reduce((sum, item) => {
       const price =
         item.price ??
         item.minPrice ??
@@ -67,12 +60,12 @@ async function composePackage({
       const OpenAI = require('openai');
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      const hotels = validSelections.filter(s => s.type === 'hotel');
-      const experiences = validSelections.filter(s => s.type === 'experience');
-      const cities = [...new Set(validSelections.map(s => s.payload?.city || s.city).filter(Boolean))];
+      const hotels = selections.filter(s => s.type === 'hotel');
+      const experiences = selections.filter(s => s.type === 'experience');
+      const cities = [...new Set(selections.map(s => s.payload?.city || s.city).filter(Boolean))];
       const hotelNames = hotels.map(s => s.payload?.name || s.name).filter(Boolean);
       const expTitles = experiences.map(s => s.payload?.title || s.title).filter(Boolean);
-      const numDays = Math.min(Math.max(cities.length || hotels.length || validSelections.length, 1), 5);
+      const numDays = Math.min(Math.max(cities.length || hotels.length || selections.length, 1), 5);
       const langNames = { tr: 'Turkish', en: 'English', ar: 'Arabic', es: 'Spanish', de: 'German', ru: 'Russian' };
       const langName = langNames[language] || 'Turkish';
 
@@ -117,7 +110,7 @@ Rules:
     // 🧱 DB write (after itinerary so we can persist it)
     const created = await packageRepository.createPackage({
       userId,
-      items: validSelections,
+      items: selections,
       totalPrice,
       currency: 'USD',
       status: 'draft',
@@ -129,7 +122,7 @@ Rules:
       success: true,
       package: {
         id: created.id,
-        items: validSelections,
+        items: selections,
         totalPrice,
         currency: 'USD',
         status: 'draft',
