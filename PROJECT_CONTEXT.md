@@ -1,7 +1,8 @@
 # XOTIJI — PROJECT CONTEXT FILE
-Last updated: March 2026 | Base repo: hatirla-base
+Last updated: 2026-07-28 | Base repo: hatirla-base
 
 > Read this file at the start of every session before making any changes.
+> See also: [docs/VISION.md](docs/VISION.md) (long-term identity) and [docs/LAUNCH_V1.md](docs/LAUNCH_V1.md) (active sprint plan).
 
 ---
 
@@ -10,10 +11,9 @@ Last updated: March 2026 | Base repo: hatirla-base
 - **Phase 1 (Compose / Package Flow) — DONE**
 - **Phase 2 (Save / Return Loop) — DONE**
 - **Phase 3 (User System) — DONE**
-- Phase 4 (Share & Growth) — NEXT
-- Phase 5+ — FUTURE
+- **Launch V1 (5-week sprint) — ACTIVE.** See docs/LAUNCH_V1.md for week-by-week plan.
 
-XOTIJI now has auth, saved trips, user-linked packages, and My Trips working for both anonymous and logged-in users. Phases 1–3 complete.
+XOTIJI has real AI compose (OpenAI-generated itineraries persisted to Postgres), a save/return loop (My Trips), and a full auth system (JWT + bcrypt, packages linked to user accounts). The old Phase 4-7 roadmap (POST_BETA_ROADMAP.md, archived) has been replaced by Launch V1, a focused push toward a global Product Hunt launch.
 
 ---
 
@@ -23,7 +23,7 @@ XOTIJI is an AI-native travel platform. The name derives from Zazaca for "Kendi 
 
 XOTIJI is not a booking app or a search engine. It is a **decision engine** — it reduces cognitive load, understands user intent, and produces shareable, personalized travel experiences.
 
-Current state: **Beta launched.** Shared with friends and family. Core features active.
+Current focus: **global**, not Turkey-outbound. English-primary with 6-language support (TR, EN, ES, DE, AR, PT planned — see docs/LAUNCH_V1.md Week 4). Long-term identity and scope are defined in docs/VISION.md.
 
 ---
 
@@ -40,7 +40,7 @@ Current state: **Beta launched.** Shared with friends and family. Core features 
 | Share pages | Cloudflare Worker (xotiji-share) | Cloudflare |
 | DNS | Cloudflare | Cloudflare |
 | Analytics | Google Analytics (G-C4BR4K86D9) | Google |
-| eSIM affiliate | Breeze eSIM (sca_ref=10856377.PkjRGu7WRR) | Breeze |
+| eSIM affiliate | Breeze eSIM (sca_ref=10856377.PkjRGu7WRR) — being evaluated against Airalo, see LAUNCH_V1 | Breeze |
 
 ---
 
@@ -49,42 +49,56 @@ Current state: **Beta launched.** Shared with friends and family. Core features 
 Monorepo: hatirla-base
 - apps/frontend — React/TS SPA
 - apps/api — Node/Express backend
-- apps/api/db — schema.sql + seed.js
-- apps/api/src/gateway — gateway index, error codes, middleware
-- apps/api/src/controllers — ai.controller.js
-- apps/api/src/services — ai.service.js, r2.service.js
-- apps/api/src/repositories — faceSwapJob.repository.js, package.repository.js (in-memory)
-- apps/api/src/routes — share.routes.js, proxy.js
-- apps/api/middleware — errorHandler.js, logger.js, rateLimiter.js
-- apps/frontend/src/components — all UI components
-- apps/frontend/src/pages — SpaceSelfie.tsx, CinematicIntro.tsx, static pages
-- apps/frontend/src/hooks — useAI.ts, useCities.ts, useCityDetails.ts
-- apps/frontend/src/utils — logger.ts
-- apps/frontend/src/MSZCore.ts — client-side AI interpretation layer
+  - apps/api/index.js — server entry, mounts `./gateway` at `/api`
+  - apps/api/gateway/index.js — request ID, language resolver, rate limiting, route mounting, error handler
+  - apps/api/src/routes — ai.js, auth.js, data.js, user.js (mock stub, unmounted), proxy.js, share.routes.js
+  - apps/api/controllers/ai/ai.controller.js — compose, packages, suggestions, face-swap handlers
+  - apps/api/services/ai/ai.service.js — OpenAI calls (compose + suggestions) with deterministic fallback
+  - apps/api/services/r2.service.js — Cloudflare R2 upload for Space Selfie
+  - apps/api/data — faceSwapJob.repository.js, package.repository.js, user.repository.js (raw pg queries)
+  - apps/api/middleware — auth.middleware.js (verifyJWT/optionalJWT), errorHandler.js, logger.js
+  - apps/api/src/gateway/error.js — AppError + error codes
+  - apps/api/src/validation — compose.schema.js (Zod)
+  - apps/api/db — schema.sql + seed.js
+- apps/frontend/src/App.tsx — SPA shell, `useState<page>` router (no router library), data hooks
+- apps/frontend/src/i18n.ts — inline translations, `t(key)`, TR default / EN fallback
+- apps/frontend/src/components/{layout,city,hotel,experience,ai,common,pages}/
+- apps/frontend/src/hooks — useAI.ts, useAuth.ts, useCities.ts, useCityDetails.ts
+- apps/frontend/src/MSZCore.ts — client-side AI interpretation layer (pre-compose scoring)
+- docs/ — VISION.md, LAUNCH_V1.md, INSTRUCTIONS.md, archive/POST_BETA_ROADMAP.md
 
 ---
 
 ## 4. ACTIVE API ROUTES
 
 All routes mount under /api via the gateway.
-Gateway middleware: X-Request-Id, language resolution (tr/en/ar/es/de/ru → defaults tr), rate limiting (100 req/15min general, 50 AI, 300 polling), centralized error handler → { success: false, error: { code, message } }
+Gateway middleware: X-Request-Id, language resolution (tr/en/ar/es/de/ru → defaults tr), rate limiting (100 req/15min general, 50 AI, 300 status polling), centralized error handler → `{ success: false, error: { code, message } }`.
 
 ### Root
 - GET / — health check
 - GET /api/health — uptime, timestamp, NODE_ENV, resolved language
 
+### Auth (/api/auth)
+- POST /api/auth/register — bcrypt hash, creates user, returns JWT (7d expiry)
+- POST /api/auth/login — verifies credentials, returns JWT
+
 ### Data (/api/data)
 - GET /api/data/cities — distinct cities from hotels+experiences tables, with counts
-- GET /api/data/hotels?city=&lang= — hotels filtered by city, TR/EN translated, ordered by rating DESC
-- GET /api/data/experiences?city=&lang= — same pattern as hotels
+- GET /api/data/hotels?city=&country= — hotels filtered, TR/EN translated by `req.lang`, ordered by rating DESC
+- GET /api/data/experiences?city=&country= — same pattern as hotels
 
 ### AI (/api/ai)
 - GET /api/ai — sanity check, lists available endpoints
 - GET /api/ai/suggestions?lang= — top 5 hotels + top 8 experiences → gpt-4o-mini → 3 {title, description, score} suggestions. Deterministic fallback if OpenAI fails.
-- POST /api/ai/compose — validates with Zod, calculates totalPrice, writes to in-memory package store. **STUB: itinerary is static, no OpenAI call here yet.**
-- GET /api/ai/packages — returns all packages from in-memory store (wiped on restart)
+- POST /api/ai/compose — `optionalJWT` (attaches userId if token present). Validates with Zod, calls OpenAI gpt-4o-mini for a real day-by-day itinerary, persists to `packages` table. Deterministic fallback if OpenAI fails.
+- GET /api/ai/packages — all packages (admin/debug)
+- GET /api/ai/packages/:id — single package by id, used by My Trips reopen flow
+- GET /api/ai/my-packages — `verifyJWT` required, packages owned by the authenticated user
 - POST /api/ai/face-swap — accepts {photo: dataURI, cityId}, submits to fal.ai queue async, returns {jobId}
 - GET /api/ai/face-swap/status/:jobId — polls fal.ai, on completion uploads to R2, returns {status, imageUrl, shareUrl}
+
+### User (/api/user) — NOT MOUNTED
+- `src/routes/user.js` is a hardcoded mock stub (`?email=mock@user.com`). Commented out in gateway/index.js. Superseded by /api/auth + /api/ai/my-packages. Candidate for deletion — not part of Launch V1 scope.
 
 ### Share
 - GET /api/share/:id — validates id ([a-zA-Z0-9_-]{1,100}), serves OG HTML page for Space Selfie share
@@ -100,59 +114,58 @@ Gateway middleware: X-Request-Id, language resolution (tr/en/ar/es/de/ru → def
 - **hotels** — id, name, name_tr, description, description_tr, city, country, rating, price_per_night, amenities, images, location
 - **experiences** — id, title, title_tr, description, description_tr, city, country, category, rating, price, duration_hours, images, location
 - **face_swap_jobs** — job_id, fal_request_id, status (processing/done/error), image_url, share_url, error, created_at. TTL cleanup every 10min, deletes rows older than 24h.
+- **users** — id, email, password_hash, name, created_at. Queried by auth routes + optionalJWT/verifyJWT.
+- **packages** — id, items, total_price, user_id (nullable, FK to users), currency, status, itinerary, language, created_at. Written by compose, read by packages/:id and my-packages.
 
-### Schema exists but NOT active (Phase 2+)
-- users — no routes yet
+### Schema exists but NOT active
 - admin_users — no routes yet
-- flights — no routes yet
+- flights — no routes yet (planned Launch V1 Week 2, "flight search" panel in Trip Toolkit)
 - referrals — no routes yet
-- packages — no routes (compose uses in-memory store instead)
-- suggestions — no routes yet
-- ai_logs — no routes yet
+- suggestions — no routes yet (persisting AI suggestions for analysis)
+- ai_logs — no routes yet (logging all AI calls)
 
 ---
 
 ## 6. FRONTEND PAGES & COMPONENTS
 
-SPA with useState<page> router. No URL changes except ?ref=spaceselfie.
+SPA with `useState<page>` router in App.tsx (`"home"|"privacy"|"terms"|"contact"|"spaceSelfie"|"mytrips"|"auth"`), navigation via `handleNavigate(to)` passed as `onNavigate` prop. No URL routing except `?ref=spaceselfie`.
 
-### Pages
-- home — default, city list → hotel/experience selection → AI compose → eSIM CTA
-- spaceSelfie — full Space Selfie flow (upload → era selection → fal.ai → result → share)
-- privacy, terms, contact — static bilingual pages
+### Pages (apps/frontend/src/components/pages/)
+- home (App.tsx root render, not a separate page file) — city list → hotel/experience selection → AI compose → eSIM CTA
+- SpaceSelfie.tsx — full Space Selfie flow (upload → era selection → fal.ai → result → share)
+- AuthPage.tsx — login/register UI, token stored in localStorage
+- MyTrips.tsx — DB panel for logged-in users (via /api/ai/my-packages), localStorage panel for anonymous users
+- PrivacyPolicy.tsx, TermsOfService.tsx, Contact.tsx — static bilingual pages
+- CinematicIntro.tsx, CinematicSequence.tsx — first-visit intro animation
 
 ### Key components
-- CinematicIntro.tsx — first-visit typing animation ("XOTIJI. // toward the sun")
-- HeroSection.tsx — hero with Space Selfie CTA
-- CityList.tsx / CityCard.tsx — city grid
-- HotelList.tsx / HotelCard.tsx — hotel selection with checkboxes
-- ExperienceList.tsx / ExperienceCard.tsx — experience selection
-- AIPackageModal.tsx — displays composed package + MSZ comment
-- AILoadingIndicator.tsx — spinner during compose
-- SpaceSelfie.tsx (855 lines) — full Space Selfie feature
-- CookieConsent.tsx — bilingual cookie banner
-- LanguageSwitcher.tsx — TR/EN toggle, persists to localStorage
-- ErrorBoundary.tsx — React error boundary
-- PWAInstallBanner.tsx — "Add to Home Screen" prompt
+- layout/HeroSection.tsx, layout/Header.tsx, layout/Footer.tsx
+- city/CityList.tsx, city/CityCard.tsx
+- hotel/HotelList.tsx, hotel/HotelCard.tsx
+- experience/ExperienceList.tsx, experience/ExperienceCard.tsx
+- ai/AIPackageModal.tsx — displays composed package + AI/MSZ comment
+- ai/AILoadingIndicator.tsx — spinner during compose
+- common/Modal.tsx, common/PWAInstallBanner.tsx
+- CookieConsent.tsx, LanguageSwitcher.tsx, ErrorBoundary.tsx
 
 ### MSZCore.ts
-Client-side singleton. analyzeBeforeCompose(items) scores selection (hotels×0.4 + experiences×0.4 + count×0.2) and returns short i18n string shown in AIPackageModal as mszComment when API doesn't return aiComment (which currently never happens — compose is a stub).
+Client-side singleton. `analyzeBeforeCompose(items)` scores selection (hotels×0.4 + experiences×0.4 + count×0.2) and returns a short i18n string shown in AIPackageModal as `mszComment` when the API doesn't return `aiComment`.
 
 ---
 
 ## 7. WHAT AI CURRENTLY DOES
 
 ### A. Travel Suggestions (GET /api/ai/suggestions)
-Queries top 5 hotels + top 8 experiences from DB. Builds prompt. Calls gpt-4o-mini. Returns 3 {title, description, score} objects. Has deterministic fallback.
+Queries top 5 hotels + top 8 experiences from DB. Builds prompt. Calls gpt-4o-mini. Returns 3 {title, description, score} objects. Deterministic fallback if OpenAI fails.
 
 ### B. Package Compose (POST /api/ai/compose)
-**STUB.** Validates input, calculates price, saves to in-memory store. Returns static itinerary placeholder "Hazırlanıyor...". No OpenAI call. Packages lost on server restart.
+Validates input (Zod), calls OpenAI gpt-4o-mini for a real day-by-day itinerary, calculates total price, persists to `packages` table (linked to `user_id` if authenticated via optionalJWT). Deterministic fallback if OpenAI fails.
 
 ### C. Space Selfie / Face Swap
 Accepts {photo: dataURI, cityId}. 16 scenes (8 cities + 8 time stops), 3 prompt variants each (48 total). Submits to fal-ai/flux-pro/kontext queue async. Polls status. On completion: uploads to R2, persists shareUrl = xotiji.app/s/{shareId}. Share buttons: Save, Instagram, TikTok, X, WhatsApp.
 
 ### D. MSZ Lite (client-side only)
-analyzeBeforeCompose scores selection 0–1, returns one of 3 i18n strings. Not an API call.
+`analyzeBeforeCompose` scores selection 0–1, returns one of 3 i18n strings. Not an API call.
 
 ---
 
@@ -162,17 +175,25 @@ Stone Age → Ancient World → Medieval → 1920s → Present (2026) → Future
 
 ---
 
-## 9. COMPLETED FEATURES (BETA)
+## 9. CURRENT CITIES (8, expanding to 30 in Launch V1 Week 5)
+
+Istanbul, Paris, Rome, Barcelona, Berlin, Dubai, Tokyo, London — already a global mix, not Turkey-centric. Week 5 expands to a broader global set (Rio, NYC, Bangkok, Bali, etc.) per docs/LAUNCH_V1.md.
+
+---
+
+## 10. COMPLETED FEATURES
 
 - Space Selfie (fal.ai async polling, PostgreSQL job storage, 24h TTL)
 - Share infrastructure (R2 bucket, shares.xotiji.app custom domain, Cloudflare Worker, OG meta tags)
 - Watermark system (proxy endpoint bakes xotiji.app watermark into downloaded images)
 - City / Hotel / Experience flow
 - AI suggestions with fallback
-- AI compose (stub — needs real OpenAI integration)
+- AI compose — real OpenAI itinerary, persisted to Postgres
+- Save / Return loop — My Trips (localStorage for anonymous, DB for logged-in)
+- User system — JWT auth (register/login), bcrypt, packages linked to userId
 - MSZ Lite client-side scoring
 - eSIM affiliate CTA (Breeze)
-- Google Analytics (6 custom events: teleport_start, teleport_complete, space_selfie_start, space_selfie_complete, share_click, teleport_start)
+- Google Analytics (custom events: teleport_start, teleport_complete, space_selfie_start, space_selfie_complete, share_click)
 - i18n TR/EN with language switcher
 - Cinematic intro
 - Cookie consent banner (bilingual)
@@ -180,118 +201,66 @@ Stone Age → Ancient World → Medieval → 1920s → Present (2026) → Future
 - SEO: meta tags, robots.txt, sitemap.xml, og-image.png, Google Search Console
 - Legal pages: Privacy Policy, Terms of Service, Contact
 - Mobile responsive
-- ?ref=spaceselfie auto-opens Space Selfie after intro
-- Technical debt cleanup: 18 issues resolved (ESM/CJS fix, XSS patch, AppError fix, PrismaClient removed, mock stubs disabled, Tailwind removed, MagicMirror.tsx deleted, dead routes deleted, axios removed, logger utility added, DB TTL aligned to 24h, .env.example files created)
 
 ---
 
-## 10. POST-BETA ROADMAP
+## 11. LAUNCH V1 — ACTIVE PLAN
 
-### Phase 1 — Compose / Package Flow ✅ DONE
-- /api/ai/compose calls OpenAI, generates real day-by-day itinerary
-- Packages persisted to PostgreSQL (packages table)
-- GET /api/ai/packages/:id endpoint live
+Full week-by-week plan: **docs/LAUNCH_V1.md**
+Long-term vision beyond v1: **docs/VISION.md**
+Working rules for this repo: **docs/INSTRUCTIONS.md**
 
-### Phase 2 — Save / Return Loop ✅ DONE
-- Package id exposed to frontend after compose
-- Saved to localStorage (xotiji_trips) with duplicate guard
-- My Trips page: lists saved trips, reopens itinerary modal by id
-- getPackageById fetches from DB; graceful on 404
+Summary: 5-week sprint targeting a Product Hunt launch (Week 5, Tuesday 10:01 TR time). Adds real affiliate monetization (GetYourGuide, Booking.com, Airalo eSIM, SafetyWing, Kiwi.com), a single-page Trip Toolkit result, chat-first input, English SEO landing pages, and 5 new languages (ES, DE, AR, PT + existing TR/EN). Target: $500-1500/month post-launch.
 
-### Phase 3 — User System ✅ DONE
-- JWT auth: register/login endpoints, bcrypt hashing, 7-day tokens
-- useAuth hook + AuthPage UI, token stored in localStorage
-- Packages linked to userId via optionalJWT on compose
-- My Trips: DB panel for logged-in users, localStorage for anonymous
-
-### Phase 4 — Share & Growth (NEXT)
-- Space Selfie → share card / trip identity
-- Travel Reel Generator
-- Referral system (referrals table exists)
-- Contest / badge system
-
-### Phase 5 — Data & Logging
-- ai_logs table active — track all AI calls
-- suggestions table active — persist and analyze suggestions
-- Analytics dashboarding
-
-### Phase 6 — Expand Content
-- More cities (currently 8)
-- Flight data (flights table exists)
-- Local guide content
-
-### Phase 7 — MSZ Pro
-- Multi-agent orchestration (deferred, infrastructure phase)
-- Hetzner VPS + Ollama + n8n (deferred)
-
-### Phase 8 — Global Scale
-- Additional languages (ar, es, de, ru — gateway supports 6, frontend only TR/EN)
-- Regional pricing
-- Performance optimization
+Old Phase 4-7 roadmap (Share & Growth, Data & Logging, Content Expansion, MSZ Pro, Global Scale) is archived at docs/archive/POST_BETA_ROADMAP.md — superseded by Launch V1, but its later phases (ai_logs, referrals, flights) may resurface as backlog after v1 ships.
 
 ---
 
-## 11. CODING PRINCIPLES
+## 12. CODING PRINCIPLES
 
 - CommonJS throughout backend (no ESM syntax in .js files)
 - Raw pg queries only — no Prisma, no ORM
 - All env vars via process.env — no hardcoded secrets
-- Unified error response: { success: false, error: { code, message } }
+- Unified error response: `{ success: false, error: { code, message } }`
 - Controller → Service → Repository chain
 - AI must have deterministic fallback — never block user flow
-- Auth is disabled for beta — no user sessions
-- TypeScript strict mode in frontend, zero errors required
+- Middleware (verifyJWT/optionalJWT) applied at route level, not controller level
+- TypeScript strict mode in frontend, zero errors required — run `tsc --noEmit` before every push
 - logger.ts in frontend — console.error only in DEV
-- No new architecture layers without discussion
+- No new architecture layers or dependencies without discussion
+
+Full working rules (prompt format, red flags, session checklist): **docs/INSTRUCTIONS.md**
 
 ---
 
-## 12. ARCHITECTURE PRINCIPLES
+## 13. ARCHITECTURE PRINCIPLES
 
 - Core backend is locked — no unsolicited refactors
-- ai.interface.js (or equivalent) is the single AI entry point
 - No new external services without explicit decision
 - Mobile-first always
 - Space Selfie is the primary acquisition hook
-- Compose flow is the primary retention and monetization hook
+- Compose flow → Trip Toolkit is the primary retention and monetization hook (Launch V1 Week 2)
 - All shareable outputs must have watermark
-- packages table is the target for compose persistence (currently in-memory)
+- Affiliate links must be contextual, not intrusive (see docs/LAUNCH_V1.md)
 
 ---
 
-## 13. PRODUCT CONSTRAINTS
+## 14. PRODUCT CONSTRAINTS
 
 - NOT a full OTA — no complex booking UI
 - AI must not block flows — always fallback
-- No paid ads — growth via shareability only
-- Beta = invite only, no public launch until Phase 1 compose is real
-- eSIM is contextual monetization, not a side feature
-
----
-
-## 14. DECISION RULES
-
-Move UP in priority if it:
-- Increases virality or shareability
-- Makes a stub real (especially compose)
-- Adds retention (save/return)
-- Generates affiliate revenue (eSIM contextual)
-- Fixes something broken in production
-
-Move DOWN in priority if it:
-- Is invisible to users
-- Adds new architecture without product justification
-- Requires new external service not already integrated
-- Is a "nice to have" without clear user impact
+- No paid ads pre-launch — growth via shareability + SEO
+- Global scope, English-primary — see docs/VISION.md for what's in/out of v1
+- eSIM/insurance/activity affiliate links are contextual monetization, not a side feature
 
 ---
 
 ## 15. HOW TO USE THIS FILE
 
 At the start of every Claude/AI session:
-1. Read this file completely
+1. Read this file, docs/LAUNCH_V1.md, and docs/INSTRUCTIONS.md
 2. Do not assume anything not written here
 3. Do not suggest changes to core backend architecture
 4. Ask before adding new dependencies
-5. TypeScript must pass with zero errors before every push
-6. Always run tsc --noEmit before pushing
+5. Always run `tsc --noEmit` before pushing — zero errors required
+6. Update this file's Definition of Done for any deliverable that changes routes, tables, or pages

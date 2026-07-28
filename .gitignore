@@ -8,3 +8,6 @@ node_modules
 apps/api/data.db
 apps/api/db/*.sqlite
 
+# Claude Code local config (per-machine, not shared)
+.claude/settings.local.json
+
