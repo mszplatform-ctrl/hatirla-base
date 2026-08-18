@@ -1,5 +1,5 @@
 # XOTIJI — PROJECT CONTEXT FILE
-Last updated: 2026-07-28 | Base repo: hatirla-base
+Last updated: 2026-08-17 | Base repo: hatirla-base
 
 > Read this file at the start of every session before making any changes.
 > See also: [docs/VISION.md](docs/VISION.md) (long-term identity) and [docs/LAUNCH_V1.md](docs/LAUNCH_V1.md) (active sprint plan).
@@ -11,7 +11,7 @@ Last updated: 2026-07-28 | Base repo: hatirla-base
 - **Phase 1 (Compose / Package Flow) — DONE**
 - **Phase 2 (Save / Return Loop) — DONE**
 - **Phase 3 (User System) — DONE**
-- **Launch V1 (5-week sprint) — ACTIVE.** See docs/LAUNCH_V1.md for week-by-week plan.
+- **Launch V1 (9-week sprint) — ACTIVE.** See docs/LAUNCH_V1.md for week-by-week plan.
 
 XOTIJI has real AI compose (OpenAI-generated itineraries persisted to Postgres), a save/return loop (My Trips), and a full auth system (JWT + bcrypt, packages linked to user accounts). The old Phase 4-7 roadmap (POST_BETA_ROADMAP.md, archived) has been replaced by Launch V1, a focused push toward a global Product Hunt launch.
 
@@ -40,7 +40,8 @@ Current focus: **global**, not Turkey-outbound. English-primary with 6-language 
 | Share pages | Cloudflare Worker (xotiji-share) | Cloudflare |
 | DNS | Cloudflare | Cloudflare |
 | Analytics | Google Analytics (G-C4BR4K86D9) | Google |
-| eSIM affiliate | Breeze eSIM (sca_ref=10856377.PkjRGu7WRR) — being evaluated against Airalo, see LAUNCH_V1 | Breeze |
+| Affiliate networks | Direct + Travelpayouts (marker 561828) + CJ Affiliate (Publisher 8033579) | Multi |
+| Payments | Payoneer USD (Citibank NY) | Payoneer |
 
 ---
 
@@ -119,7 +120,7 @@ Gateway middleware: X-Request-Id, language resolution (tr/en/ar/es/de/ru → def
 
 ### Schema exists but NOT active
 - admin_users — no routes yet
-- flights — no routes yet (planned Launch V1 Week 2, "flight search" panel in Trip Toolkit)
+- flights — no routes yet (planned Launch V1 Week 4, "flight search" panel in Trip Toolkit)
 - referrals — no routes yet
 - suggestions — no routes yet (persisting AI suggestions for analysis)
 - ai_logs — no routes yet (logging all AI calls)
@@ -175,9 +176,9 @@ Stone Age → Ancient World → Medieval → 1920s → Present (2026) → Future
 
 ---
 
-## 9. CURRENT CITIES (8, expanding to 30 in Launch V1 Week 5)
+## 9. CURRENT CITIES (8, expanding to 30 in Launch V1 Week 7)
 
-Istanbul, Paris, Rome, Barcelona, Berlin, Dubai, Tokyo, London — already a global mix, not Turkey-centric. Week 5 expands to a broader global set (Rio, NYC, Bangkok, Bali, etc.) per docs/LAUNCH_V1.md.
+Istanbul, Paris, Rome, Barcelona, Berlin, Dubai, Tokyo, London — already a global mix, not Turkey-centric. Week 7 expands to a broader global set (Rio, NYC, Bangkok, Bali, etc.) per docs/LAUNCH_V1.md.
 
 ---
 
@@ -204,13 +205,43 @@ Istanbul, Paris, Rome, Barcelona, Berlin, Dubai, Tokyo, London — already a glo
 
 ---
 
+## 10.5 AFFILIATE & PAYMENT INFRASTRUCTURE
+
+### Affiliate networks (multi-partner, 12-channel v1 plan)
+
+- **Direct**: GetYourGuide (FKADAF3), SafetyWing (26574648), Breeze eSIM, DiscoverCars (xotiji)
+- **Travelpayouts** (marker 561828): Aviasales, Klook, Welcome Pickups,
+  Radical Storage, AirHelp (v1.1)
+- **CJ Affiliate** (Publisher ID 8033579, Property ID 101850450):
+  Booking.com Brazil + LATAM active; 10 regional programs pending
+- **Pending**: iVisa (direct)
+
+Full channel table with links, commission rates, and status: **docs/LAUNCH_V1.md**
+
+### Payment infrastructure
+
+- **Payoneer USD**: ACTIVE. Customer ID `105806780`. Beneficiary: YEKTA SEVIM.
+  Bank: Citibank NY. Routing (ABA): `031100209`. SWIFT: `CITIUS33`.
+  Account: `70589800002570506`. Type: Checking.
+- **Payoneer EUR/GBP receiving accounts**: available but not yet activated.
+- **Configured platforms**: CJ Affiliate, GetYourGuide (SEPA config pending),
+  Breeze eSIM, Travelpayouts ($400 min), DiscoverCars ($200 min).
+
+### Travelpayouts Drive verification
+
+- Snippet deployed to production: `apps/frontend/index.html`
+- Commit: `a2395db`
+- Verified via Vercel deploy.
+
+---
+
 ## 11. LAUNCH V1 — ACTIVE PLAN
 
 Full week-by-week plan: **docs/LAUNCH_V1.md**
 Long-term vision beyond v1: **docs/VISION.md**
 Working rules for this repo: **docs/INSTRUCTIONS.md**
 
-Summary: 5-week sprint targeting a Product Hunt launch (Week 5, Tuesday 10:01 TR time). Adds real affiliate monetization (GetYourGuide, Booking.com, Airalo eSIM, SafetyWing, Kiwi.com), a single-page Trip Toolkit result, chat-first input, English SEO landing pages, and 5 new languages (ES, DE, AR, PT + existing TR/EN). Target: $500-1500/month post-launch.
+Summary: 9-week sprint targeting a Product Hunt launch (Week 9, Tuesday 10:01 TR time). Adds real affiliate monetization across 12 channels via 3 networks (Direct, Travelpayouts, CJ Affiliate), a single-page Trip Toolkit result, chat-first input, English SEO landing pages, and 5 new languages (ES, DE, AR, PT + existing TR/EN). Target: $500-1500/month post-launch.
 
 Old Phase 4-7 roadmap (Share & Growth, Data & Logging, Content Expansion, MSZ Pro, Global Scale) is archived at docs/archive/POST_BETA_ROADMAP.md — superseded by Launch V1, but its later phases (ai_logs, referrals, flights) may resurface as backlog after v1 ships.
 
@@ -228,6 +259,7 @@ Old Phase 4-7 roadmap (Share & Growth, Data & Logging, Content Expansion, MSZ Pr
 - TypeScript strict mode in frontend, zero errors required — run `tsc --noEmit` before every push
 - logger.ts in frontend — console.error only in DEV
 - No new architecture layers or dependencies without discussion
+- Node.js 20 → 24 migration required before October 1, 2026 (Vercel deadline). Currently on Node 20; migration is tracked in the non-launch backlog (see docs/LAUNCH_V1.md).
 
 Full working rules (prompt format, red flags, session checklist): **docs/INSTRUCTIONS.md**
 
@@ -239,7 +271,7 @@ Full working rules (prompt format, red flags, session checklist): **docs/INSTRUC
 - No new external services without explicit decision
 - Mobile-first always
 - Space Selfie is the primary acquisition hook
-- Compose flow → Trip Toolkit is the primary retention and monetization hook (Launch V1 Week 2)
+- Compose flow → Trip Toolkit is the primary retention and monetization hook (Launch V1 Week 4)
 - All shareable outputs must have watermark
 - Affiliate links must be contextual, not intrusive (see docs/LAUNCH_V1.md)
 

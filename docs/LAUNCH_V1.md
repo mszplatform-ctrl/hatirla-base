@@ -1,5 +1,5 @@
-# XOTIJI — LAUNCH V1 (5-Week Sprint)
-Last updated: 2026-07-28
+# XOTIJI — LAUNCH V1 (9-Week Sprint)
+Last updated: 2026-08-17
 
 > Active sprint plan. Supersedes the old Phase 4-7 roadmap (archived at docs/archive/POST_BETA_ROADMAP.md).
 > Long-term identity: [VISION.md](VISION.md). Working rules: [INSTRUCTIONS.md](INSTRUCTIONS.md).
@@ -10,8 +10,11 @@ Last updated: 2026-07-28
 
 Ship a global, English-primary AI travel assistant with real affiliate monetization and launch it on Product Hunt.
 
-- **Launch date:** Week 5, Tuesday, 10:01 TR time.
-- **Target revenue:** $500–1500/month post-launch.
+- **Launch date:** Week 9 (late September 2026), Tuesday, 10:01 TR time.
+  Extended from Week 5 to accommodate the 12-channel affiliate integration
+  and quality bar for launch.
+- **Target revenue:** $500–1500/month post-launch (stretch: $1–3K/month lifestyle
+  target per founder's runway plan).
 - **Scope:** global (not Turkey-outbound). Multi-language: TR, EN, ES, DE, AR, PT.
 
 ---
@@ -32,106 +35,171 @@ See PROJECT_CONTEXT.md for the full current-state inventory.
 ## THE 3 PERMANENT DIFFERENTIATORS (do not remove during this sprint)
 
 1. Space Selfie viral hook
-2. Trip Toolkit single-page experience (built in Week 2)
-3. 6 languages day one of launch (built in Week 4)
+2. Trip Toolkit single-page experience (built in Week 4)
+3. 6 languages day one of launch (built in Week 6)
 
 ---
 
 ## AFFILIATE CHANNELS
 
-| Channel | Commission | Approval time | Product |
-|---|---|---|---|
-| GetYourGuide | ~8% | Instant | Experiences/activities |
-| Booking.com | 25-40% of their commission | 2-8 weeks | Hotels |
-| Airalo | 8-10% | 24-48h | eSIM |
-| SafetyWing | 10% | 1-3 days | Travel insurance |
-| Kiwi.com | 1-3% | 1-2 weeks | Flight search |
+Launch V1 target: 12 active affiliate channels. 11 approved and link-ready,
+1 (iVisa) pending review. Plus 10 Booking.com CJ regional programs in
+approval pipeline.
 
-Booking.com approval (2-8 weeks) can outlast the sprint — apply Week 0, do not block Week 1 work on approval landing. Build the integration behind a flag/placeholder if approval hasn't landed by the time the deep-link work starts.
+### Active — link ready
+
+| # | Channel      | Network        | Commission     | ID / Link marker                        | Notes |
+|---|--------------|----------------|----------------|------------------------------------------|-------|
+| 1 | GetYourGuide | Direct         | ~8%            | Partner ID `FKADAF3`                    | SEPA payment config escalated (Sanja, ticket 20506720) |
+| 2 | SafetyWing   | Direct         | 10%            | Ambassador `26574648`                   | Travel insurance |
+| 3 | Breeze eSIM  | Direct         | 20%            | `sca_ref=10856377.PkjRGu7WRR`           | Kept over Airalo (higher commission) |
+| 4 | Aviasales    | Travelpayouts  | 40%            | `aviasales.tpx.li/wUELJcyH`             | Replaces Kiwi.com (40% vs 3%). `sub_id=xotiji_flight` |
+| 5 | Klook        | Travelpayouts  | 2–5%           | `klook.tpx.li/1jnbuhqE`                 | Activities Asia. `sub_id=xotiji_activity_asia` |
+| 6 | Welcome Pickups | Travelpayouts | 8–9%         | `tpx.li/yZiTB7Fw`                       | Airport transfer. `sub_id=xotiji_transfer` |
+| 7 | Radical Storage | Travelpayouts | 8%           | `radicalstorage.tpx.li/PU6PL52z`        | Luggage storage. `sub_id=xotiji_luggage` |
+| 8 | AirHelp      | Travelpayouts  | 15–16%         | `airhelp.tpx.li/bcGRwYRZ`               | **Deferred to v1.1**. `sub_id=xotiji_compensation` |
+| 9 | DiscoverCars | Direct         | 70% base       | `discovercars.com/?a_aid=xotiji`        | 80% bonus tier pending (Ilina OOO until Aug 20). 365-day cookie |
+| 10 | Booking.com Brazil | CJ Affiliate | ~4% stays  | `tkqlhce.com/click-101850450-17288448`  | Advertiser `7854073` |
+| 11 | Booking.com LATAM  | CJ Affiliate | ~4% stays  | `jdoqocy.com/click-101850450-17288992`  | Advertiser `7864342` |
+
+### Pending approval — build integration behind flag
+
+- **10 Booking.com CJ regional programs**: APAC, Australia, BENELUX, CEE, DACH,
+  France, Italy, MEA, North America, Spain & Portugal, UK. 1–14 day review.
+  CJ Publisher ID `8033579`, Property ID `101850450`.
+- **iVisa** (direct): 20% commission, 365-day cookie, first-click attribution.
+  Pending review.
+
+### Locked (waitlist) — Travelpayouts programs
+
+Booking.com, DiscoverCars, Omio, 12Go, Trip.com, Viator, etc.
+Require 3-month traffic proof — resurface post-launch on data reading day (Week 13).
+
+### One-partner-per-category rule
+
+Preserve decision engine identity (not aggregator positioning): one active
+partner per category. Rail Europe and Ferryhopper deferred to v1.5 backlog.
+Abracadabra NYC (CJ) declined — outside travel vertical.
+
+Note: Booking.com approval (2–8 weeks) can outlast the sprint. For any pending
+region, build the integration behind a flag/placeholder — do not block work
+on approval landing.
 
 ---
 
 ## WEEK-BY-WEEK
 
-### Week 0 — Doc sync & applications (this task)
+### Week 0 — Doc sync & applications — DONE
+- Docs trilogy synced.
+- Affiliate applications submitted across 12 channels.
+- Payoneer USD approved and configured across 5 platforms.
+
+### Weeks 1–3 — Affiliate wiring (4 sub-deliverables)
+
+Sequential, one deliverable per session, each with the show-diff-before-push gate.
+
+- **Deliverable 1.1 — Foundation + GetYourGuide + Booking.com regional routing**
+  - `apps/frontend/src/config/affiliates.ts` structure
+  - GetYourGuide link builder (Partner ID `FKADAF3`)
+  - Booking.com regional geo-routing (Brazil + LATAM active, 10 pending behind flag)
+  - Integrate into first card component as proof
+- **Deliverable 1.2 — Booking.com regional expansion** (as CJ approvals land)
+- **Deliverable 1.3 — Aviasales + DiscoverCars cards** (with `sub_id` channel tracking)
+- **Deliverable 1.4 — Remaining 5 partners**: Welcome Pickups, Radical Storage,
+  Breeze eSIM, SafetyWing, iVisa (if approved by then)
+
+### Week 4 — Trip Toolkit + header revamp
+
 **Deliverables:**
-- PROJECT_CONTEXT.md, VISION.md, LAUNCH_V1.md, INSTRUCTIONS.md in sync with repo reality
-- POST_BETA_ROADMAP.md archived
-- .claude/settings.local.json gitignored
-- Affiliate applications submitted: GetYourGuide, Booking.com, Airalo, SafetyWing, Kiwi.com
+- Compose result renders as a full-page Trip Toolkit: single scroll containing
+  itinerary, hotels, activities, eSIM, insurance, flight search, share —
+  replacing the current modal-based result view
+- Header revamp: auth menu moved up/prominent, SEO title/description switched
+  to English
+- Flight search panel (Aviasales affiliate deep link)
 
-**Acceptance criteria:** docs describe the repo as it actually is (no stale "STUB"/"Phase 4 NEXT" language), all 5 affiliate applications submitted.
+**Acceptance criteria:** after compose, user lands on one scrollable page with
+every monetization surface visible without opening a separate modal; header
+shows working auth entry point; page `<title>`/meta description are in English.
 
-**Must-have.**
+**Must-have:** single-page Trip Toolkit layout, header auth menu.
 
----
+### Week 5 — Chat-first input
 
-### Week 1 — Affiliate wiring
 **Deliverables:**
-- GetYourGuide deep links on experience cards (contextual, city/experience-aware)
-- Booking.com deep links on hotel cards (if approved; else placeholder behind flag)
-- eSIM CTA made destination-aware with live price (replace static Breeze CTA or extend it with Airalo)
-- SafetyWing insurance banner (contextual, not intrusive — see VISION.md "what XOTIJI is not")
-
-**Acceptance criteria:** clicking a hotel/experience card affiliate link opens the correct destination-specific deep link; eSIM CTA shows a real price for the selected city; insurance banner appears without disrupting the compose flow.
-
-**Must-have:** GetYourGuide links, eSIM CTA. **Nice-to-have:** Booking.com (gated on approval), SafetyWing banner can slip to Week 2 if needed.
-
----
-
-### Week 2 — Trip Toolkit + header revamp
-**Deliverables:**
-- Compose result renders as a full-page Trip Toolkit: single scroll containing itinerary, hotels, activities, eSIM, insurance, flight search, share — replacing the current modal-based result view
-- Header revamp: auth menu moved up/prominent, SEO title/description switched to English
-- Flight search panel (Kiwi.com affiliate, can be a search-box deep link rather than embedded results)
-
-**Acceptance criteria:** after compose, user lands on one scrollable page with every monetization surface visible without opening a separate modal; header shows working auth entry point; page `<title>`/meta description are in English.
-
-**Must-have:** single-page Trip Toolkit layout, header auth menu. **Nice-to-have:** embedded flight results (a deep-link box is sufficient for v1).
-
----
-
-### Week 3 — Chat-first input
-**Deliverables:**
-- Chat-style UI on the home page ("3 days Rome, 2 people" free-text style input)
-- Frontend-side parser that maps free text into the existing compose request shape (city, days, party size) — backend compose endpoint and schema unchanged
+- Chat-style UI on the home page (`"3 days Rome, 2 people"` free-text style input)
+- Frontend-side parser that maps free text into the existing compose request
+  shape (city, days, party size) — backend compose endpoint and schema unchanged
 - Fallback to the existing city/hotel/experience picker if parsing is ambiguous
 
-**Acceptance criteria:** typing a natural-language trip request produces the same compose result as manually selecting city/hotel/experience; ambiguous input falls back gracefully, never a dead end.
+**Acceptance criteria:** typing a natural-language trip request produces the
+same compose result as manually selecting city/hotel/experience; ambiguous
+input falls back gracefully, never a dead end.
 
-**Must-have.** Note: this is a UI/parsing layer only — no backend NLP service, no new AI call. Parsing happens client-side or via existing compose validation.
+**Must-have.** UI/parsing layer only — no backend NLP service, no new AI call.
 
----
+### Week 6 — SEO + i18n expansion
 
-### Week 4 — SEO + i18n expansion
 **Deliverables:**
-- 20-30 SEO landing pages in English (Astro static site, route pattern `/trips/{city}-{days}-days`)
-- Frontend i18n expanded to ES, DE, AR, PT (gateway already resolves these langs; frontend i18n.ts currently only implements tr/en)
-- Currency detection (display prices in user's likely local currency, informational — not a payment feature)
+- 20–30 SEO landing pages in English (Astro static, route pattern
+  `/trips/{city}-{days}-days`)
+- Frontend i18n expanded to ES, DE, AR, PT (gateway already resolves these
+  langs; frontend `i18n.ts` currently only implements tr/en)
+- Currency detection (display prices in user's likely local currency,
+  informational — not a payment feature)
 
-**Acceptance criteria:** 20+ landing pages live and indexable; language switcher offers all 6 languages with real translated content (not English fallback); currency shown matches browser locale/geolocation on first load.
+**Acceptance criteria:** 20+ landing pages live and indexable; language switcher
+offers all 6 languages with real translated content (not English fallback);
+currency shown matches browser locale/geolocation on first load.
 
-**Must-have:** landing pages, 6-language i18n. **Nice-to-have:** currency detection can ship as a fixed-list dropdown if auto-detect slips.
+**Must-have:** landing pages, 6-language i18n. **Nice-to-have:** currency
+detection can ship as a fixed-list dropdown if auto-detect slips.
 
----
+### Week 7 — City expansion 8 → 30
 
-### Week 5 — City expansion + launch
 **Deliverables:**
-- Cities expanded 8 → 30, global mix (e.g. Rio, Tokyo, NYC, Paris, Dubai, Bangkok, Barcelona, Bali, Istanbul, and others spanning all continents except Antarctica)
-- Product Hunt launch materials (tagline, gallery, first comment, hunter outreach)
-- **LAUNCH DAY: Tuesday, 10:01 TR time**
+- Cities expanded 8 → 30, global mix (e.g. Rio, Tokyo, NYC, Paris, Dubai,
+  Bangkok, Barcelona, Bali, Istanbul, and others spanning all continents
+  except Antarctica)
 
-**Acceptance criteria:** 30 cities have real hotel/experience seed data (not placeholders); Product Hunt listing is live and complete at launch time.
+**Acceptance criteria:** 30 cities have real hotel/experience seed data
+(not placeholders).
+
+### Week 8 — Launch materials + rehearsal
+
+**Deliverables:**
+- Product Hunt tagline, gallery, first comment, hunter outreach
+- Full end-to-end rehearsal on staging
+- Space Selfie load test
+
+### Week 9 — LAUNCH
+
+- **Tuesday, 10:01 TR time.**
+- All 12 affiliate channels live (iVisa if approved by then, else placeholder).
+- 30 cities, 6 languages.
+- Product Hunt listing live and complete.
 
 **Must-have, hard deadline.**
 
----
-
 ## CRITICAL PATH (must-have only, in order)
 
-Week 0 docs/apps → Week 1 GetYourGuide + eSIM → Week 2 Trip Toolkit → Week 3 chat input → Week 4 landing pages + 6-lang i18n → Week 5 city expansion + launch.
+Week 0 docs/apps → Weeks 1–3 affiliate wiring (Deliverables 1.1 → 1.4) →
+Week 4 Trip Toolkit → Week 5 chat input → Week 6 landing pages + 6-lang i18n
+→ Week 7 city expansion → Week 8 rehearsal → Week 9 launch.
 
-Anything marked nice-to-have above may slip a week or be cut without moving the launch date. Booking.com and embedded flight search are the most likely candidates to slip past v1 given external approval timelines.
+Anything marked nice-to-have above may slip a week or be cut without moving
+the launch date. iVisa and remaining 10 Booking.com CJ regions are the most
+likely candidates to slip past v1 given external approval timelines.
+
+## NON-LAUNCH BACKLOG (must be done, but not launch-blocking)
+
+- **Node.js 20 → 24 migration** — Vercel deprecation deadline: October 1, 2026.
+  Must ship before launch if launch date > Oct 1; otherwise post-launch priority.
+- **Payoneer EUR/GBP receiving accounts** — available to apply; needed if any
+  affiliate insists on non-USD payout.
+- **GetYourGuide SEPA payment** — waiting on Sanja escalation (ticket 20506720).
+- **DiscoverCars 80% bonus tier** — Ilina Beskina follow-up when back from OOO (Aug 20).
+- **Docs update: PROJECT_CONTEXT.md + LAUNCH_V1.md sync after every deliverable** (DoD rule).
 
 ---
 
@@ -141,9 +209,9 @@ MSZ Devrilmez Sistemi, NFT, AI Influencer Network, Learn-to-Build, native mobile
 
 ---
 
-## WEEK 9 — DATA READING DAY (post-launch, ~4 weeks after Week 5)
+## WEEK 13 — DATA READING DAY (post-launch, ~4 weeks after Week 9 launch)
 
-Not part of the 5-week build sprint — a scheduled checkpoint after launch has had time to generate real usage data.
+Not part of the 9-week build sprint — a scheduled checkpoint after launch has had time to generate real usage data.
 
 **Deliverables:**
 - Pull affiliate click/conversion data across all 5 channels
