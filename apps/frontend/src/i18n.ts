@@ -175,6 +175,11 @@ const translations: Record<Lang, any> = {
       ctaButton: "eSIM Al",
       poweredBy: "Powered by Breeze eSIM",
     },
+    affiliates: {
+      bookOnBooking: "Booking.com'da rezerve et",
+      bookOnGetYourGuide: "GetYourGuide'da gör",
+      disclosure: "Affiliate",
+    },
   },
   en: {
     common: {
@@ -324,6 +329,11 @@ const translations: Record<Lang, any> = {
       ctaTitle: "Traveling to this city? Stay connected.",
       ctaButton: "Get eSIM",
       poweredBy: "Powered by Breeze eSIM",
+    },
+    affiliates: {
+      bookOnBooking: "Book on Booking.com",
+      bookOnGetYourGuide: "See on GetYourGuide",
+      disclosure: "Affiliate",
     },
   },
 };

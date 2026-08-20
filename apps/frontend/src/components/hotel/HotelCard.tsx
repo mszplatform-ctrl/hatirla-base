@@ -1,4 +1,6 @@
 import { t, getLang } from '../../i18n';
+import { AffiliateButton } from '../common/AffiliateButton';
+import { detectBookingChannel, getBookingRegionLabel } from '../../utils/detectRegion';
 
 type Hotel = {
   id: number;
@@ -18,6 +20,8 @@ type HotelCardProps = {
 
 export function HotelCard({ hotel, isSelected, onCardClick, onToggleSelection }: HotelCardProps) {
   const displayName = (getLang() === 'tr' && hotel.name_tr) ? hotel.name_tr : hotel.name;
+  const bookingChannel = detectBookingChannel();
+  const bookingRegion = getBookingRegionLabel(bookingChannel);
   return (
     <div
       style={{
@@ -42,20 +46,35 @@ export function HotelCard({ hotel, isSelected, onCardClick, onToggleSelection }:
           </p>
         )}
       </div>
-      <button
-        onClick={onToggleSelection}
-        style={{
-          fontSize: "11px",
-          padding: "6px 10px",
-          borderRadius: "999px",
-          border: "1px solid #0f766e",
-          background: isSelected ? "#0f766e" : "white",
-          color: isSelected ? "white" : "#0f766e",
-          cursor: "pointer"
-        }}
-      >
-        {isSelected ? t('home.removeFromPackage') : t('home.addToPackage')}
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <button
+          onClick={onToggleSelection}
+          style={{
+            fontSize: "11px",
+            padding: "6px 10px",
+            borderRadius: "999px",
+            border: "1px solid #0f766e",
+            background: isSelected ? "#0f766e" : "white",
+            color: isSelected ? "white" : "#0f766e",
+            cursor: "pointer"
+          }}
+        >
+          {isSelected ? t('home.removeFromPackage') : t('home.addToPackage')}
+        </button>
+        {bookingChannel && (
+          <AffiliateButton
+            channelKey={bookingChannel}
+            labelKey="affiliates.bookOnBooking"
+            analytics={{
+              partner: 'booking',
+              region: bookingRegion,
+              surface: 'hotelcard',
+              destinationId: hotel.id,
+              destinationName: hotel.name,
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

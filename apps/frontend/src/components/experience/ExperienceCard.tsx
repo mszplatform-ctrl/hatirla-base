@@ -1,4 +1,5 @@
 import { t, getLang } from '../../i18n';
+import { AffiliateButton } from '../common/AffiliateButton';
 
 type Experience = {
   id: number;
@@ -43,20 +44,37 @@ export function ExperienceCard({ experience, isSelected, onCardClick, onToggleSe
           </p>
         )}
       </div>
-      <button
-        onClick={onToggleSelection}
-        style={{
-          fontSize: "11px",
-          padding: "6px 10px",
-          borderRadius: "999px",
-          border: "1px solid #0f766e",
-          background: isSelected ? "#0f766e" : "white",
-          color: isSelected ? "white" : "#0f766e",
-          cursor: "pointer"
-        }}
-      >
-        {isSelected ? t('home.removeFromPackage') : t('home.addToPackage')}
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <button
+          onClick={onToggleSelection}
+          style={{
+            fontSize: "11px",
+            padding: "6px 10px",
+            borderRadius: "999px",
+            border: "1px solid #0f766e",
+            background: isSelected ? "#0f766e" : "white",
+            color: isSelected ? "white" : "#0f766e",
+            cursor: "pointer"
+          }}
+        >
+          {isSelected ? t('home.removeFromPackage') : t('home.addToPackage')}
+        </button>
+        <AffiliateButton
+          channelKey="getYourGuide"
+          labelKey="affiliates.bookOnGetYourGuide"
+          linkParams={{
+            surface: 'experiencecard',
+            destination: experience.title,
+          }}
+          analytics={{
+            partner: 'getyourguide',
+            region: null,
+            surface: 'experiencecard',
+            destinationId: experience.id,
+            destinationName: experience.title,
+          }}
+        />
+      </div>
     </div>
   );
 }
