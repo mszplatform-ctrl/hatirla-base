@@ -296,3 +296,85 @@ At the start of every Claude/AI session:
 4. Ask before adding new dependencies
 5. Always run `tsc --noEmit` before pushing — zero errors required
 6. Update this file's Definition of Done for any deliverable that changes routes, tables, or pages
+
+---
+
+## 16. AFFILIATE INTEGRATION (Deliverable 1.1)
+
+Foundation for all 12 v1 affiliate channels. Config-driven, extensible for approvals landing over time.
+
+### Config location
+- **`apps/frontend/src/config/affiliates.ts`** — central registry. Each channel: enabled flag, network (Direct/CJ/Travelpayouts), homepage link, optional deep link builder, locale scope, tracking IDs.
+- **`apps/frontend/src/utils/detectRegion.ts`** — `getUserLocale()` (navigator.language), `detectBookingChannel()`, `getBookingRegionLabel()`.
+- **`apps/frontend/src/components/common/AffiliateButton.tsx`** — reusable exit button. Blue (#1e40af) accent, ↗ icon, "Affiliate" disclosure below. `rel="sponsored noopener"`. `stopPropagation` prevents parent card click.
+
+### Active in v1.1 (integrated into UI)
+- **GetYourGuide** on ExperienceCard — all locales, deep link to city-specific GYG page if city ID known, else homepage fallback. `cmp={surface}_{destination}` tracking.
+- **Booking.com Brazil (bookingBR)** on HotelCard — pt-BR users only, homepage link with CJ tracking.
+- **Booking.com LATAM (bookingLATAM)** on HotelCard — es-LatAm users (17 countries), homepage link.
+
+### In config but not UI-integrated yet (enabled: false)
+- **Direct**: SafetyWing (D1.4), Breeze eSIM (D1.4), DiscoverCars (D1.3)
+- **Travelpayouts**: Aviasales (D1.3), Klook (D1.3), Welcome Pickups (D1.4), Radical Storage (D1.4), AirHelp (v1.1 post-launch)
+- **Pending CJ Booking regions**: APAC, Australia, BENELUX, CEE, DACH, France, Italy, MEA, North America, Spain&Portugal, UK
+- **Pending Direct**: iVisa
+
+### Locale routing
+`detectBookingChannel()` reads `navigator.language`, matches against each Booking channel's `locales` array:
+- `pt-BR` → `bookingBR`
+- `es-MX/AR/CO/CL/PE/VE/EC/BO/PY/UY/DO/CR/GT/HN/NI/PA/SV` → `bookingLATAM`
+- `es-ES`, `pt-PT`, `en-US`, `de-DE`, etc. → `null` (no button rendered)
+
+Button is conditionally rendered — if `null` returned, no button shown (no "coming soon" placeholder, no disabled state).
+
+### Deep link strategy (v1 launch = homepage only)
+- **GetYourGuide**: city-specific deep link if city ID in `GYG_CITY_IDS` map (l71 istanbul, l16 paris, l33 rome, l45 barcelona, l17 berlin, l816 dubai, l193 tokyo, l57 london — UNVERIFIED, deploy test needed). Fallback to homepage if city unknown. Note: today ExperienceCard passes no `city` param, so all clicks route to homepage. City propagation added in Deliverable 1.1.5.
+- **Booking Brazil/LATAM**: homepage only in v1. Deep link (`?url=` param, URL-encoded destination) planned for Week 4 SEO landing pages.
+- **DiscoverCars**: homepage-only per platform (deep link not supported). `chan={surface}_{destination}` for tracking.
+- **Aviasales**: `tp.media/r?p=aviasales&u=...&marker=561828` wrapper for deep links planned in Deliverable 1.3.
+
+### Analytics tracking
+`trackAffiliateClick()` fires `gtag('event', 'affiliate_click', {...})` on every affiliate button click:
+- `partner`: 'booking' | 'getyourguide' | etc.
+- `region`: 'BR' | 'LATAM' | 'global' | etc.
+- `surface`: 'hotelcard' | 'experiencecard' | (future: 'triptoolkit', 'seopage')
+- `destination_id`: hotel/experience DB id
+- `destination_name`: hotel name / experience title
+
+GA event name: `affiliate_click`. Week 13 data reading day filters by these dimensions.
+
+### FTC/DSA compliance
+- HTML: `rel="sponsored noopener"` per Google/FTC standard.
+- Visual: "Affiliate" text disclosure below every button (11px, gray #9ca3af).
+- No hidden affiliate redirects.
+
+### Deferred / unverified
+- **Unverified URL/ID formats requiring deploy-time testing**: GetYourGuide 8 city IDs, CJ `?sid=` parameter forwarding on Booking Brazil/LATAM links (check CJ dashboard SubID column 24h after first clicks).
+- **Deep link migration**: Week 4 SEO landing pages + PROJECT_CONTEXT.md revisit.
+- **es-ES fallback**: Spain&Portugal CJ program expected 2-14 days. Week 4 checkpoint: if still pending and es-ES traffic significant, revisit LATAM fallback (CJ commission attribution risk).
+- **GetYourGuide city context**: ExperienceCard currently does not receive city prop. Deliverable 1.1.5 will add city propagation from parent (ExperienceList → ExperienceCard) so GYG deep links activate.
+
+---
+
+## 16.5 MINI SUPERINTELLIGENCE ROADMAP (v1.5+)
+
+XOTIJI's long-term AI differentiation is a 3-layer memory system. Not implemented in v1 — architectural placeholder note only. No code slots today (YAGNI).
+
+**Layer 1 (v1.5, launch + 30-60 days):**
+- User memory: past trips loaded into compose input
+- Impact: personalized itineraries based on prior behavior
+- Effort: 1-2 weeks
+
+**Layer 2 (v2, month 6-9):**
+- Behavioral learning: click stream data feeds compose input
+- Impact: partner preferences learned per user
+- Effort: 1 month
+
+**Layer 3 (v2.5+, month 12+):**
+- Peer learning: aggregate stats across users
+- Impact: "10K Rome users chose Trastevere" hints
+- Effort: 2-3 months
+
+**Rationale:** These layers turn XOTIJI from "AI travel planner" (commoditized, ChatGPT-comparable) into "personalized travel decision engine" (differentiated). Without them, XOTIJI = ChatGPT + affiliate links, easily replicable.
+
+**Revisit trigger:** Week 13 data reading day. Prioritize based on real user retention and repeat-visit data.
